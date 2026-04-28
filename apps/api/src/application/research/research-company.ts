@@ -2,12 +2,13 @@ import type { LeadRepository } from "#/domain/lead/lead-repository.ts"
 import type { Lead } from "#/domain/lead/lead.ts"
 import type { ScraperService } from "#/domain/ports/scraper-service.ts"
 import type { AIService, WebsiteAnalysis } from "#/domain/ports/ai-service.ts"
-import { logger } from "#/infrastructure/observability/logger.ts"
+import type { Logger } from "#/domain/ports/logger.ts"
 
 interface ResearchCompanyDeps {
 	leadRepo: LeadRepository
 	scraper: ScraperService
 	ai: AIService
+	logger: Logger
 }
 
 export interface CompanyResearchResult {
@@ -24,7 +25,7 @@ export function makeResearchCompanyUseCase(deps: ResearchCompanyDeps) {
 
 		try {
 			// Step 1: Scrape website with Deepcrawl
-			logger.info({ url: lead.companyWebsite }, "Scraping company website")
+			deps.logger.info({ url: lead.companyWebsite }, "Scraping company website")
 			const scraped = await deps.scraper.readUrl(lead.companyWebsite)
 
 			if (!scraped.success || !scraped.markdown) {
@@ -32,11 +33,11 @@ export function makeResearchCompanyUseCase(deps: ResearchCompanyDeps) {
 			}
 
 			// Step 2: AI analyze website content (P3)
-			logger.info({ leadId: lead.id }, "Analyzing website content")
+			deps.logger.info({ leadId: lead.id }, "Analyzing website content")
 			const websiteAnalysis = await deps.ai.analyzeWebsite(scraped.markdown)
 
 			// Step 3: AI build company profile (P4)
-			logger.info({ leadId: lead.id }, "Building company profile")
+			deps.logger.info({ leadId: lead.id }, "Building company profile")
 			const companyProfile = await deps.ai.buildCompanyProfile({
 				websiteMarkdown: scraped.markdown,
 				metadata: scraped.metadata ?? {},

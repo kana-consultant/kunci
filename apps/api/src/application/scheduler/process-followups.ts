@@ -1,9 +1,11 @@
 import type { LeadRepository } from "#/domain/lead/lead-repository.ts"
-import { logger } from "#/infrastructure/observability/logger.ts"
+import type { Lead } from "#/domain/lead/lead.ts"
+import type { Logger } from "#/domain/ports/logger.ts"
 
 interface SchedulerDeps {
 	leadRepo: LeadRepository
-	sendFollowup: (lead: any) => Promise<void>
+	sendFollowup: (lead: Lead) => Promise<void>
+	logger: Logger
 }
 
 export function makeProcessPendingFollowupsUseCase(deps: SchedulerDeps) {
@@ -16,7 +18,7 @@ export function makeProcessPendingFollowupsUseCase(deps: SchedulerDeps) {
 			lastEmailBefore: fourDaysAgo,
 		})
 
-		logger.info({ count: leads.length }, "Processing pending follow-ups")
+		deps.logger.info({ count: leads.length }, "Processing pending follow-ups")
 
 		let processed = 0
 		let errors = 0
@@ -27,14 +29,14 @@ export function makeProcessPendingFollowupsUseCase(deps: SchedulerDeps) {
 				processed++
 			} catch (error) {
 				errors++
-				logger.error(
+				deps.logger.error(
 					{ leadId: lead.id, error },
 					"Follow-up processing failed",
 				)
 			}
 		}
 
-		logger.info({ processed, errors }, "Follow-up processing complete")
+		deps.logger.info({ processed, errors }, "Follow-up processing complete")
 		return { processed, errors }
 	}
 }

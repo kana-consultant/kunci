@@ -1,12 +1,15 @@
 import type { Lead } from "#/domain/lead/lead.ts"
 import type { BehaviorAnalysis } from "#/domain/behavior-analysis/behavior-analysis.ts"
-import { logger } from "#/infrastructure/observability/logger.ts"
+import type { Logger } from "#/domain/ports/logger.ts"
+import type { CreateLeadInput } from "#/domain/lead/lead.ts"
+import type { CompanyResearchResult } from "#/application/research/research-company.ts"
 
 interface PipelineDeps {
-	captureLead: (input: any) => Promise<Lead>
-	researchCompany: (lead: Lead) => Promise<any>
+	captureLead: (input: CreateLeadInput) => Promise<Lead>
+	researchCompany: (lead: Lead) => Promise<CompanyResearchResult>
 	analyzeBehavior: (lead: Lead, companyProfile: string) => Promise<BehaviorAnalysis>
 	sendInitialEmail: (lead: Lead, analysis: BehaviorAnalysis) => Promise<void>
+	logger: Logger
 }
 
 /**
@@ -22,7 +25,7 @@ export function makeRunOutboundPipelineUseCase(deps: PipelineDeps) {
 		painPoints?: string
 		leadSource?: string
 	}): Promise<{ leadId: string; status: string }> => {
-		logger.info({ email: input.email }, "Starting outbound pipeline")
+		deps.logger.info({ email: input.email }, "Starting outbound pipeline")
 
 		// Step 1: Capture lead
 		const lead = await deps.captureLead(input)
@@ -37,10 +40,10 @@ export function makeRunOutboundPipelineUseCase(deps: PipelineDeps) {
 			// Step 4: Generate sequence + Send first email
 			await deps.sendInitialEmail(lead, analysis)
 
-			logger.info({ leadId: lead.id }, "Outbound pipeline completed")
+			deps.logger.info({ leadId: lead.id }, "Outbound pipeline completed")
 			return { leadId: lead.id, status: "email_sent" }
 		} catch (error) {
-			logger.error(
+			deps.logger.error(
 				{ leadId: lead.id, error },
 				"Pipeline failed after capture",
 			)

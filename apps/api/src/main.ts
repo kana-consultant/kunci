@@ -47,7 +47,7 @@ async function bootstrap() {
 	}
 
 	// 2. Build Application Use Cases
-	const useCases = buildUseCases({ repos, services })
+	const useCases = buildUseCases({ repos, services, logger })
 
 	// 3. Setup oRPC
 	const rpcHandler = new RPCHandler(appRouter, {

@@ -1,12 +1,13 @@
 import type { LeadRepository } from "#/domain/lead/lead-repository.ts"
 import type { CreateLeadInput, Lead } from "#/domain/lead/lead.ts"
 import type { EmailVerifier } from "#/domain/ports/email-verifier.ts"
+import type { Logger } from "#/domain/ports/logger.ts"
 import { badRequest, conflict } from "#/application/shared/errors.ts"
-import { logger } from "#/infrastructure/observability/logger.ts"
 
 interface CaptureLeadDeps {
 	leadRepo: LeadRepository
 	emailVerifier: EmailVerifier
+	logger: Logger
 }
 
 export function makeCaptureLeadUseCase(deps: CaptureLeadDeps) {
@@ -25,7 +26,7 @@ export function makeCaptureLeadUseCase(deps: CaptureLeadDeps) {
 
 		// 3. Create lead
 		const lead = await deps.leadRepo.create(input)
-		logger.info({ leadId: lead.id, email: lead.email }, "Lead captured")
+		deps.logger.info({ leadId: lead.id, email: lead.email }, "Lead captured")
 
 		return lead
 	}

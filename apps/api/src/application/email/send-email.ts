@@ -4,20 +4,21 @@ import type { AIService } from "#/domain/ports/ai-service.ts"
 import type { EmailService } from "#/domain/ports/email-service.ts"
 import type { Lead } from "#/domain/lead/lead.ts"
 import type { BehaviorAnalysis } from "#/domain/behavior-analysis/behavior-analysis.ts"
-import { logger } from "#/infrastructure/observability/logger.ts"
+import type { Logger } from "#/domain/ports/logger.ts"
 
 interface EmailUseCaseDeps {
 	leadRepo: LeadRepository
 	sequenceRepo: EmailSequenceRepository
 	ai: AIService
 	emailService: EmailService
+	logger: Logger
 }
 
 /** Send the initial (1st) email to a lead */
 export function makeSendInitialEmailUseCase(deps: EmailUseCaseDeps) {
 	return async (lead: Lead, analysis: BehaviorAnalysis): Promise<void> => {
 		// 1. Generate 3-email sequence
-		logger.info({ leadId: lead.id }, "Generating email sequence")
+		deps.logger.info({ leadId: lead.id }, "Generating email sequence")
 		const generated = await deps.ai.generateEmailSequence(lead, analysis)
 
 		// 2. Save sequences to DB
@@ -37,7 +38,7 @@ export function makeSendInitialEmailUseCase(deps: EmailUseCaseDeps) {
 		if (!firstEmail) throw new Error("First email not found in sequence")
 
 		// 3. Convert to HTML
-		logger.info({ leadId: lead.id }, "Converting email to HTML")
+		deps.logger.info({ leadId: lead.id }, "Converting email to HTML")
 		const htmlContent = await deps.ai.convertToHtml(firstEmail.content)
 		await deps.sequenceRepo.updateHtml(firstEmail.id, htmlContent)
 
@@ -45,7 +46,7 @@ export function makeSendInitialEmailUseCase(deps: EmailUseCaseDeps) {
 		const subject = await deps.ai.pickSubjectLine(lead, firstEmail.subjectLines)
 
 		// 5. Send via Resend
-		logger.info({ leadId: lead.id, to: lead.email }, "Sending first email")
+		deps.logger.info({ leadId: lead.id, to: lead.email }, "Sending first email")
 		const result = await deps.emailService.send({
 			to: lead.email,
 			subject,
@@ -64,7 +65,7 @@ export function makeSendInitialEmailUseCase(deps: EmailUseCaseDeps) {
 			lastEmailSentAt: result.sentAt,
 		})
 
-		logger.info({ leadId: lead.id, messageId: result.messageId }, "First email sent")
+		deps.logger.info({ leadId: lead.id, messageId: result.messageId }, "First email sent")
 	}
 }
 
@@ -73,7 +74,7 @@ export function makeSendFollowupUseCase(deps: EmailUseCaseDeps) {
 	return async (lead: Lead): Promise<void> => {
 		const nextStage = (lead.stage + 1) as 1 | 2 | 3
 		if (nextStage > 3) {
-			logger.info({ leadId: lead.id }, "All 3 emails sent, marking completed")
+			deps.logger.info({ leadId: lead.id }, "All 3 emails sent, marking completed")
 			await deps.leadRepo.update(lead.id, { replyStatus: "completed" })
 			return
 		}
@@ -81,7 +82,7 @@ export function makeSendFollowupUseCase(deps: EmailUseCaseDeps) {
 		// 1. Get email template for next stage
 		const template = await deps.sequenceRepo.getByStage(lead.id, nextStage)
 		if (!template) {
-			logger.warn({ leadId: lead.id, nextStage }, "No email template found for stage")
+			deps.logger.warn({ leadId: lead.id, nextStage }, "No email template found for stage")
 			return
 		}
 
@@ -115,7 +116,7 @@ export function makeSendFollowupUseCase(deps: EmailUseCaseDeps) {
 			lastEmailSentAt: result.sentAt,
 		})
 
-		logger.info(
+		deps.logger.info(
 			{ leadId: lead.id, stage: nextStage, messageId: result.messageId },
 			"Follow-up email sent",
 		)

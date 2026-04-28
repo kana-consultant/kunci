@@ -5,6 +5,7 @@ import type { ScraperService } from "#/domain/ports/scraper-service.ts"
 import type { AIService } from "#/domain/ports/ai-service.ts"
 import type { EmailService } from "#/domain/ports/email-service.ts"
 import type { Cache } from "#/domain/ports/cache.ts"
+import type { Logger } from "#/domain/ports/logger.ts"
 
 import {
 	makeCaptureLeadUseCase,
@@ -32,13 +33,17 @@ export interface AppDependencies {
 		email: EmailService
 		cache: Cache
 	}
+	logger: Logger
 }
 
 export function buildUseCases(deps: AppDependencies) {
+	const { logger } = deps
+
 	// Lead use cases
 	const captureLead = makeCaptureLeadUseCase({
 		leadRepo: deps.repos.lead,
 		emailVerifier: deps.services.emailVerifier,
+		logger,
 	})
 	const listLeads = makeListLeadsUseCase({ leadRepo: deps.repos.lead })
 	const getLeadDetail = makeGetLeadDetailUseCase({ leadRepo: deps.repos.lead })
@@ -48,6 +53,7 @@ export function buildUseCases(deps: AppDependencies) {
 		leadRepo: deps.repos.lead,
 		scraper: deps.services.scraper,
 		ai: deps.services.ai,
+		logger,
 	})
 
 	// Email use cases
@@ -56,6 +62,7 @@ export function buildUseCases(deps: AppDependencies) {
 		sequenceRepo: deps.repos.sequence,
 		ai: deps.services.ai,
 		emailService: deps.services.email,
+		logger,
 	})
 
 	const sendFollowup = makeSendFollowupUseCase({
@@ -63,6 +70,7 @@ export function buildUseCases(deps: AppDependencies) {
 		sequenceRepo: deps.repos.sequence,
 		ai: deps.services.ai,
 		emailService: deps.services.email,
+		logger,
 	})
 
 	const handleReply = makeHandleReplyUseCase({
@@ -70,6 +78,7 @@ export function buildUseCases(deps: AppDependencies) {
 		sequenceRepo: deps.repos.sequence,
 		ai: deps.services.ai,
 		emailService: deps.services.email,
+		logger,
 	})
 
 	// Pipeline orchestrator
@@ -78,12 +87,14 @@ export function buildUseCases(deps: AppDependencies) {
 		researchCompany,
 		analyzeBehavior: deps.services.ai.analyzeBehavior,
 		sendInitialEmail,
+		logger,
 	})
 
 	// Scheduler
 	const processPendingFollowups = makeProcessPendingFollowupsUseCase({
 		leadRepo: deps.repos.lead,
 		sendFollowup,
+		logger,
 	})
 
 	return {

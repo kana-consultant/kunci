@@ -2,13 +2,14 @@ import type { LeadRepository } from "#/domain/lead/lead-repository.ts"
 import type { EmailSequenceRepository } from "#/domain/email-sequence/email-sequence-repository.ts"
 import type { AIService } from "#/domain/ports/ai-service.ts"
 import type { EmailService } from "#/domain/ports/email-service.ts"
-import { logger } from "#/infrastructure/observability/logger.ts"
+import type { Logger } from "#/domain/ports/logger.ts"
 
 export interface HandleReplyDependencies {
 	leadRepo: LeadRepository
 	sequenceRepo: EmailSequenceRepository
 	ai: AIService
 	emailService: EmailService
+	logger: Logger
 }
 
 export function makeHandleReplyUseCase(deps: HandleReplyDependencies) {
@@ -18,17 +19,17 @@ export function makeHandleReplyUseCase(deps: HandleReplyDependencies) {
 		textBody: string
 		messageId: string
 	}) {
-		logger.info({ email: payload.fromEmail }, "Handling inbound reply")
+		deps.logger.info({ email: payload.fromEmail }, "Handling inbound reply")
 
 		// 1. Find lead
 		const lead = await deps.leadRepo.findByEmail(payload.fromEmail)
 		if (!lead) {
-			logger.warn({ email: payload.fromEmail }, "Received reply from unknown lead")
+			deps.logger.warn({ email: payload.fromEmail }, "Received reply from unknown lead")
 			return { status: "ignored", reason: "unknown_lead" }
 		}
 
 		if (lead.replyStatus === "completed") {
-			logger.info({ leadId: lead.id }, "Lead is already completed, ignoring reply")
+			deps.logger.info({ leadId: lead.id }, "Lead is already completed, ignoring reply")
 			return { status: "ignored", reason: "lead_completed" }
 		}
 
@@ -41,7 +42,7 @@ export function makeHandleReplyUseCase(deps: HandleReplyDependencies) {
 		const nextEmailNumber = lead.stage === 1 ? 2 : lead.stage === 2 ? 3 : null
 
 		if (!nextEmailNumber) {
-			logger.info({ leadId: lead.id, stage: lead.stage }, "Lead replied but no next sequence available, human intervention needed")
+			deps.logger.info({ leadId: lead.id, stage: lead.stage }, "Lead replied but no next sequence available, human intervention needed")
 			// We can mark them as awaiting manual action
 			return { status: "success", action: "manual_intervention_required" }
 		}
@@ -49,13 +50,13 @@ export function makeHandleReplyUseCase(deps: HandleReplyDependencies) {
 		// Get the next sequence template
 		const sequence = await deps.sequenceRepo.getByStage(lead.id, nextEmailNumber as 1 | 2 | 3)
 		if (!sequence) {
-			logger.error({ leadId: lead.id, emailNumber: nextEmailNumber }, "Next sequence not found")
+			deps.logger.error({ leadId: lead.id, emailNumber: nextEmailNumber }, "Next sequence not found")
 			return { status: "failed", reason: "sequence_not_found" }
 		}
 
 		// 3. Personalize the reply using AI
 		try {
-			logger.info({ leadId: lead.id }, "Personalizing reply via AI")
+			deps.logger.info({ leadId: lead.id }, "Personalizing reply via AI")
 			const personalized = await deps.ai.personalizeReply(lead, payload.textBody, {
 				content: sequence.content,
 				cta: sequence.cta,
@@ -88,10 +89,10 @@ export function makeHandleReplyUseCase(deps: HandleReplyDependencies) {
 			// Update sequence as sent
 			await deps.sequenceRepo.markSent(sequence.id)
 
-			logger.info({ leadId: lead.id }, "Successfully processed reply and sent personalized follow-up")
+			deps.logger.info({ leadId: lead.id }, "Successfully processed reply and sent personalized follow-up")
 			return { status: "success", action: "auto_replied" }
 		} catch (error) {
-			logger.error({ error, leadId: lead.id }, "Failed to process reply")
+			deps.logger.error({ error, leadId: lead.id }, "Failed to process reply")
 			// Update status to pending so it can be retried or manually handled
 			await deps.leadRepo.update(lead.id, { replyStatus: "pending" })
 			throw error
