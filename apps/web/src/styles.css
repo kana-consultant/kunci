@@ -1,0 +1,12 @@
+@import "tailwindcss";
+@import "@kana-consultant/ui-kit/styles";
+
+@theme {
+  --font-sans: "Inter", system-ui, sans-serif;
+}
+
+@layer base {
+  body {
+    @apply bg-slate-50 text-slate-900 antialiased;
+  }
+}

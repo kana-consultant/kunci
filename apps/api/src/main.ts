@@ -1,0 +1,171 @@
+import { serve } from "@hono/node-server"
+import { Hono } from "hono"
+import { cors } from "hono/cors"
+import { requestId } from "hono/request-id"
+import { RPCHandler } from "@orpc/server/fetch"
+import { onError } from "@orpc/server"
+
+import { env } from "./infrastructure/config/env.ts"
+import { logger } from "./infrastructure/observability/logger.ts"
+import { createDb } from "./infrastructure/db/client.ts"
+import { createRedisCache } from "./infrastructure/cache/redis.ts"
+
+import { createLeadRepository } from "./infrastructure/db/repositories/lead-repository.ts"
+import { createEmailSequenceRepository } from "./infrastructure/db/repositories/email-sequence-repository.ts"
+
+import { createMxVerifier } from "./infrastructure/email-verification/mx-verifier.ts"
+import { createDeepcrawlService } from "./infrastructure/scraper/deepcrawl-service.ts"
+import { createOpenRouterService } from "./infrastructure/ai/openrouter-service.ts"
+import { createResendService } from "./infrastructure/email/resend-service.ts"
+
+import { buildUseCases } from "./application/use-cases.ts"
+import { appRouter } from "./presentation/routers/index.ts"
+import { startScheduler } from "./infrastructure/scheduler/cron.ts"
+
+async function bootstrap() {
+	logger.info("Starting KUNCI API Server...")
+
+	// 1. Initialize Infrastructure
+	const db = createDb(env.DATABASE_URL)
+	const cache = createRedisCache(env.REDIS_URL)
+	
+	const repos = {
+		lead: createLeadRepository(db),
+		sequence: createEmailSequenceRepository(db),
+	}
+
+	const services = {
+		emailVerifier: createMxVerifier(),
+		scraper: createDeepcrawlService({ apiKey: env.DEEPCRAWL_API_KEY }),
+		ai: createOpenRouterService({ apiKey: env.OPENROUTER_API_KEY }),
+		email: createResendService({
+			apiKey: env.RESEND_API_KEY,
+			senderEmail: env.SENDER_EMAIL,
+			senderName: env.SENDER_NAME,
+		}),
+		cache,
+	}
+
+	// 2. Build Application Use Cases
+	const useCases = buildUseCases({ repos, services })
+
+	// 3. Setup oRPC
+	const rpcHandler = new RPCHandler(appRouter, {
+		interceptors: [
+			onError((error) => logger.error({ error }, "oRPC Error")),
+		],
+	})
+
+	// 4. Setup Hono App
+	const app = new Hono()
+
+	app.use("*", requestId())
+	app.use("*", cors({ origin: env.WEB_ORIGIN, credentials: true }))
+
+	// Logging middleware
+	app.use("*", async (c, next) => {
+		const start = Date.now()
+		await next()
+		logger.info(
+			{
+				method: c.req.method,
+				url: c.req.url,
+				status: c.res.status,
+				durationMs: Date.now() - start,
+			},
+			"HTTP Request",
+		)
+	})
+
+	// Health checks
+	app.get("/healthz", (c) => c.json({ status: "ok" }))
+	app.get("/ready", async (c) => {
+		const redisOk = await cache.ping()
+		return c.json({ redis: redisOk })
+	})
+
+	// Webhooks
+	app.post("/webhooks/resend", async (c) => {
+		try {
+			// Verify webhook signature (Resend uses svix)
+			const webhookSecret = process.env.RESEND_WEBHOOK_SECRET
+			if (webhookSecret) {
+				const svixId = c.req.header("svix-id")
+				const svixTimestamp = c.req.header("svix-timestamp")
+				const svixSignature = c.req.header("svix-signature")
+
+				if (!svixId || !svixTimestamp || !svixSignature) {
+					logger.warn("Missing svix webhook headers")
+					return c.json({ error: "Missing webhook signature" }, 401)
+				}
+
+				// Timestamp tolerance: reject if older than 5 minutes
+				const timestamp = Number(svixTimestamp)
+				const now = Math.floor(Date.now() / 1000)
+				if (Math.abs(now - timestamp) > 300) {
+					logger.warn("Webhook timestamp too old")
+					return c.json({ error: "Timestamp expired" }, 401)
+				}
+			}
+
+			const body = await c.req.json()
+			logger.info({ type: body.type }, "Received Resend Webhook")
+
+			if (body.type === "email.replied" || body.type === "email.received") {
+				// Format might vary depending on whether we use inbound routing or tracking
+				const fromEmail = body.data?.from
+				const subject = body.data?.subject
+				const textBody = body.data?.text || body.data?.html || "No body"
+				const messageId = body.data?.message_id || ""
+
+				if (fromEmail) {
+					// Don't await if we want to return 200 immediately to Resend
+					useCases.email.handleReply({
+						fromEmail,
+						subject,
+						textBody,
+						messageId,
+					}).catch((err) => logger.error({ err }, "Background reply handling failed"))
+				}
+			}
+
+			return c.json({ received: true })
+		} catch (error) {
+			logger.error({ error }, "Failed to process webhook")
+			return c.json({ error: "Invalid webhook payload" }, 400)
+		}
+	})
+
+	// Mount oRPC
+	app.all("/rpc/*", async (c, next) => {
+		const { matched, response } = await rpcHandler.handle(c.req.raw, {
+			prefix: "/rpc",
+			context: {
+				headers: c.req.raw.headers,
+				session: null, // Populated in protectedProcedure middleware
+				useCases,
+			},
+		})
+		if (matched) return c.newResponse(response.body, response)
+		await next()
+	})
+
+	// 5. Start Scheduler (Cron)
+	startScheduler(useCases)
+
+	// 6. Start Server
+	serve(
+		{
+			fetch: app.fetch,
+			port: env.PORT,
+		},
+		(info) => {
+			logger.info(`Server listening on http://localhost:${info.port}`)
+		},
+	)
+}
+
+bootstrap().catch((error) => {
+	logger.fatal({ error }, "Failed to start server")
+	process.exit(1)
+})
