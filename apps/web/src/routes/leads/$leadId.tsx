@@ -1,4 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router"
+import ReactMarkdown from "react-markdown"
+import remarkBreaks from "remark-breaks"
 import { useQuery } from "@tanstack/react-query"
 import { orpc } from "~/libs/orpc/client"
 import {
@@ -88,7 +90,7 @@ function LeadDetailPage() {
 						<h1 className="text-3xl font-bold">
 							{lead.fullName as string}
 						</h1>
-						<p className="text-lg text-[var(--color-muted)] mt-1 flex items-center gap-2">
+						<p className="text-lg text-[var(--color-muted-foreground)] mt-1 flex items-center gap-2">
 							{lead.companyName as string}
 							{lead.companyWebsite && (
 								<a
@@ -122,7 +124,7 @@ function LeadDetailPage() {
 						</CardHeader>
 						<CardContent className="space-y-3">
 							<div className="flex items-center gap-3 text-sm">
-								<Mail className="w-4 h-4 text-[var(--color-muted)] shrink-0" />
+								<Mail className="w-4 h-4 text-[var(--color-muted-foreground)] shrink-0" />
 								<a
 									href={`mailto:${lead.email}`}
 									className="text-[var(--color-primary)] break-all"
@@ -130,7 +132,7 @@ function LeadDetailPage() {
 									{lead.email as string}
 								</a>
 							</div>
-							<div className="flex items-center gap-3 text-sm text-[var(--color-muted)]">
+							<div className="flex items-center gap-3 text-sm text-[var(--color-muted-foreground)]">
 								<Calendar className="w-4 h-4 shrink-0" />
 								Captured on{" "}
 								{new Date(lead.createdAt as string).toLocaleDateString()}
@@ -161,8 +163,10 @@ function LeadDetailPage() {
 								</CardTitle>
 							</CardHeader>
 							<CardContent>
-								<div className="prose prose-sm max-w-none text-sm leading-relaxed">
-									{lead.companyResearch as string}
+								<div className="prose prose-sm max-w-none text-sm leading-relaxed prose-invert">
+									<ReactMarkdown remarkPlugins={[remarkBreaks]}>
+										{lead.companyResearch as string}
+									</ReactMarkdown>
 								</div>
 							</CardContent>
 						</Card>
@@ -174,7 +178,7 @@ function LeadDetailPage() {
 					<Card className="h-full flex flex-col">
 						<CardHeader className="flex flex-row items-center justify-between">
 							<CardTitle>Email Sequence</CardTitle>
-							<span className="text-xs font-medium text-[var(--color-muted)] uppercase tracking-wider">
+							<span className="text-xs font-medium text-[var(--color-muted-foreground)] uppercase tracking-wider">
 								Timeline
 							</span>
 						</CardHeader>
@@ -182,7 +186,7 @@ function LeadDetailPage() {
 						<Separator />
 
 						<CardContent className="flex-1">
-							<div className="text-center py-12 text-[var(--color-muted)]">
+							<div className="text-center py-12 text-[var(--color-muted-foreground)]">
 								<Mail className="w-12 h-12 mx-auto mb-3 opacity-30" />
 								<p>
 									The AI is currently crafting the sequence or no emails have
