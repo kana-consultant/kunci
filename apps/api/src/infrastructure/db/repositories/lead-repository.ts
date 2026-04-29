@@ -1,12 +1,12 @@
-import { eq, and, lte, ne, sql } from "drizzle-orm"
-import type { Database } from "#/infrastructure/db/client.ts"
+import { and, eq, lte, ne, sql } from "drizzle-orm"
+import type { CreateLeadInput, Lead } from "#/domain/lead/lead.ts"
 import type {
 	LeadRepository,
 	ListLeadsParams,
 	PendingFollowupsParams,
 	UpdateLeadData,
 } from "#/domain/lead/lead-repository.ts"
-import type { CreateLeadInput, Lead } from "#/domain/lead/lead.ts"
+import type { Database } from "#/infrastructure/db/client.ts"
 import { leads } from "#/infrastructure/db/schema.ts"
 
 export function createLeadRepository(db: Database): LeadRepository {
@@ -86,10 +86,16 @@ export function createLeadRepository(db: Database): LeadRepository {
 				.set({
 					...(data.stage !== undefined ? { stage: data.stage } : {}),
 					...(data.replyStatus ? { replyStatus: data.replyStatus } : {}),
-					...(data.companyResearch ? { companyResearch: data.companyResearch } : {}),
-					...(data.latestMessageId ? { latestMessageId: data.latestMessageId } : {}),
+					...(data.companyResearch
+						? { companyResearch: data.companyResearch }
+						: {}),
+					...(data.latestMessageId
+						? { latestMessageId: data.latestMessageId }
+						: {}),
 					...(data.messageIds ? { messageIds: data.messageIds } : {}),
-					...(data.lastEmailSentAt ? { lastEmailSentAt: data.lastEmailSentAt } : {}),
+					...(data.lastEmailSentAt
+						? { lastEmailSentAt: data.lastEmailSentAt }
+						: {}),
 					updatedAt: new Date(),
 				})
 				.where(eq(leads.id, id))
@@ -98,7 +104,9 @@ export function createLeadRepository(db: Database): LeadRepository {
 			return mapRowToLead(row)
 		},
 
-		async findPendingFollowups(params: PendingFollowupsParams): Promise<Lead[]> {
+		async findPendingFollowups(
+			params: PendingFollowupsParams,
+		): Promise<Lead[]> {
 			const rows = await db
 				.select()
 				.from(leads)
@@ -116,12 +124,27 @@ export function createLeadRepository(db: Database): LeadRepository {
 
 		async getStats() {
 			const [total, sent, replied, bounced] = await Promise.all([
-				db.select({ count: sql<number>`count(*)::int` }).from(leads).then(r => r[0]?.count ?? 0),
-				db.select({ count: sql<number>`count(*)::int` }).from(leads).where(ne(leads.stage, 0)).then(r => r[0]?.count ?? 0),
-				db.select({ count: sql<number>`count(*)::int` }).from(leads).where(eq(leads.replyStatus, "replied")).then(r => r[0]?.count ?? 0),
-				db.select({ count: sql<number>`count(*)::int` }).from(leads).where(eq(leads.replyStatus, "bounced")).then(r => r[0]?.count ?? 0),
+				db
+					.select({ count: sql<number>`count(*)::int` })
+					.from(leads)
+					.then((r) => r[0]?.count ?? 0),
+				db
+					.select({ count: sql<number>`count(*)::int` })
+					.from(leads)
+					.where(ne(leads.stage, 0))
+					.then((r) => r[0]?.count ?? 0),
+				db
+					.select({ count: sql<number>`count(*)::int` })
+					.from(leads)
+					.where(eq(leads.replyStatus, "replied"))
+					.then((r) => r[0]?.count ?? 0),
+				db
+					.select({ count: sql<number>`count(*)::int` })
+					.from(leads)
+					.where(eq(leads.replyStatus, "bounced"))
+					.then((r) => r[0]?.count ?? 0),
 			])
-			
+
 			return { total, sent, replied, bounced }
 		},
 	}

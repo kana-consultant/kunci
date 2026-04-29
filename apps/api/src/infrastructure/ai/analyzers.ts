@@ -1,6 +1,9 @@
-import type { CompanyDataInput, WebsiteAnalysis } from "#/domain/ports/ai-service.ts"
 import type { BehaviorAnalysis } from "#/domain/behavior-analysis/behavior-analysis.ts"
 import type { Lead } from "#/domain/lead/lead.ts"
+import type {
+	CompanyDataInput,
+	WebsiteAnalysis,
+} from "#/domain/ports/ai-service.ts"
 import { callOpenRouter } from "./client.ts"
 import {
 	BEHAVIOR_ANALYZER_PROMPT,
@@ -13,7 +16,9 @@ export async function analyzeBehavior(
 	lead: Lead,
 	companyProfile: string,
 ): Promise<BehaviorAnalysis> {
-	const result = await callOpenRouter<Omit<BehaviorAnalysis, "id" | "leadId" | "createdAt">>(apiKey, {
+	const result = await callOpenRouter<
+		Omit<BehaviorAnalysis, "id" | "leadId" | "createdAt">
+	>(apiKey, {
 		model: "openai/gpt-4o",
 		messages: [
 			{ role: "system", content: BEHAVIOR_ANALYZER_PROMPT },
@@ -55,7 +60,10 @@ export async function analyzeBehavior(
 	}
 }
 
-export async function analyzeWebsite(apiKey: string, websiteMarkdown: string): Promise<WebsiteAnalysis> {
+export async function analyzeWebsite(
+	apiKey: string,
+	websiteMarkdown: string,
+): Promise<WebsiteAnalysis> {
 	return callOpenRouter<WebsiteAnalysis>(apiKey, {
 		model: "openai/o3-mini",
 		messages: [
@@ -75,14 +83,25 @@ export async function analyzeWebsite(apiKey: string, websiteMarkdown: string): P
 					targetAudience: { type: "string" },
 					callsToAction: { type: "string" },
 				},
-				required: ["brandName", "tagline", "industryCategory", "keyOfferings", "valueProposition", "targetAudience", "callsToAction"],
+				required: [
+					"brandName",
+					"tagline",
+					"industryCategory",
+					"keyOfferings",
+					"valueProposition",
+					"targetAudience",
+					"callsToAction",
+				],
 				additionalProperties: false,
 			},
 		},
 	})
 }
 
-export async function buildCompanyProfile(apiKey: string, data: CompanyDataInput): Promise<string> {
+export async function buildCompanyProfile(
+	apiKey: string,
+	data: CompanyDataInput,
+): Promise<string> {
 	return callOpenRouter<string>(apiKey, {
 		model: "openai/gpt-4.1-mini",
 		messages: [

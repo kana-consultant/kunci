@@ -1,18 +1,18 @@
-import { createFileRoute } from "@tanstack/react-router"
-import { useQuery } from "@tanstack/react-query"
-import { orpc } from "~/libs/orpc/client"
 import {
-	StatCard,
+	Badge,
 	Card,
+	CardContent,
 	CardHeader,
 	CardTitle,
-	CardContent,
 	Skeleton,
-	Badge,
+	StatCard,
 } from "@kana-consultant/ui-kit"
-import { Users, Mail, MessageCircle, TrendingUp } from "lucide-react"
+import { useQuery } from "@tanstack/react-query"
+import { createFileRoute } from "@tanstack/react-router"
+import { Mail, MessageCircle, TrendingUp, Users } from "lucide-react"
+import { orpc } from "~/libs/orpc/client"
 
-export const Route = createFileRoute("/_authenticated/")(	{
+export const Route = createFileRoute("/_authenticated/")({
 	component: DashboardPage,
 })
 
@@ -94,7 +94,9 @@ function DashboardPage() {
 									{i + 1}. {step}
 								</Badge>
 								{i < 5 && (
-									<span className="text-[var(--color-muted-foreground)]">→</span>
+									<span className="text-[var(--color-muted-foreground)]">
+										→
+									</span>
 								)}
 							</div>
 						))}

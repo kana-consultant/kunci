@@ -1,20 +1,20 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router"
-import { useMutation } from "@tanstack/react-query"
-import { orpc } from "~/libs/orpc/client"
 import {
 	Button,
 	Card,
+	CardContent,
+	CardDescription,
+	CardFooter,
 	CardHeader,
 	CardTitle,
-	CardDescription,
-	CardContent,
-	CardFooter,
 	Input,
 	Label,
 	Textarea,
 } from "@kana-consultant/ui-kit"
-import { useRef } from "react"
+import { useMutation } from "@tanstack/react-query"
+import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { Sparkles } from "lucide-react"
+import { useRef } from "react"
+import { orpc } from "~/libs/orpc/client"
 
 export const Route = createFileRoute("/_authenticated/capture")({
 	component: CapturePage,
@@ -24,7 +24,11 @@ function CapturePage() {
 	const navigate = useNavigate()
 	const formRef = useRef<HTMLFormElement>(null)
 
-	const { mutate: captureLead, isPending, error } = useMutation(
+	const {
+		mutate: captureLead,
+		isPending,
+		error,
+	} = useMutation(
 		orpc.lead.capture.mutationOptions({
 			onSuccess: () => {
 				navigate({ to: "/leads" })

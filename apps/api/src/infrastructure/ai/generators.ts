@@ -1,10 +1,10 @@
+import type { BehaviorAnalysis } from "#/domain/behavior-analysis/behavior-analysis.ts"
+import type { Lead } from "#/domain/lead/lead.ts"
 import type {
 	EmailTemplateInput,
 	GeneratedSequence,
 	PersonalizedReply,
 } from "#/domain/ports/ai-service.ts"
-import type { BehaviorAnalysis } from "#/domain/behavior-analysis/behavior-analysis.ts"
-import type { Lead } from "#/domain/lead/lead.ts"
 import { callOpenRouter } from "./client.ts"
 import {
 	EMAIL_HTML_CONVERTER_PROMPT,
@@ -45,7 +45,15 @@ export async function generateEmailSequence(
 								timing: { type: "string" },
 								psychologicalTrigger: { type: "string" },
 							},
-							required: ["emailNumber", "purpose", "subjectLines", "content", "callToAction", "timing", "psychologicalTrigger"],
+							required: [
+								"emailNumber",
+								"purpose",
+								"subjectLines",
+								"content",
+								"callToAction",
+								"timing",
+								"psychologicalTrigger",
+							],
 							additionalProperties: false,
 						},
 					},
@@ -57,7 +65,10 @@ export async function generateEmailSequence(
 	})
 }
 
-export async function convertToHtml(apiKey: string, content: string): Promise<string> {
+export async function convertToHtml(
+	apiKey: string,
+	content: string,
+): Promise<string> {
 	return callOpenRouter<string>(apiKey, {
 		model: "openai/gpt-4o-mini",
 		messages: [
@@ -99,7 +110,11 @@ export async function personalizeReply(
 	})
 }
 
-export async function pickSubjectLine(apiKey: string, lead: Lead, variations: string[]): Promise<string> {
+export async function pickSubjectLine(
+	apiKey: string,
+	lead: Lead,
+	variations: string[],
+): Promise<string> {
 	const result = await callOpenRouter<{ subject_line: string }>(apiKey, {
 		model: "openai/gpt-4o-mini",
 		messages: [

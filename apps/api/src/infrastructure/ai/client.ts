@@ -9,7 +9,11 @@ export interface CallParams {
 
 interface OpenRouterResponse {
 	choices: Array<{ message: { content: string } }>
-	usage?: { prompt_tokens: number; completion_tokens: number; total_tokens: number }
+	usage?: {
+		prompt_tokens: number
+		completion_tokens: number
+		total_tokens: number
+	}
 }
 
 function sleep(ms: number): Promise<void> {
@@ -56,7 +60,9 @@ export async function callOpenRouter<T>(
 
 			if (response.status === 429) {
 				const retryAfter = response.headers.get("retry-after")
-				const wait = retryAfter ? Number(retryAfter) * 1000 : 2 ** attempt * 1000
+				const wait = retryAfter
+					? Number(retryAfter) * 1000
+					: 2 ** attempt * 1000
 				logger.warn({ attempt, wait }, "OpenRouter rate limited, retrying")
 				await sleep(wait)
 				continue
@@ -85,7 +91,10 @@ export async function callOpenRouter<T>(
 			return content as T
 		} catch (error) {
 			lastError = error instanceof Error ? error : new Error(String(error))
-			logger.warn({ attempt, error: lastError.message }, "OpenRouter call failed")
+			logger.warn(
+				{ attempt, error: lastError.message },
+				"OpenRouter call failed",
+			)
 			if (attempt < maxRetries - 1) {
 				await sleep(2 ** attempt * 1000)
 			}

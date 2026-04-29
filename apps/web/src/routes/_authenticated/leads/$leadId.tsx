@@ -1,39 +1,42 @@
-import { createFileRoute, Link } from "@tanstack/react-router"
-import ReactMarkdown from "react-markdown"
-import remarkBreaks from "remark-breaks"
-import { useQuery } from "@tanstack/react-query"
-import { orpc } from "~/libs/orpc/client"
 import {
-	Card,
-	CardHeader,
-	CardTitle,
-	CardContent,
 	Badge,
 	Button,
-	Skeleton,
+	Card,
+	CardContent,
+	CardHeader,
+	CardTitle,
 	Separator,
+	Skeleton,
 } from "@kana-consultant/ui-kit"
+import { useQuery } from "@tanstack/react-query"
+import { createFileRoute, Link } from "@tanstack/react-router"
 import {
 	ArrowLeft,
-	Mail,
-	ExternalLink,
+	Brain,
 	Calendar,
 	CheckCircle2,
-	XCircle,
-	Loader2,
-	Globe,
-	Brain,
+	Clock,
+	ExternalLink,
 	FileText,
+	Globe,
+	Loader2,
+	Mail,
 	Send,
 	UserCheck,
-	Clock,
+	XCircle,
 } from "lucide-react"
+import ReactMarkdown from "react-markdown"
+import remarkBreaks from "remark-breaks"
+import { orpc } from "~/libs/orpc/client"
 
 export const Route = createFileRoute("/_authenticated/leads/$leadId")({
 	component: LeadDetailPage,
 })
 
-const statusTones: Record<string, "neutral" | "primary" | "success" | "warning" | "danger" | "info"> = {
+const statusTones: Record<
+	string,
+	"neutral" | "primary" | "success" | "warning" | "danger" | "info"
+> = {
 	pending: "warning",
 	researching: "info",
 	ready: "success",
@@ -62,9 +65,11 @@ function formatDuration(ms: number | null): string {
 }
 
 function PipelineStepsTimeline({ leadId }: { leadId: string }) {
-	const { data: steps, isPending, error } = useQuery(
-		orpc.lead.getPipelineSteps.queryOptions({ input: { leadId } }),
-	)
+	const {
+		data: steps,
+		isPending,
+		error,
+	} = useQuery(orpc.lead.getPipelineSteps.queryOptions({ input: { leadId } }))
 
 	const pipelineSteps = (steps ?? []) as any[]
 
@@ -91,7 +96,9 @@ function PipelineStepsTimeline({ leadId }: { leadId: string }) {
 			<div className="text-center py-12 text-[var(--color-muted-foreground)]">
 				<Clock className="w-10 h-10 mx-auto mb-3 opacity-30" />
 				<p className="text-sm">No pipeline steps recorded yet.</p>
-				<p className="text-xs mt-1 opacity-60">Steps will appear here when the pipeline runs.</p>
+				<p className="text-xs mt-1 opacity-60">
+					Steps will appear here when the pipeline runs.
+				</p>
 			</div>
 		)
 	}
@@ -106,7 +113,10 @@ function PipelineStepsTimeline({ leadId }: { leadId: string }) {
 
 			<div className="space-y-1">
 				{pipelineSteps.map((step: any, idx: number) => {
-					const meta = stepMeta[step.step] ?? { icon: CheckCircle2, color: "var(--color-muted-foreground)" }
+					const meta = stepMeta[step.step] ?? {
+						icon: CheckCircle2,
+						color: "var(--color-muted-foreground)",
+					}
 					const StepIcon = meta.icon
 					const isFailed = step.status === "failed"
 					const isRunning = step.status === "running"
@@ -127,7 +137,10 @@ function PipelineStepsTimeline({ leadId }: { leadId: string }) {
 					const detail = step.detail as Record<string, unknown> | null
 
 					return (
-						<div key={step.id ?? idx} className="relative flex items-start gap-3 px-2 py-2.5 group">
+						<div
+							key={step.id ?? idx}
+							className="relative flex items-start gap-3 px-2 py-2.5 group"
+						>
 							{/* Timeline dot */}
 							<div
 								className="relative z-10 flex items-center justify-center w-[22px] h-[22px] rounded-full shrink-0 mt-0.5"
@@ -146,7 +159,10 @@ function PipelineStepsTimeline({ leadId }: { leadId: string }) {
 							<div className="flex-1 min-w-0">
 								<div className="flex items-center justify-between gap-2">
 									<div className="flex items-center gap-2 min-w-0">
-										<StepIcon className="w-3.5 h-3.5 shrink-0" style={{ color: meta.color }} />
+										<StepIcon
+											className="w-3.5 h-3.5 shrink-0"
+											style={{ color: meta.color }}
+										/>
 										<span className="text-sm font-medium truncate">
 											{step.label}
 										</span>
@@ -158,7 +174,9 @@ function PipelineStepsTimeline({ leadId }: { leadId: string }) {
 											</span>
 										)}
 										<Badge
-											tone={isFailed ? "danger" : isRunning ? "warning" : "success"}
+											tone={
+												isFailed ? "danger" : isRunning ? "warning" : "success"
+											}
 											className="text-[10px] px-1.5 py-0"
 										>
 											{step.status}
@@ -170,27 +188,42 @@ function PipelineStepsTimeline({ leadId }: { leadId: string }) {
 								{detail && (
 									<div className="mt-1 space-y-0.5">
 										{detail.error && (
-											<p className="text-xs text-[var(--color-danger)] truncate" title={detail.error as string}>
+											<p
+												className="text-xs text-[var(--color-danger)] truncate"
+												title={detail.error as string}
+											>
 												Error: {detail.error as string}
 											</p>
 										)}
 										{detail.provider && (
 											<p className="text-xs text-[var(--color-muted-foreground)]">
-												Provider: <span className="font-medium">{detail.provider as string}</span>
+												Provider:{" "}
+												<span className="font-medium">
+													{detail.provider as string}
+												</span>
 												{detail.model && (
 													<>
-														{" · "}Model: <span className="font-mono">{detail.model as string}</span>
+														{" · "}Model:{" "}
+														<span className="font-mono">
+															{detail.model as string}
+														</span>
 													</>
 												)}
 											</p>
 										)}
 										{detail.apiUrl && (
-											<p className="text-xs text-[var(--color-muted-foreground)] font-mono truncate opacity-60" title={detail.apiUrl as string}>
+											<p
+												className="text-xs text-[var(--color-muted-foreground)] font-mono truncate opacity-60"
+												title={detail.apiUrl as string}
+											>
 												→ {detail.apiUrl as string}
 											</p>
 										)}
 										{detail.url && !detail.apiUrl && (
-											<p className="text-xs text-[var(--color-muted-foreground)] font-mono truncate opacity-60" title={detail.url as string}>
+											<p
+												className="text-xs text-[var(--color-muted-foreground)] font-mono truncate opacity-60"
+												title={detail.url as string}
+											>
 												→ {detail.url as string}
 											</p>
 										)}
@@ -240,7 +273,10 @@ function LeadDetailPage() {
 					</CardContent>
 				</Card>
 				<Link to="/leads">
-					<Button variant="ghost" leadingIcon={<ArrowLeft className="w-4 h-4" />}>
+					<Button
+						variant="ghost"
+						leadingIcon={<ArrowLeft className="w-4 h-4" />}
+					>
 						Back to pipeline
 					</Button>
 				</Link>
@@ -266,9 +302,7 @@ function LeadDetailPage() {
 				</Link>
 				<div className="flex items-start justify-between">
 					<div>
-						<h1 className="text-3xl font-bold">
-							{lead.fullName as string}
-						</h1>
+						<h1 className="text-3xl font-bold">{lead.fullName as string}</h1>
 						<p className="text-lg text-[var(--color-muted-foreground)] mt-1 flex items-center gap-2">
 							{lead.companyName as string}
 							{lead.companyWebsite && (

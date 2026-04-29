@@ -27,7 +27,11 @@ export interface PipelineTracker {
 	completeStep(stepId: string, detail?: Record<string, unknown>): Promise<void>
 
 	/** Mark a step as failed, recording error info */
-	failStep(stepId: string, error: string, detail?: Record<string, unknown>): Promise<void>
+	failStep(
+		stepId: string,
+		error: string,
+		detail?: Record<string, unknown>,
+	): Promise<void>
 
 	/** Get all steps for a lead, ordered by startedAt ascending */
 	getStepsForLead(leadId: string): Promise<PipelineStep[]>

@@ -1,14 +1,16 @@
-import type { Lead } from "#/domain/lead/lead.ts"
+import type { CompanyResearchResult } from "#/application/research/research-company.ts"
 import type { BehaviorAnalysis } from "#/domain/behavior-analysis/behavior-analysis.ts"
+import type { CreateLeadInput, Lead } from "#/domain/lead/lead.ts"
 import type { Logger } from "#/domain/ports/logger.ts"
 import type { PipelineTracker } from "#/domain/ports/pipeline-tracker.ts"
-import type { CreateLeadInput } from "#/domain/lead/lead.ts"
-import type { CompanyResearchResult } from "#/application/research/research-company.ts"
 
 interface PipelineDeps {
 	captureLead: (input: CreateLeadInput) => Promise<Lead>
 	researchCompany: (lead: Lead) => Promise<CompanyResearchResult>
-	analyzeBehavior: (lead: Lead, companyProfile: string) => Promise<BehaviorAnalysis>
+	analyzeBehavior: (
+		lead: Lead,
+		companyProfile: string,
+	) => Promise<BehaviorAnalysis>
 	sendInitialEmail: (lead: Lead, analysis: BehaviorAnalysis) => Promise<void>
 	tracker: PipelineTracker
 	logger: Logger
@@ -81,7 +83,11 @@ export function makeRunOutboundPipelineUseCase(deps: PipelineDeps) {
 				lead.id,
 				"analyze_website",
 				"Calling AI Provider: https://openrouter.ai — Website Analysis",
-				{ provider: "OpenRouter", model: "openai/o3-mini", apiUrl: "https://openrouter.ai/api/v1/chat/completions" },
+				{
+					provider: "OpenRouter",
+					model: "openai/o3-mini",
+					apiUrl: "https://openrouter.ai/api/v1/chat/completions",
+				},
 			)
 			await deps.tracker.completeStep(aiAnalyzeStepId, {
 				brandName: research.websiteAnalysis.brandName,
@@ -93,7 +99,11 @@ export function makeRunOutboundPipelineUseCase(deps: PipelineDeps) {
 				lead.id,
 				"build_profile",
 				"Calling AI Provider: https://openrouter.ai — Company Profiler",
-				{ provider: "OpenRouter", model: "openai/gpt-4.1-mini", apiUrl: "https://openrouter.ai/api/v1/chat/completions" },
+				{
+					provider: "OpenRouter",
+					model: "openai/gpt-4.1-mini",
+					apiUrl: "https://openrouter.ai/api/v1/chat/completions",
+				},
 			)
 			await deps.tracker.completeStep(profileStepId, {
 				profileLength: research.companyProfile.length,
@@ -104,7 +114,11 @@ export function makeRunOutboundPipelineUseCase(deps: PipelineDeps) {
 				lead.id,
 				"analyze_behavior",
 				"Calling AI Provider: https://openrouter.ai — Behavior Analysis",
-				{ provider: "OpenRouter", model: "openai/gpt-4o", apiUrl: "https://openrouter.ai/api/v1/chat/completions" },
+				{
+					provider: "OpenRouter",
+					model: "openai/gpt-4o",
+					apiUrl: "https://openrouter.ai/api/v1/chat/completions",
+				},
 			)
 
 			let analysis: BehaviorAnalysis

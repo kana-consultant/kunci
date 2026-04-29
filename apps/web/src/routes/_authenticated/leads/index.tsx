@@ -1,27 +1,33 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router"
-import { useQuery } from "@tanstack/react-query"
-import { orpc } from "~/libs/orpc/client"
 import {
+	Badge,
 	Button,
 	Card,
 	CardContent,
-	Badge,
 	Skeleton,
 } from "@kana-consultant/ui-kit"
+import { useQuery } from "@tanstack/react-query"
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router"
 import { UserPlus } from "lucide-react"
+import { orpc } from "~/libs/orpc/client"
 
 export const Route = createFileRoute("/_authenticated/leads/")({
 	component: LeadsPage,
 })
 
-const stageLabels: Record<number, { text: string; tone: "neutral" | "primary" | "accent" | "info" }> = {
+const stageLabels: Record<
+	number,
+	{ text: string; tone: "neutral" | "primary" | "accent" | "info" }
+> = {
 	0: { text: "Captured", tone: "neutral" },
 	1: { text: "1st Email Sent", tone: "primary" },
 	2: { text: "Follow-up 1", tone: "info" },
 	3: { text: "Follow-up 2", tone: "accent" },
 }
 
-const statusTones: Record<string, "neutral" | "primary" | "accent" | "success" | "warning" | "danger" | "info"> = {
+const statusTones: Record<
+	string,
+	"neutral" | "primary" | "accent" | "success" | "warning" | "danger" | "info"
+> = {
 	pending: "warning",
 	researching: "info",
 	ready: "success",
@@ -118,9 +124,10 @@ function LeadsPage() {
 								</thead>
 								<tbody className="divide-y divide-[var(--color-border)]">
 									{leads.map((lead) => {
-										const stage =
-											stageLabels[lead.stage as number] ??
-											({ text: `Stage ${lead.stage}`, tone: "neutral" as const })
+										const stage = stageLabels[lead.stage as number] ?? {
+											text: `Stage ${lead.stage}`,
+											tone: "neutral" as const,
+										}
 										const statusTone =
 											statusTones[lead.replyStatus as string] ?? "neutral"
 										return (

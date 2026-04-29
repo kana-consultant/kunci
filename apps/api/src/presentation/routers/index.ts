@@ -1,6 +1,6 @@
 import { os } from "@orpc/server"
-import { leadRouter } from "./lead.ts"
 import { campaignRouter } from "./campaign.ts"
+import { leadRouter } from "./lead.ts"
 
 export const appRouter = os.router({
 	lead: leadRouter,

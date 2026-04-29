@@ -1,9 +1,9 @@
-import { defineConfig } from "vite"
-import react from "@vitejs/plugin-react"
+import { readFileSync } from "node:fs"
+import path from "node:path"
 import tailwindcss from "@tailwindcss/vite"
 import { TanStackRouterVite } from "@tanstack/router-plugin/vite"
-import path from "node:path"
-import { readFileSync } from "node:fs"
+import react from "@vitejs/plugin-react"
+import { defineConfig } from "vite"
 
 const rootPkg = JSON.parse(
 	readFileSync(path.resolve(__dirname, "../../package.json"), "utf-8"),

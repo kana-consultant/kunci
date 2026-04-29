@@ -1,11 +1,12 @@
-import { eq, asc } from "drizzle-orm"
+import { asc, eq } from "drizzle-orm"
+import type {
+	PipelineStep,
+	PipelineTracker,
+} from "#/domain/ports/pipeline-tracker.ts"
 import type { Database } from "../client.ts"
-import type { PipelineTracker, PipelineStep } from "#/domain/ports/pipeline-tracker.ts"
 import { pipelineSteps } from "../schema.ts"
 
-export function createPipelineStepRepository(
-	db: Database,
-): PipelineTracker {
+export function createPipelineStepRepository(db: Database): PipelineTracker {
 	return {
 		async startStep(leadId, step, label, detail) {
 			const [row] = await db

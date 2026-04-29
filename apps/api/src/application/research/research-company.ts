@@ -1,8 +1,8 @@
-import type { LeadRepository } from "#/domain/lead/lead-repository.ts"
 import type { Lead } from "#/domain/lead/lead.ts"
-import type { ScraperService } from "#/domain/ports/scraper-service.ts"
+import type { LeadRepository } from "#/domain/lead/lead-repository.ts"
 import type { AIService, WebsiteAnalysis } from "#/domain/ports/ai-service.ts"
 import type { Logger } from "#/domain/ports/logger.ts"
+import type { ScraperService } from "#/domain/ports/scraper-service.ts"
 
 interface ResearchCompanyDeps {
 	leadRepo: LeadRepository

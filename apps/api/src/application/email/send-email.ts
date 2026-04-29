@@ -1,9 +1,9 @@
-import type { LeadRepository } from "#/domain/lead/lead-repository.ts"
+import type { BehaviorAnalysis } from "#/domain/behavior-analysis/behavior-analysis.ts"
 import type { EmailSequenceRepository } from "#/domain/email-sequence/email-sequence-repository.ts"
+import type { Lead } from "#/domain/lead/lead.ts"
+import type { LeadRepository } from "#/domain/lead/lead-repository.ts"
 import type { AIService } from "#/domain/ports/ai-service.ts"
 import type { EmailService } from "#/domain/ports/email-service.ts"
-import type { Lead } from "#/domain/lead/lead.ts"
-import type { BehaviorAnalysis } from "#/domain/behavior-analysis/behavior-analysis.ts"
 import type { Logger } from "#/domain/ports/logger.ts"
 
 interface EmailUseCaseDeps {
@@ -65,7 +65,10 @@ export function makeSendInitialEmailUseCase(deps: EmailUseCaseDeps) {
 			lastEmailSentAt: result.sentAt,
 		})
 
-		deps.logger.info({ leadId: lead.id, messageId: result.messageId }, "First email sent")
+		deps.logger.info(
+			{ leadId: lead.id, messageId: result.messageId },
+			"First email sent",
+		)
 	}
 }
 
@@ -74,7 +77,10 @@ export function makeSendFollowupUseCase(deps: EmailUseCaseDeps) {
 	return async (lead: Lead): Promise<void> => {
 		const nextStage = (lead.stage + 1) as 1 | 2 | 3
 		if (nextStage > 3) {
-			deps.logger.info({ leadId: lead.id }, "All 3 emails sent, marking completed")
+			deps.logger.info(
+				{ leadId: lead.id },
+				"All 3 emails sent, marking completed",
+			)
 			await deps.leadRepo.update(lead.id, { replyStatus: "completed" })
 			return
 		}
@@ -82,7 +88,10 @@ export function makeSendFollowupUseCase(deps: EmailUseCaseDeps) {
 		// 1. Get email template for next stage
 		const template = await deps.sequenceRepo.getByStage(lead.id, nextStage)
 		if (!template) {
-			deps.logger.warn({ leadId: lead.id, nextStage }, "No email template found for stage")
+			deps.logger.warn(
+				{ leadId: lead.id, nextStage },
+				"No email template found for stage",
+			)
 			return
 		}
 

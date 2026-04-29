@@ -1,13 +1,13 @@
+import { readFileSync } from "node:fs"
+import { dirname, resolve } from "node:path"
+import { fileURLToPath } from "node:url"
 import { serve } from "@hono/node-server"
 import { serveStatic } from "@hono/node-server/serve-static"
+import { onError } from "@orpc/server"
+import { RPCHandler } from "@orpc/server/fetch"
 import { Hono } from "hono"
 import { cors } from "hono/cors"
 import { requestId } from "hono/request-id"
-import { RPCHandler } from "@orpc/server/fetch"
-import { onError } from "@orpc/server"
-import { readFileSync } from "node:fs"
-import { resolve, dirname } from "node:path"
-import { fileURLToPath } from "node:url"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
@@ -15,36 +15,35 @@ function readAppVersion(): string {
 	// Try root package.json relative to source file location
 	const candidates = [
 		resolve(__dirname, "../../../package.json"), // from src/ or dist/
-		resolve(process.cwd(), "package.json"),      // from monorepo root
+		resolve(process.cwd(), "package.json"), // from monorepo root
 	]
 	for (const candidate of candidates) {
 		try {
 			const pkg = JSON.parse(readFileSync(candidate, "utf-8"))
 			if (pkg.version) return pkg.version
-		} catch { /* try next */ }
+		} catch {
+			/* try next */
+		}
 	}
 	return "unknown"
 }
 
 const APP_VERSION = readAppVersion()
 
-import { env } from "./infrastructure/config/env.ts"
-import { logger } from "./infrastructure/observability/logger.ts"
-import { createDb } from "./infrastructure/db/client.ts"
-import { createRedisCache } from "./infrastructure/cache/redis.ts"
-
-import { createLeadRepository } from "./infrastructure/db/repositories/lead-repository.ts"
-import { createEmailSequenceRepository } from "./infrastructure/db/repositories/email-sequence-repository.ts"
-
-import { createMxVerifier } from "./infrastructure/email-verification/mx-verifier.ts"
-import { createDeepcrawlService } from "./infrastructure/scraper/deepcrawl-service.ts"
-import { createOpenRouterService } from "./infrastructure/ai/openrouter-service.ts"
-import { createResendService } from "./infrastructure/email/resend-service.ts"
-import { createPipelineStepRepository } from "./infrastructure/db/repositories/pipeline-step-repository.ts"
-
 import { buildUseCases } from "./application/use-cases.ts"
-import { appRouter } from "./presentation/routers/index.ts"
+import { createOpenRouterService } from "./infrastructure/ai/openrouter-service.ts"
+import { createRedisCache } from "./infrastructure/cache/redis.ts"
+import { env } from "./infrastructure/config/env.ts"
+import { createDb } from "./infrastructure/db/client.ts"
+import { createEmailSequenceRepository } from "./infrastructure/db/repositories/email-sequence-repository.ts"
+import { createLeadRepository } from "./infrastructure/db/repositories/lead-repository.ts"
+import { createPipelineStepRepository } from "./infrastructure/db/repositories/pipeline-step-repository.ts"
+import { createResendService } from "./infrastructure/email/resend-service.ts"
+import { createMxVerifier } from "./infrastructure/email-verification/mx-verifier.ts"
+import { logger } from "./infrastructure/observability/logger.ts"
 import { startScheduler } from "./infrastructure/scheduler/cron.ts"
+import { createDeepcrawlService } from "./infrastructure/scraper/deepcrawl-service.ts"
+import { appRouter } from "./presentation/routers/index.ts"
 
 async function bootstrap() {
 	logger.info({ version: APP_VERSION }, "Starting KUNCI API Server...")
@@ -52,7 +51,7 @@ async function bootstrap() {
 	// 1. Initialize Infrastructure
 	const db = createDb(env.DATABASE_URL)
 	const cache = createRedisCache(env.REDIS_URL)
-	
+
 	const repos = {
 		lead: createLeadRepository(db),
 		sequence: createEmailSequenceRepository(db),
@@ -77,19 +76,23 @@ async function bootstrap() {
 
 	// 3. Setup oRPC
 	const rpcHandler = new RPCHandler(appRouter, {
-		interceptors: [
-			onError((error) => logger.error({ error }, "oRPC Error")),
-		],
+		interceptors: [onError((error) => logger.error({ error }, "oRPC Error"))],
 	})
 
 	// 4. Setup Hono App
 	const app = new Hono()
 
 	app.use("*", requestId())
-	app.use("*", cors({ 
-		origin: (origin) => (origin && origin.startsWith("http://localhost") ? origin : env.WEB_ORIGIN), 
-		credentials: true 
-	}))
+	app.use(
+		"*",
+		cors({
+			origin: (origin) =>
+				origin && origin.startsWith("http://localhost")
+					? origin
+					: env.WEB_ORIGIN,
+			credentials: true,
+		}),
+	)
 
 	// Logging middleware
 	app.use("*", async (c, next) => {
@@ -149,12 +152,16 @@ async function bootstrap() {
 
 				if (fromEmail) {
 					// Don't await if we want to return 200 immediately to Resend
-					useCases.email.handleReply({
-						fromEmail,
-						subject,
-						textBody,
-						messageId,
-					}).catch((err) => logger.error({ err }, "Background reply handling failed"))
+					useCases.email
+						.handleReply({
+							fromEmail,
+							subject,
+							textBody,
+							messageId,
+						})
+						.catch((err) =>
+							logger.error({ err }, "Background reply handling failed"),
+						)
 				}
 			}
 
@@ -182,12 +189,18 @@ async function bootstrap() {
 	// 5. Serve Static Frontend if WEB_DIST_PATH is configured
 	if (env.WEB_DIST_PATH) {
 		app.use("/*", serveStatic({ root: env.WEB_DIST_PATH }))
-		
+
 		// SPA Fallback for unknown routes
 		app.notFound((c) => {
-			if (!c.req.path.startsWith("/rpc") && !c.req.path.startsWith("/webhooks")) {
+			if (
+				!c.req.path.startsWith("/rpc") &&
+				!c.req.path.startsWith("/webhooks")
+			) {
 				try {
-					const html = readFileSync(resolve(env.WEB_DIST_PATH!, "index.html"), "utf-8")
+					const html = readFileSync(
+						resolve(env.WEB_DIST_PATH!, "index.html"),
+						"utf-8",
+					)
 					return c.html(html)
 				} catch (e) {
 					return c.json({ error: "Frontend build not found" }, 404)

@@ -7,7 +7,12 @@ export interface LeadRepository {
 	list(params: ListLeadsParams): Promise<{ leads: Lead[]; total: number }>
 	update(id: string, data: Partial<UpdateLeadData>): Promise<Lead>
 	findPendingFollowups(params: PendingFollowupsParams): Promise<Lead[]>
-	getStats(): Promise<{ total: number; sent: number; replied: number; bounced: number }>
+	getStats(): Promise<{
+		total: number
+		sent: number
+		replied: number
+		bounced: number
+	}>
 }
 
 export interface ListLeadsParams {

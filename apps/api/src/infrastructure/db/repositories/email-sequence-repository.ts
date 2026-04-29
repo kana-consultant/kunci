@@ -1,12 +1,10 @@
-import { eq, and } from "drizzle-orm"
-import type { Database } from "#/infrastructure/db/client.ts"
-import type {
-	EmailSequenceRepository,
-} from "#/domain/email-sequence/email-sequence-repository.ts"
+import { and, eq } from "drizzle-orm"
 import type {
 	CreateEmailSequenceInput,
 	EmailSequence,
 } from "#/domain/email-sequence/email-sequence.ts"
+import type { EmailSequenceRepository } from "#/domain/email-sequence/email-sequence-repository.ts"
+import type { Database } from "#/infrastructure/db/client.ts"
 import { emailSequences } from "#/infrastructure/db/schema.ts"
 
 export function createEmailSequenceRepository(
