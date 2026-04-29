@@ -6,7 +6,7 @@ FROM node:22-alpine AS base
 RUN apk add --no-cache tini
 
 # Install pnpm globally
-RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN npm install -g pnpm
 
 WORKDIR /app
 
