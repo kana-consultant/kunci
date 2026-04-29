@@ -17,6 +17,7 @@
 		"@tailwindcss/typography": "^0.5.19",
 		"@tanstack/react-query": "^5.0.0",
 		"@tanstack/react-router": "^1.0.0",
+		"@tanstack/react-table": "^8.21.3",
 		"clsx": "^2.1.0",
 		"lucide-react": "^0.470.0",
 		"react": "^19.0.0",

@@ -114,6 +114,9 @@ importers:
       '@tanstack/react-router':
         specifier: ^1.0.0
         version: 1.168.25(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
+      '@tanstack/react-table':
+        specifier: ^8.21.3
+        version: 8.21.3(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       clsx:
         specifier: ^2.1.0
         version: 2.1.1
