@@ -11,6 +11,7 @@
   <a href="#usage">Usage</a> •
   <a href="#tech-stack">Tech Stack</a> •
   <a href="#project-structure">Project Structure</a> •
+  <a href="#production-deployment">Deployment</a> •
   <a href="#license">License</a>
 </p>
 
@@ -43,72 +44,107 @@ All powered by LLMs through OpenRouter, with real email delivery via Resend.
 
 ## Features
 
-- 🤖 **Autonomous Pipeline** — One-click lead capture triggers the full research → analyze → generate → send workflow
-- 🧠 **8 Specialized AI Prompts** — Behavior analysis, website intelligence, email sequence generation, reply personalization, and more
-- 📧 **3-Email Nurturing Sequences** — AI-generated with psychological triggers and multiple subject line variations
-- 🔄 **Auto-Reply Handling** — Webhook-driven reply detection with AI-personalized responses sent in the same email thread
-- ⏰ **Scheduled Follow-ups** — Cron-based daily follow-up processing at optimal send times
-- 📊 **Dashboard** — Real-time stats on total leads, response rates, and conversion metrics
-- 🔒 **End-to-End Type Safety** — Shared types from API to frontend via oRPC
-- 🏗️ **Clean Architecture** — Domain-driven design with ports & adapters for testability and modularity
+- **Autonomous Pipeline** — One-click lead capture triggers the full research → analyze → generate → send workflow
+- **8 Specialized AI Prompts** — Behavior analysis, website intelligence, email sequence generation, reply personalization, and more
+- **3-Email Nurturing Sequences** — AI-generated with psychological triggers and multiple subject line variations
+- **Auto-Reply Handling** — Webhook-driven reply detection with AI-personalized responses sent in the same email thread
+- **Scheduled Follow-ups** — Cron-based daily follow-up processing at optimal send times
+- **Dashboard** — Real-time stats on total leads, response rates, and conversion metrics
+- **End-to-End Type Safety** — Shared types from API to frontend via oRPC
+- **Clean Architecture** — Domain-driven design with ports & adapters for testability and modularity
 
 ---
 
 ## Architecture
 
-KUNCI is a pnpm monorepo with two apps and a clean separation of concerns:
+KUNCI is a pnpm monorepo with two apps following Clean Architecture (ports & adapters):
 
 ```
-┌─────────────────────────────────────────────────────┐
-│                    Frontend (Web)                    │
-│  React 19 • TanStack Router • Vite 6 • Kana UI Kit  │
-│              oRPC Client (type-safe RPC)             │
-└────────────────────────┬────────────────────────────┘
-                         │ /rpc/*
-┌────────────────────────▼────────────────────────────┐
-│                    Backend (API)                     │
-│                      Hono 4.7                        │
-│  ┌───────────────────────────────────────────────┐  │
-│  │              Presentation Layer                │  │
-│  │       oRPC Routers • Webhook Handlers          │  │
-│  └──────────────────────┬────────────────────────┘  │
-│  ┌──────────────────────▼────────────────────────┐  │
-│  │              Application Layer                 │  │
-│  │  Pipeline • Research • Email • Scheduler       │  │
-│  └──────────────────────┬────────────────────────┘  │
-│  ┌──────────────────────▼────────────────────────┐  │
-│  │                Domain Layer                    │  │
-│  │  Lead • EmailSequence • BehaviorAnalysis       │  │
-│  │  Ports: AI • Email • Scraper • Cache • Logger  │  │
-│  └──────────────────────┬────────────────────────┘  │
-│  ┌──────────────────────▼────────────────────────┐  │
-│  │             Infrastructure Layer               │  │
-│  │  OpenRouter • Resend • Deepcrawl • Drizzle     │  │
-│  │  Redis • Pino • Croner • MX Verifier           │  │
-│  └───────────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────────┘
-         │              │              │
-    PostgreSQL 17    Redis 7     OpenRouter API
+┌─────────────────────────────────────────────────────────┐
+│                     Frontend (Web)                       │
+│   React 19 • TanStack Router • Vite 6 • Kana UI Kit     │
+│               oRPC Client (type-safe RPC)                │
+└───────────────────────────┬─────────────────────────────┘
+                            │ /rpc/*
+┌───────────────────────────▼─────────────────────────────┐
+│                      Backend (API)                       │
+│                        Hono 4.7                          │
+│                                                          │
+│  ┌────────────────────────────────────────────────────┐  │
+│  │               Presentation Layer                    │  │
+│  │    oRPC Routers (lead, campaign)                    │  │
+│  │    Webhook Handler (Resend)                         │  │
+│  │    Middleware (public + protected procedures)       │  │
+│  └────────────────────────┬───────────────────────────┘  │
+│  ┌────────────────────────▼───────────────────────────┐  │
+│  │               Application Layer                     │  │
+│  │    pipeline/   — Outbound orchestrator              │  │
+│  │    research/   — Scrape + AI analysis               │  │
+│  │    email/      — Send initial, follow-up, reply     │  │
+│  │    lead/       — Capture, list, detail               │  │
+│  │    scheduler/  — Cron follow-up processor           │  │
+│  │    shared/     — AppError, AuthedContext            │  │
+│  │    use-cases.ts — Composition root (DI wiring)      │  │
+│  └────────────────────────┬───────────────────────────┘  │
+│  ┌────────────────────────▼───────────────────────────┐  │
+│  │                  Domain Layer                       │  │
+│  │    Entities:                                        │  │
+│  │      Lead • EmailSequence • BehaviorAnalysis        │  │
+│  │    Ports (interfaces):                              │  │
+│  │      AIService • EmailService • ScraperService      │  │
+│  │      Cache • Logger • EmailVerifier                 │  │
+│  │    Repository interfaces:                           │  │
+│  │      LeadRepository • EmailSequenceRepository       │  │
+│  └────────────────────────┬───────────────────────────┘  │
+│  ┌────────────────────────▼───────────────────────────┐  │
+│  │              Infrastructure Layer                   │  │
+│  │    ai/         — OpenRouter (native fetch, 7 prompts)│  │
+│  │    email/      — Resend SDK                         │  │
+│  │    scraper/    — Deepcrawl SDK                      │  │
+│  │    db/         — Drizzle ORM + PostgreSQL            │  │
+│  │    cache/      — Redis (ioredis)                     │  │
+│  │    scheduler/  — Croner (cron jobs)                  │  │
+│  │    observability/ — Pino (structured logging)       │  │
+│  │    email-verification/ — DNS MX validation          │  │
+│  │    config/     — Zod-validated environment           │  │
+│  └────────────────────────────────────────────────────┘  │
+└──────────────────────────────────────────────────────────┘
+          │              │              │              │
+     PostgreSQL 17    Redis 7    OpenRouter API    Resend API
 ```
 
 ### Pipeline Flows
 
-**Flow 1 — Outbound (Lead → Email):**
+**Flow 1 -- Outbound (Lead to Email):**
 ```
-Capture Lead → Scrape Website → AI Website Analysis → AI Company Profile
-  → AI Behavior Analysis → AI Generate 3-Email Sequence → AI Convert to HTML
-  → AI Pick Subject Line → Send via Resend → Track in DB
+Capture Lead (+ MX verify)
+  -> Scrape Website (Deepcrawl)
+  -> AI Website Analysis (P3: o3-mini)
+  -> AI Company Profile (P4: gpt-4.1-mini)
+  -> AI Behavior Analysis (P1: gpt-4o)
+  -> AI Generate 3-Email Sequence (P2: gpt-4o-mini)
+  -> AI Convert to HTML (P5: gpt-4o-mini)
+  -> AI Pick Subject Line (P8: gpt-4o-mini)
+  -> Send via Resend
+  -> Track in DB
 ```
 
-**Flow 2 — Reply Handling (Webhook → Auto-Reply):**
+**Flow 2 -- Reply Handling (Webhook to Auto-Reply):**
 ```
-Resend Webhook → Find Lead → Get Next Sequence Template
-  → AI Personalize Reply → AI Convert to HTML → Reply in Thread → Update Status
+Resend Webhook (email.replied / email.received)
+  -> Find Lead by email
+  -> Get next sequence template
+  -> AI Personalize Reply (P6/P7: o3-mini)
+  -> AI Convert to HTML (P5: gpt-4o-mini)
+  -> Reply in thread via Resend
+  -> Update lead stage + status
 ```
 
-**Flow 3 — Scheduled Follow-ups (Cron):**
+**Flow 3 -- Scheduled Follow-ups (Cron):**
 ```
-Daily 09:30 UTC → Find Leads Awaiting Reply → Send Next Email in Sequence
+Daily 09:30 UTC
+  -> Find leads with status=awaiting, stage<=2, last email >4 days ago
+  -> For each: send next email in sequence
 ```
 
 ---
@@ -124,7 +160,8 @@ Daily 09:30 UTC → Find Leads Awaiting Reply → Send Next Email in Sequence
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/your-org/kunci.git
+git clone https://github.com/kana-consultant/kunci.git
+
 cd kunci
 ```
 
@@ -154,14 +191,14 @@ Edit `.env` with your API keys:
 
 | Variable | Description | Required |
 |---|---|---|
-| `DATABASE_URL` | PostgreSQL connection string | ✅ |
-| `REDIS_URL` | Redis connection string | ✅ |
-| `OPENROUTER_API_KEY` | [OpenRouter](https://openrouter.ai) API key for LLM access | ✅ |
-| `RESEND_API_KEY` | [Resend](https://resend.com) API key for email delivery | ✅ |
+| `DATABASE_URL` | PostgreSQL connection string | Yes |
+| `REDIS_URL` | Redis connection string | Yes |
+| `OPENROUTER_API_KEY` | [OpenRouter](https://openrouter.ai) API key for LLM access | Yes |
+| `RESEND_API_KEY` | [Resend](https://resend.com) API key for email delivery | Yes |
 | `RESEND_WEBHOOK_SECRET` | Webhook signature verification secret | Optional |
-| `SENDER_EMAIL` | Verified sender email address | ✅ |
-| `SENDER_NAME` | Sender display name | ✅ |
-| `DEEPCRAWL_API_KEY` | [Deepcrawl](https://deepcrawl.com) API key for web scraping | ✅ |
+| `SENDER_EMAIL` | Verified sender email address | Yes |
+| `SENDER_NAME` | Sender display name | Yes |
+| `DEEPCRAWL_API_KEY` | [Deepcrawl](https://deepcrawl.com) API key for web scraping | Yes |
 | `PORT` | API server port (default: `3001`) | Optional |
 | `WEB_ORIGIN` | Frontend URL for CORS (default: `http://localhost:3000`) | Optional |
 
@@ -220,37 +257,38 @@ Subscribe to `email.replied` and `email.received` events.
 | [Hono](https://hono.dev) | Ultrafast web framework |
 | [oRPC](https://orpc.unnoq.com) | End-to-end type-safe RPC |
 | [Drizzle ORM](https://orm.drizzle.team) | Type-safe SQL ORM |
-| [PostgreSQL](https://postgresql.org) | Primary database |
-| [Redis](https://redis.io) (via ioredis) | Caching |
-| [OpenRouter](https://openrouter.ai) | Multi-model LLM gateway |
-| [Resend](https://resend.com) | Transactional email |
+| [PostgreSQL](https://postgresql.org) | Primary database (4 tables: leads, email_sequences, behavior_analyses, activity_log) |
+| [Redis](https://redis.io) (via ioredis) | Caching layer |
+| [OpenRouter](https://openrouter.ai) | Multi-model LLM gateway (native fetch, no SDK) |
+| [Resend](https://resend.com) | Transactional email delivery + webhook events |
+| [Deepcrawl](https://github.com/nicepkg/deepcrawl) | Website scraper (open-source Firecrawl alternative) |
 | [Pino](https://getpino.io) | Structured JSON logging |
 | [Croner](https://github.com/Hexagon/croner) | Lightweight cron scheduler |
-| [Zod](https://zod.dev) | Runtime validation |
+| [Zod](https://zod.dev) | Runtime validation (env + oRPC input schemas) |
 
 ### Frontend
 
 | Technology | Role |
 |---|---|
 | [React 19](https://react.dev) | UI library |
-| [Vite 6](https://vite.dev) | Build tool & dev server |
+| [Vite 6](https://vite.dev) | Build tool and dev server |
 | [TanStack Router](https://tanstack.com/router) | Type-safe file-based routing |
 | [TanStack Query](https://tanstack.com/query) | Server state management |
-| [@kana-consultant/ui-kit](https://github.com/kana-consultant/kana-ui-kit) | Radix-based design system with dashboard blocks, OKLCH tokens & Tailwind v4 |
+| [@kana-consultant/ui-kit](https://github.com/kana-consultant/kana-ui-kit) | Radix-based design system (OKLCH tokens, Tailwind v4) |
 | [Tailwind CSS 4](https://tailwindcss.com) | Utility-first styling |
 | [Lucide](https://lucide.dev) | Icon library |
 
-### AI Models Used (via OpenRouter)
+### AI Prompts (via OpenRouter)
 
-| Task | Model |
-|---|---|
-| Behavior Analysis | `openai/gpt-4o` |
-| Email Sequence Generation | `openai/gpt-4o-mini` |
-| Website Analysis | `openai/o3-mini` |
-| Company Profile | `openai/gpt-4.1-mini` |
-| HTML Conversion | `openai/gpt-4o-mini` |
-| Reply Personalization | `openai/o3-mini` |
-| Subject Line Selection | `openai/gpt-4o-mini` |
+| ID | Task | Model |
+|---|---|---|
+| P1 | Behavior Analysis | `openai/gpt-4o` |
+| P2 | Email Sequence Generation | `openai/gpt-4o-mini` |
+| P3 | Website Analysis | `openai/o3-mini` |
+| P4 | Company Profile | `openai/gpt-4.1-mini` |
+| P5 | HTML Conversion | `openai/gpt-4o-mini` |
+| P6/P7 | Reply Personalization | `openai/o3-mini` |
+| P8 | Subject Line Selection | `openai/gpt-4o-mini` |
 
 ---
 
@@ -259,49 +297,139 @@ Subscribe to `email.replied` and `email.received` events.
 ```
 kunci/
 ├── apps/
-│   ├── api/                        # Backend (Hono + oRPC)
-│   │   └── src/
-│   │       ├── domain/             # Entities & port interfaces
-│   │       │   ├── lead/           # Lead entity + repository interface
-│   │       │   ├── email-sequence/ # Email sequence entity + repository
-│   │       │   ├── behavior-analysis/
-│   │       │   └── ports/          # AIService, EmailService, Cache, etc.
-│   │       ├── application/        # Use cases (business logic)
-│   │       │   ├── pipeline/       # Full outbound pipeline orchestrator
-│   │       │   ├── research/       # Company research (scrape + AI)
-│   │       │   ├── email/          # Send email & handle reply
-│   │       │   ├── scheduler/      # Follow-up processing
-│   │       │   └── use-cases.ts    # Composition root
-│   │       ├── presentation/       # HTTP layer
-│   │       │   ├── routers/        # oRPC route definitions
-│   │       │   └── orpc/           # Middleware & context
-│   │       ├── infrastructure/     # External service adapters
-│   │       │   ├── ai/             # OpenRouter implementation
-│   │       │   ├── db/             # Drizzle schema, client, repositories
-│   │       │   ├── cache/          # Redis adapter
-│   │       │   ├── email/          # Resend adapter
-│   │       │   ├── scraper/        # Deepcrawl adapter
-│   │       │   ├── scheduler/      # Croner setup
-│   │       │   └── observability/  # Pino logger
-│   │       ├── main.ts             # Server bootstrap
-│   │       └── index.ts            # AppRouter type export
+│   ├── api/                           # Backend (Hono + oRPC)
+│   │   ├── src/
+│   │   │   ├── domain/                # Pure business types (no framework deps)
+│   │   │   │   ├── lead/              # Lead entity, LeadRepository interface
+│   │   │   │   ├── email-sequence/    # EmailSequence entity + repository interface
+│   │   │   │   ├── behavior-analysis/ # BehaviorAnalysis entity
+│   │   │   │   └── ports/             # Service interfaces (AIService, EmailService,
+│   │   │   │                          #   ScraperService, Cache, Logger, EmailVerifier)
+│   │   │   ├── application/           # Use cases (orchestration logic)
+│   │   │   │   ├── pipeline/          # runOutboundPipeline (main orchestrator)
+│   │   │   │   ├── research/          # researchCompany (scrape + AI analysis)
+│   │   │   │   ├── email/             # sendInitialEmail, sendFollowup, handleReply
+│   │   │   │   ├── lead/              # captureLead, listLeads, getLeadDetail
+│   │   │   │   ├── scheduler/         # processPendingFollowups
+│   │   │   │   ├── shared/            # AppError, AuthedContext
+│   │   │   │   └── use-cases.ts       # Composition root (DI wiring)
+│   │   │   ├── presentation/          # HTTP boundary
+│   │   │   │   ├── routers/           # oRPC routers (lead, campaign)
+│   │   │   │   └── orpc/              # Context type, public/protected middleware
+│   │   │   ├── infrastructure/        # External service adapters
+│   │   │   │   ├── ai/                # OpenRouter adapter + 7 prompt templates
+│   │   │   │   ├── db/                # Drizzle schema, client, repositories
+│   │   │   │   ├── email/             # Resend adapter
+│   │   │   │   ├── scraper/           # Deepcrawl adapter
+│   │   │   │   ├── cache/             # Redis adapter
+│   │   │   │   ├── scheduler/         # Croner cron setup
+│   │   │   │   ├── observability/     # Pino logger
+│   │   │   │   ├── email-verification/# DNS MX verifier
+│   │   │   │   └── config/            # Zod-validated env vars
+│   │   │   ├── main.ts                # Server bootstrap (DI + Hono + scheduler)
+│   │   │   └── index.ts               # AppRouter type export (for web)
+│   │   └── drizzle.config.ts          # Drizzle Kit config
 │   │
-│   └── web/                        # Frontend (React + Vite)
+│   └── web/                           # Frontend (React + Vite)
 │       └── src/
-│           ├── routes/             # TanStack Router pages
-│           │   ├── __root.tsx      # Layout with sidebar
-│           │   ├── index.tsx       # Dashboard
-│           │   ├── capture.tsx     # Lead capture form
-│           │   └── leads/          # Lead list & detail pages
-│           └── libs/
-│               └── orpc/           # Type-safe oRPC client
+│           ├── routes/                # TanStack Router file-based pages
+│           │   ├── __root.tsx         # DashboardShell layout (Sidebar + TopBar)
+│           │   ├── index.tsx          # Dashboard (stats overview)
+│           │   ├── capture.tsx        # Lead capture form
+│           │   └── leads/
+│           │       ├── index.tsx      # Lead pipeline table
+│           │       └── $leadId.tsx    # Lead detail (contact + research + timeline)
+│           ├── libs/
+│           │   └── orpc/client.ts     # oRPC client setup (type-safe via @kunci/api)
+│           └── styles.css             # Tailwind + Kana UI Kit theme imports
 │
-├── docker-compose.dev.yml          # PostgreSQL + Redis
-├── biome.json                      # Linter & formatter config
-├── tsconfig.base.json              # Shared TypeScript config
-├── pnpm-workspace.yaml             # Monorepo workspace config
-└── package.json                    # Root scripts
+├── Dockerfile                         # Multi-stage production build (hardened)
+├── docker-compose.dev.yml             # Dev infrastructure (PostgreSQL + Redis)
+├── docker-compose.prod.yml            # Production stack (API + DB + Redis)
+├── .dockerignore                      # Build context exclusions
+├── .env.production.example            # Production env template
+├── biome.json                         # Biome linter and formatter config
+├── tsconfig.base.json                 # Shared TypeScript config
+├── pnpm-workspace.yaml                # Monorepo workspace definition
+└── package.json                       # Root scripts (dev, build, db, lint, test)
 ```
+
+---
+
+## Production Deployment
+
+### Quick Start
+
+```bash
+# 1. Create production environment file
+cp .env.production.example .env.production
+# Edit .env.production with real credentials
+
+# 2. Build and start
+docker compose -f docker-compose.prod.yml up -d --build
+
+# 3. Push database schema
+docker compose -f docker-compose.prod.yml exec api \
+  node -e "import('#/infrastructure/db/client.ts').then(m => m.pushSchema())"
+```
+
+### Docker Architecture
+
+The `Dockerfile` uses a **6-stage multi-stage build** to produce a minimal, secure image:
+
+| Stage | Purpose | Base |
+|---|---|---|
+| `base` | Shared base with pnpm + tini | `node:22-alpine` |
+| `deps` | Install all dependencies (dev + prod) | base |
+| `build-api` | Compile API with tsup | deps |
+| `build-web` | Build React frontend with Vite | deps |
+| `prod-deps` | Install production-only dependencies | base |
+| `runtime` | Final image with only compiled output | `node:22-alpine` |
+
+The final image contains **no source code, no devDependencies, and no build tools**.
+
+### Security Hardening
+
+The production stack applies the following hardening measures:
+
+**Container-level:**
+- Non-root user (`kunci:1001`) for the API process
+- `read_only: true` root filesystem on all containers
+- `cap_drop: ALL` with minimal capabilities re-added where needed
+- `no-new-privileges` security option to prevent privilege escalation
+- `tini` as PID 1 for proper SIGTERM/SIGINT signal forwarding
+- Tmpfs mounts with `noexec,nosuid` for `/tmp`
+- Resource limits (memory + CPU) on every service
+
+**Database (PostgreSQL):**
+- `scram-sha-256` authentication (no trust auth)
+- No port exposed to the host by default (internal network only)
+- Read-only root filesystem with tmpfs for runtime dirs
+- Shared memory set to 128MB via `shm_size`
+
+**Cache (Redis):**
+- Dangerous commands disabled: `FLUSHALL`, `FLUSHDB`, `DEBUG`, `CONFIG`
+- `protected-mode yes` enabled
+- Memory capped at 128MB with LRU eviction
+- Persistence disabled (cache-only, not a data store)
+- No port exposed to host
+
+**Logging:**
+- JSON file driver with 10MB max size, 3 file rotation
+- Pino structured JSON logging from the API
+
+**Secrets:**
+- `.env.production` is gitignored
+- `POSTGRES_PASSWORD` is **required** (compose fails without it)
+- All API keys validated at startup via Zod schema
+
+### Health Checks
+
+| Service | Endpoint/Command | Interval | Start Period |
+|---|---|---|---|
+| API | `GET /healthz` | 30s | 15s |
+| PostgreSQL | `pg_isready -U kunci -d kunci` | 10s | 30s |
+| Redis | `redis-cli ping` | 10s | 10s |
 
 ---
 
@@ -369,5 +497,5 @@ This project is licensed under the MIT License — see the [LICENSE](LICENSE) fi
 ---
 
 <p align="center">
-  Built with ❤️ by <a href="https://github.com/your-org">KanA Consultant</a>
+  Built by <a href="https://github.com/kana-consultant">KanA Consultant</a>
 </p>

@@ -4,6 +4,28 @@ import { cors } from "hono/cors"
 import { requestId } from "hono/request-id"
 import { RPCHandler } from "@orpc/server/fetch"
 import { onError } from "@orpc/server"
+import { readFileSync } from "node:fs"
+import { resolve, dirname } from "node:path"
+import { fileURLToPath } from "node:url"
+
+const __dirname = dirname(fileURLToPath(import.meta.url))
+
+function readAppVersion(): string {
+	// Try root package.json relative to source file location
+	const candidates = [
+		resolve(__dirname, "../../../package.json"), // from src/ or dist/
+		resolve(process.cwd(), "package.json"),      // from monorepo root
+	]
+	for (const candidate of candidates) {
+		try {
+			const pkg = JSON.parse(readFileSync(candidate, "utf-8"))
+			if (pkg.version) return pkg.version
+		} catch { /* try next */ }
+	}
+	return "unknown"
+}
+
+const APP_VERSION = readAppVersion()
 
 import { env } from "./infrastructure/config/env.ts"
 import { logger } from "./infrastructure/observability/logger.ts"
@@ -23,7 +45,7 @@ import { appRouter } from "./presentation/routers/index.ts"
 import { startScheduler } from "./infrastructure/scheduler/cron.ts"
 
 async function bootstrap() {
-	logger.info("Starting KUNCI API Server...")
+	logger.info({ version: APP_VERSION }, "Starting KUNCI API Server...")
 
 	// 1. Initialize Infrastructure
 	const db = createDb(env.DATABASE_URL)
@@ -81,7 +103,7 @@ async function bootstrap() {
 	})
 
 	// Health checks
-	app.get("/healthz", (c) => c.json({ status: "ok" }))
+	app.get("/healthz", (c) => c.json({ status: "ok", version: APP_VERSION }))
 	app.get("/ready", async (c) => {
 		const redisOk = await cache.ping()
 		return c.json({ redis: redisOk })
