@@ -34,12 +34,20 @@ export const protectedProcedure = publicProcedure.use(
 			isAuthenticated = true
 		} else if (authHeader?.startsWith("Basic ")) {
 			// Basic auth (for dashboard access)
-			const credentials = atob(authHeader.slice(6))
-			const [user, pass] = credentials.split(":")
-			const adminUser = env.ADMIN_USER
-			const adminPass = env.ADMIN_PASS
-			if (adminPass && user === adminUser && pass === adminPass) {
-				isAuthenticated = true
+			try {
+				const credentials = atob(authHeader.slice(6))
+				const separator = credentials.indexOf(":")
+				if (separator >= 0) {
+					const user = credentials.slice(0, separator)
+					const pass = credentials.slice(separator + 1)
+					const adminUser = env.ADMIN_USER
+					const adminPass = env.ADMIN_PASS
+					if (adminPass && user === adminUser && pass === adminPass) {
+						isAuthenticated = true
+					}
+				}
+			} catch {
+				// Invalid base64 or malformed payload: treat as unauthorized
 			}
 		} else if (isDevMode && !envApiKey) {
 			// Dev mode fallback — allow unauthenticated when no API_KEY is configured
@@ -47,9 +55,9 @@ export const protectedProcedure = publicProcedure.use(
 		}
 
 		if (!isAuthenticated) {
-			// TODO: Remove this temporary bypass once the frontend login page is implemented
-			// throw new ORPCError("UNAUTHORIZED", { message: "Authentication required" })
-			isAuthenticated = true
+			throw new ORPCError("UNAUTHORIZED", {
+				message: "Authentication required",
+			})
 		}
 
 		return next({
