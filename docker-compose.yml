@@ -121,7 +121,7 @@ services:
       --maxmemory-policy allkeys-lru
       --save ""
       --appendonly no
-      --protected-mode yes
+      --protected-mode no
       --rename-command FLUSHALL ""
       --rename-command FLUSHDB ""
       --rename-command DEBUG ""
