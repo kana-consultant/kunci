@@ -10,6 +10,7 @@ export interface LeadRepository {
 	getStats(): Promise<{
 		total: number
 		sent: number
+		awaiting: number
 		replied: number
 		bounced: number
 	}>

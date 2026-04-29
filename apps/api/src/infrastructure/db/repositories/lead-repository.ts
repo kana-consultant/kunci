@@ -123,7 +123,7 @@ export function createLeadRepository(db: Database): LeadRepository {
 		},
 
 		async getStats() {
-			const [total, sent, replied, bounced] = await Promise.all([
+			const [total, sent, awaiting, replied, bounced] = await Promise.all([
 				db
 					.select({ count: sql<number>`count(*)::int` })
 					.from(leads)
@@ -132,6 +132,11 @@ export function createLeadRepository(db: Database): LeadRepository {
 					.select({ count: sql<number>`count(*)::int` })
 					.from(leads)
 					.where(ne(leads.stage, 0))
+					.then((r) => r[0]?.count ?? 0),
+				db
+					.select({ count: sql<number>`count(*)::int` })
+					.from(leads)
+					.where(eq(leads.replyStatus, "awaiting"))
 					.then((r) => r[0]?.count ?? 0),
 				db
 					.select({ count: sql<number>`count(*)::int` })
@@ -145,7 +150,7 @@ export function createLeadRepository(db: Database): LeadRepository {
 					.then((r) => r[0]?.count ?? 0),
 			])
 
-			return { total, sent, replied, bounced }
+			return { total, sent, awaiting, replied, bounced }
 		},
 	}
 }

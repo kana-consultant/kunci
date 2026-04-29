@@ -12,7 +12,7 @@ export const campaignRouter = os.router({
 		return {
 			totalLeads: stats.total,
 			replied: stats.replied,
-			awaiting: stats.sent - stats.replied,
+			awaiting: stats.awaiting,
 			conversionRate: Number(conversionRate.toFixed(1)),
 		}
 	}),
