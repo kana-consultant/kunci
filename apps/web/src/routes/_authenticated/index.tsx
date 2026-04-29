@@ -12,7 +12,7 @@ import {
 } from "@kana-consultant/ui-kit"
 import { Users, Mail, MessageCircle, TrendingUp } from "lucide-react"
 
-export const Route = createFileRoute("/")(	{
+export const Route = createFileRoute("/_authenticated/")(	{
 	component: DashboardPage,
 })
 

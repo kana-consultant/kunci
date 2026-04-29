@@ -20,7 +20,7 @@ import {
 	Calendar,
 } from "lucide-react"
 
-export const Route = createFileRoute("/leads/$leadId")({
+export const Route = createFileRoute("/_authenticated/leads/$leadId")({
 	component: LeadDetailPage,
 })
 
@@ -60,7 +60,7 @@ function LeadDetailPage() {
 						Failed to load lead details. Make sure the API server is running.
 					</CardContent>
 				</Card>
-				<Link to="/leads">
+				<Link to="/_authenticated/leads">
 					<Button variant="ghost" leadingIcon={<ArrowLeft className="w-4 h-4" />}>
 						Back to pipeline
 					</Button>
@@ -75,7 +75,7 @@ function LeadDetailPage() {
 		<div className="space-y-6 max-w-5xl mx-auto">
 			{/* Header */}
 			<div>
-				<Link to="/leads">
+				<Link to="/_authenticated/leads">
 					<Button
 						variant="ghost"
 						size="sm"
