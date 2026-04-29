@@ -30,9 +30,9 @@ export default defineConfig({
 	server: {
 		port: 8020,
 		proxy: {
-			"/rpc": "http://localhost:8021",
-			"/webhooks": "http://localhost:8021",
-			"/healthz": "http://localhost:8021",
+			"/rpc": "http://localhost:3005",
+			"/webhooks": "http://localhost:3005",
+			"/healthz": "http://localhost:3005",
 		},
 	},
 })
