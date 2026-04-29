@@ -3,9 +3,9 @@ import { DashboardShell, Sidebar, TopBar, type TNavItem } from "@kana-consultant
 import { LayoutDashboard, Users, UserPlus } from "lucide-react"
 
 const navItems: TNavItem[] = [
-	{ id: "/_authenticated", label: "Dashboard", icon: LayoutDashboard },
-	{ id: "/_authenticated/leads", label: "Leads Pipeline", icon: Users },
-	{ id: "/_authenticated/capture", label: "Add Lead", icon: UserPlus },
+	{ id: "/", label: "Dashboard", icon: LayoutDashboard },
+	{ id: "/leads", label: "Leads Pipeline", icon: Users },
+	{ id: "/capture", label: "Add Lead", icon: UserPlus },
 ]
 
 function AuthenticatedLayout() {
@@ -14,8 +14,8 @@ function AuthenticatedLayout() {
 	const navigate = useNavigate()
 
 	const activeId = currentPath === "/"
-		? "/_authenticated"
-		: navItems.find((n) => n.id !== "/_authenticated" && currentPath.startsWith(n.id.replace("/_authenticated", "")))?.id ?? "/_authenticated"
+		? "/"
+		: navItems.find((n) => n.id !== "/" && currentPath.startsWith(n.id))?.id ?? "/"
 
 	return (
 		<DashboardShell
@@ -24,7 +24,7 @@ function AuthenticatedLayout() {
 					brandName="KUNCI"
 					items={navItems}
 					activeId={activeId}
-					onNavigate={(id) => navigate({ to: id })}
+					onNavigate={(id) => navigate({ to: id as any })}
 					footer={
 						<p className="text-xs text-[var(--color-muted-foreground)]">
 							v{__APP_VERSION__} • KanA Consultant
