@@ -1,0 +1,40 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build output (rebuilt in Docker)
+dist/
+apps/api/dist/
+apps/web/dist/
+
+# Dev files
+.git/
+.gitignore
+.vscode/
+.moon/
+.husky/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Logs & OS
+*.log
+.DS_Store
+Thumbs.db
+
+# Docker
+docker-compose*.yml
+Dockerfile*
+
+# Documentation
+README.md
+LICENSE
+docs/
+documentation/
+
+# Tests
+**/*.test.ts
+**/*.spec.ts
+coverage/

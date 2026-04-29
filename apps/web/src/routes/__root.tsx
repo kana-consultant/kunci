@@ -27,7 +27,7 @@ function RootLayout() {
 					onNavigate={(id) => navigate({ to: id })}
 					footer={
 						<p className="text-xs text-[var(--color-muted-foreground)]">
-							v0.1.0 • KanA Consultant
+							v{__APP_VERSION__} • KanA Consultant
 						</p>
 					}
 				/>
