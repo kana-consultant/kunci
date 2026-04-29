@@ -120,7 +120,6 @@ function PipelineStepsTimeline({ leadId }: { leadId: string }) {
 					const StepIcon = meta.icon
 					const isFailed = step.status === "failed"
 					const isRunning = step.status === "running"
-					const isCompleted = step.status === "completed"
 
 					const StatusIcon = isFailed
 						? XCircle
@@ -134,7 +133,7 @@ function PipelineStepsTimeline({ leadId }: { leadId: string }) {
 							? "var(--color-warning)"
 							: "var(--color-success)"
 
-					const detail = step.detail as Record<string, unknown> | null
+					const detail = step.detail as Record<string, string> | null
 
 					return (
 						<div

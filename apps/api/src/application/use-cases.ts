@@ -88,6 +88,9 @@ export function buildUseCases(deps: AppDependencies) {
 		researchCompany,
 		analyzeBehavior: deps.services.ai.analyzeBehavior,
 		sendInitialEmail,
+		updateLeadStatus: async (id, status) => {
+			await deps.repos.lead.update(id, { replyStatus: status })
+		},
 		tracker,
 		logger,
 	})

@@ -44,9 +44,10 @@ export function makeResearchCompanyUseCase(deps: ResearchCompanyDeps) {
 				analysis: websiteAnalysis,
 			})
 
-			// Save research to lead
+			// Save research to lead and mark as ready
 			await deps.leadRepo.update(lead.id, {
 				companyResearch: companyProfile,
+				replyStatus: "ready",
 			})
 
 			return {

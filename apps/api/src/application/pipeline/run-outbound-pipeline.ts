@@ -1,6 +1,6 @@
 import type { CompanyResearchResult } from "#/application/research/research-company.ts"
 import type { BehaviorAnalysis } from "#/domain/behavior-analysis/behavior-analysis.ts"
-import type { CreateLeadInput, Lead } from "#/domain/lead/lead.ts"
+import type { CreateLeadInput, Lead, ReplyStatus } from "#/domain/lead/lead.ts"
 import type { Logger } from "#/domain/ports/logger.ts"
 import type { PipelineTracker } from "#/domain/ports/pipeline-tracker.ts"
 
@@ -12,6 +12,10 @@ interface PipelineDeps {
 		companyProfile: string,
 	) => Promise<BehaviorAnalysis>
 	sendInitialEmail: (lead: Lead, analysis: BehaviorAnalysis) => Promise<void>
+	updateLeadStatus: (
+		leadId: string,
+		status: ReplyStatus,
+	) => Promise<void>
 	tracker: PipelineTracker
 	logger: Logger
 }
@@ -158,6 +162,17 @@ export function makeRunOutboundPipelineUseCase(deps: PipelineDeps) {
 				{ leadId: lead.id, error },
 				"Pipeline failed after capture",
 			)
+
+			// Ensure lead status reflects the failure — don't leave it stuck in "researching"
+			try {
+				await deps.updateLeadStatus(lead.id, "research_failed")
+			} catch (statusError) {
+				deps.logger.error(
+					{ leadId: lead.id, statusError },
+					"Failed to update lead status after pipeline failure",
+				)
+			}
+
 			return { leadId: lead.id, status: "partial_failure" }
 		}
 	}

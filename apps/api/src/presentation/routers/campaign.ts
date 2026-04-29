@@ -1,7 +1,7 @@
 import { os } from "@orpc/server"
 import { protectedProcedure } from "../orpc/middleware.ts"
 
-// @ts-expect-error - oRPC v1.4.0 constraint mismatch
+
 export const campaignRouter = os.router({
 	// @ts-expect-error - oRPC constraint mismatch
 	getStats: protectedProcedure.handler(async ({ context }) => {

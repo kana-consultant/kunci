@@ -11,7 +11,7 @@ const captureLeadSchema = z.object({
 	leadSource: z.string().optional(),
 })
 
-// @ts-expect-error - oRPC v1.4.0 constraint mismatch
+
 export const leadRouter = os.router({
 	// @ts-expect-error - oRPC constraint mismatch
 	capture: publicProcedure
