@@ -4,7 +4,7 @@ import { createORPCReactQueryUtils } from "@orpc/react-query"
 import type { AppRouter } from "@kunci/api"
 
 const link = new RPCLink({
-	url: import.meta.env.DEV ? "http://localhost:8021/rpc" : "/rpc",
+	url: import.meta.env.DEV ? "http://localhost:3005/rpc" : "/rpc",
 })
 
 // @ts-expect-error - oRPC v1.4.0 constraint mismatch

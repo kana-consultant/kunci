@@ -1,4 +1,5 @@
 import { serve } from "@hono/node-server"
+import { serveStatic } from "@hono/node-server/serve-static"
 import { Hono } from "hono"
 import { cors } from "hono/cors"
 import { requestId } from "hono/request-id"
@@ -113,7 +114,7 @@ async function bootstrap() {
 	app.post("/webhooks/resend", async (c) => {
 		try {
 			// Verify webhook signature (Resend uses svix)
-			const webhookSecret = process.env.RESEND_WEBHOOK_SECRET
+			const webhookSecret = env.RESEND_WEBHOOK_SECRET
 			if (webhookSecret) {
 				const svixId = c.req.header("svix-id")
 				const svixTimestamp = c.req.header("svix-timestamp")
@@ -174,6 +175,26 @@ async function bootstrap() {
 		if (matched) return c.newResponse(response.body, response)
 		await next()
 	})
+
+	// 5. Serve Static Frontend if WEB_DIST_PATH is configured
+	if (env.WEB_DIST_PATH) {
+		app.use("/*", serveStatic({ root: env.WEB_DIST_PATH }))
+		
+		// SPA Fallback for unknown routes
+		app.notFound((c) => {
+			if (!c.req.path.startsWith("/rpc") && !c.req.path.startsWith("/webhooks")) {
+				try {
+					const html = readFileSync(resolve(env.WEB_DIST_PATH!, "index.html"), "utf-8")
+					return c.html(html)
+				} catch (e) {
+					return c.json({ error: "Frontend build not found" }, 404)
+				}
+			}
+			return c.json({ error: "Not found" }, 404)
+		})
+	} else {
+		app.notFound((c) => c.json({ error: "Not found" }, 404))
+	}
 
 	// 5. Start Scheduler (Cron)
 	startScheduler(useCases)

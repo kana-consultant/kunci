@@ -17,7 +17,7 @@ services:
       - .env.production
     environment:
       NODE_ENV: production
-      DATABASE_URL: postgres://kunci:${POSTGRES_PASSWORD}@postgres:7432/kunci
+      DATABASE_URL: postgres://kunci:${POSTGRES_PASSWORD:-CHANGE_ME_USE_A_STRONG_PASSWORD}@postgres:7432/kunci
       REDIS_URL: redis://redis:7379
       WEB_DIST_PATH: /app/apps/web/dist
     depends_on:
@@ -121,7 +121,7 @@ services:
       --maxmemory-policy allkeys-lru
       --save ""
       --appendonly no
-      --protected-mode yes
+      --protected-mode no
       --rename-command FLUSHALL ""
       --rename-command FLUSHDB ""
       --rename-command DEBUG ""
@@ -133,6 +133,10 @@ services:
       - /tmp:noexec,nosuid,size=32m
     cap_drop:
       - ALL
+    cap_add:
+      - SETGID
+      - SETUID
+      - CHOWN
     security_opt:
       - no-new-privileges:true
     deploy:
