@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "@kana-consultant/ui-kit/styles";
+@source "../../node_modules/@kana-consultant/ui-kit";
 
 @theme {
   --font-sans: "Inter", system-ui, sans-serif;
