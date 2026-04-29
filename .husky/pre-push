@@ -1,0 +1,20 @@
+echo "→ biome check"
+pnpm exec biome check . || exit 1
+
+echo "→ tsc (web)"
+(cd apps/web && pnpm exec tsc --noEmit) || exit 1
+
+echo "→ tsc (admin)"
+(cd apps/admin && pnpm exec tsc --noEmit) || exit 1
+
+echo "→ ruff"
+(cd apps/api && uv run ruff check src tests) || exit 1
+
+echo "→ pyright"
+(cd apps/api && uv run pyright) || exit 1
+
+echo "→ check-max-lines"
+(cd apps/api && uv run python -m salma_api.scripts.check_max_lines) || exit 1
+
+echo "→ pytest"
+(cd apps/api && uv run pytest -q) || exit 1
