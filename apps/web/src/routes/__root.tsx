@@ -1,5 +1,5 @@
 import { createRootRoute, Outlet, useNavigate, useRouterState } from "@tanstack/react-router"
-import { DashboardShell, Sidebar, TopBar, ThemeToggle, type TNavItem } from "@kana-consultant/ui-kit"
+import { DashboardShell, Sidebar, TopBar, type TNavItem } from "@kana-consultant/ui-kit"
 import { LayoutDashboard, Users, UserPlus } from "lucide-react"
 
 const navItems: TNavItem[] = [
@@ -36,7 +36,6 @@ function RootLayout() {
 				<TopBar
 					title=""
 					user={{ name: "Admin", email: "admin@kunci.dev" }}
-					actions={<ThemeToggle />}
 				/>
 			}
 		>
