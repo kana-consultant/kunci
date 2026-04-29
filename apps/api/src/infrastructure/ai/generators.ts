@@ -46,10 +46,12 @@ export async function generateEmailSequence(
 								psychologicalTrigger: { type: "string" },
 							},
 							required: ["emailNumber", "purpose", "subjectLines", "content", "callToAction", "timing", "psychologicalTrigger"],
+							additionalProperties: false,
 						},
 					},
 				},
 				required: ["emails"],
+				additionalProperties: false,
 			},
 		},
 	})
@@ -91,6 +93,7 @@ export async function personalizeReply(
 					cta: { type: "string" },
 				},
 				required: ["subject", "content", "cta"],
+				additionalProperties: false,
 			},
 		},
 	})
@@ -112,6 +115,7 @@ export async function pickSubjectLine(apiKey: string, lead: Lead, variations: st
 				type: "object",
 				properties: { subject_line: { type: "string" } },
 				required: ["subject_line"],
+				additionalProperties: false,
 			},
 		},
 	})

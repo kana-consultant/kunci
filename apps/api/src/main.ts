@@ -40,6 +40,7 @@ import { createMxVerifier } from "./infrastructure/email-verification/mx-verifie
 import { createDeepcrawlService } from "./infrastructure/scraper/deepcrawl-service.ts"
 import { createOpenRouterService } from "./infrastructure/ai/openrouter-service.ts"
 import { createResendService } from "./infrastructure/email/resend-service.ts"
+import { createPipelineStepRepository } from "./infrastructure/db/repositories/pipeline-step-repository.ts"
 
 import { buildUseCases } from "./application/use-cases.ts"
 import { appRouter } from "./presentation/routers/index.ts"
@@ -69,8 +70,10 @@ async function bootstrap() {
 		cache,
 	}
 
+	const tracker = createPipelineStepRepository(db)
+
 	// 2. Build Application Use Cases
-	const useCases = buildUseCases({ repos, services, logger })
+	const useCases = buildUseCases({ repos, services, tracker, logger })
 
 	// 3. Setup oRPC
 	const rpcHandler = new RPCHandler(appRouter, {

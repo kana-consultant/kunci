@@ -6,6 +6,7 @@ import type { AIService } from "#/domain/ports/ai-service.ts"
 import type { EmailService } from "#/domain/ports/email-service.ts"
 import type { Cache } from "#/domain/ports/cache.ts"
 import type { Logger } from "#/domain/ports/logger.ts"
+import type { PipelineTracker } from "#/domain/ports/pipeline-tracker.ts"
 
 import {
 	makeCaptureLeadUseCase,
@@ -33,11 +34,12 @@ export interface AppDependencies {
 		email: EmailService
 		cache: Cache
 	}
+	tracker: PipelineTracker
 	logger: Logger
 }
 
 export function buildUseCases(deps: AppDependencies) {
-	const { logger } = deps
+	const { logger, tracker } = deps
 
 	// Lead use cases
 	const captureLead = makeCaptureLeadUseCase({
@@ -81,12 +83,13 @@ export function buildUseCases(deps: AppDependencies) {
 		logger,
 	})
 
-	// Pipeline orchestrator
+	// Pipeline orchestrator (with step tracking)
 	const runOutboundPipeline = makeRunOutboundPipelineUseCase({
 		captureLead,
 		researchCompany,
 		analyzeBehavior: deps.services.ai.analyzeBehavior,
 		sendInitialEmail,
+		tracker,
 		logger,
 	})
 
@@ -114,6 +117,7 @@ export function buildUseCases(deps: AppDependencies) {
 		},
 		pipeline: {
 			runOutbound: runOutboundPipeline,
+			getSteps: tracker.getStepsForLead,
 		},
 		scheduler: {
 			processPendingFollowups,

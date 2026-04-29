@@ -5,6 +5,7 @@ import {
 	timestamp,
 	real,
 	uuid,
+	jsonb,
 } from "drizzle-orm/pg-core"
 
 export const leads = pgTable("leads", {
@@ -78,3 +79,28 @@ export const activityLog = pgTable("activity_log", {
 		.notNull()
 		.defaultNow(),
 })
+
+/**
+ * Pipeline Steps — granular, step-by-step tracking of pipeline execution.
+ * Each row is one discrete action (e.g. "Scraping website", "Calling OpenRouter AI").
+ */
+export const pipelineSteps = pgTable("pipeline_steps", {
+	id: uuid("id").primaryKey().defaultRandom(),
+	leadId: uuid("lead_id")
+		.references(() => leads.id, { onDelete: "cascade" }),
+	/** Pipeline step identifier: capture, scrape, analyze_website, build_profile, analyze_behavior, generate_sequence, send_email */
+	step: text("step").notNull(),
+	/** Human-readable label, e.g. "Scraping https://cosulagi.id" */
+	label: text("label").notNull(),
+	/** running | completed | failed */
+	status: text("status").notNull().default("running"),
+	/** Duration in milliseconds (filled on completion) */
+	durationMs: integer("duration_ms"),
+	/** Extra context: error message, API URL, model name, etc. */
+	detail: jsonb("detail").$type<Record<string, unknown>>(),
+	startedAt: timestamp("started_at", { withTimezone: true })
+		.notNull()
+		.defaultNow(),
+	completedAt: timestamp("completed_at", { withTimezone: true }),
+})
+

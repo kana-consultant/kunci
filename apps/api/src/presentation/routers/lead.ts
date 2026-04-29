@@ -44,4 +44,11 @@ export const leadRouter = os.router({
 			.handler(async ({ input, context }) => {
 				return context.useCases.lead.getDetail(input.id)
 			}),
+
+		// @ts-ignore - oRPC constraint mismatch
+		getPipelineSteps: protectedProcedure
+			.input(z.object({ leadId: z.string().uuid() }))
+			.handler(async ({ input, context }) => {
+				return context.useCases.pipeline.getSteps(input.leadId)
+			}),
 })

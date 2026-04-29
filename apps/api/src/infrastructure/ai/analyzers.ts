@@ -42,6 +42,7 @@ export async function analyzeBehavior(
 					"optimalApproach",
 					"conversionProbability",
 				],
+				additionalProperties: false,
 			},
 		},
 	})
@@ -75,6 +76,7 @@ export async function analyzeWebsite(apiKey: string, websiteMarkdown: string): P
 					callsToAction: { type: "string" },
 				},
 				required: ["brandName", "tagline", "industryCategory", "keyOfferings", "valueProposition", "targetAudience", "callsToAction"],
+				additionalProperties: false,
 			},
 		},
 	})
