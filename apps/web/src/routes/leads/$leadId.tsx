@@ -39,7 +39,7 @@ function LeadDetailPage() {
 	const { data, isPending, error } = useQuery(
 		orpc.lead.getDetail.queryOptions({ input: { id: leadId } }),
 	)
-	const lead = data as Record<string, unknown> | undefined
+	const lead = (data ?? {}) as any
 
 	if (isPending) {
 		return (

@@ -42,7 +42,8 @@ function CapturePage() {
 
 	function handleSubmit(e: React.FormEvent) {
 		e.preventDefault()
-		captureLead({
+		const mutate = captureLead as any;
+		mutate({
 			fullName: form.fullName,
 			email: form.email,
 			companyName: form.companyName,

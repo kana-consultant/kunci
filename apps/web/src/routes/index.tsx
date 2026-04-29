@@ -18,7 +18,7 @@ export const Route = createFileRoute("/")(	{
 
 function DashboardPage() {
 	const query = useQuery(orpc.campaign.getStats.queryOptions())
-	const stats = query.data ?? ({} as Record<string, number>)
+	const stats = (query.data ?? {}) as any
 
 	return (
 		<div className="space-y-8">
