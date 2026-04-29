@@ -57,7 +57,11 @@ All powered by LLMs through OpenRouter, with real email delivery via Resend.
 
 ## Architecture
 
-KUNCI is a pnpm monorepo with two apps following Clean Architecture (ports & adapters):
+KUNCI is a monorepo managed via **pnpm workspaces** and orchestrated by **Moonrepo**. It consists of four distinct workspace packages following Clean Architecture (ports & adapters):
+- `apps/api`: Backend service (Hono + oRPC)
+- `apps/web`: Frontend application (React + Vite)
+- `apps/api-e2e`: Dedicated E2E testing environment for the API
+- `apps/web-e2e`: Dedicated E2E testing environment for the Web
 
 ```
 ┌─────────────────────────────────────────────────────────┐
@@ -248,6 +252,20 @@ Subscribe to `email.replied` and `email.received` events.
 
 ---
 
+## Monorepo & Tooling
+
+To ensure high code quality, consistent development environments, and fast builds, this project utilizes modern developer tooling designed specifically for monorepos:
+
+| Tool | Role |
+|---|---|
+| [pnpm Workspaces](https://pnpm.io/workspaces) | Manages monorepo dependencies and local package linking efficiently. |
+| [Moonrepo](https://moonrepo.dev/) | Smart task runner and build system (`.moon/`). It orchestrates cross-project tasks and aggressively caches outputs (like typechecking or testing) to speed up CI/CD. |
+| [Biome](https://biomejs.dev) | Unified, lightning-fast linter and formatter, replacing ESLint and Prettier. |
+| [Vitest](https://vitest.dev) | Next-generation testing framework used in our dedicated `*-e2e` workspaces to keep production code clean. |
+| [Husky](https://typicode.github.io/husky/) | Manages Git hooks to enforce quality checks (`pre-push`) before code is pushed to the repository. |
+
+---
+
 ## Tech Stack
 
 ### Backend
@@ -296,6 +314,7 @@ Subscribe to `email.replied` and `email.received` events.
 
 ```
 kunci/
+├── .moon/                         # Moonrepo configuration for task orchestration
 ├── apps/
 │   ├── api/                           # Backend (Hono + oRPC)
 │   │   ├── src/
@@ -343,9 +362,12 @@ kunci/
 │           │   └── orpc/client.ts     # oRPC client setup (type-safe via @kunci/api)
 │           └── styles.css             # Tailwind + Kana UI Kit theme imports
 │
+│   ├── api-e2e/                       # Dedicated API testing workspace (Vitest)
+│   └── web-e2e/                       # Dedicated Web testing workspace (Vitest)
+│
 ├── Dockerfile                         # Multi-stage production build (hardened)
 ├── docker-compose.dev.yml             # Dev infrastructure (PostgreSQL + Redis)
-├── docker-compose.prod.yml            # Production stack (API + DB + Redis)
+├── docker-compose.yml            # Production stack (API + DB + Redis)
 ├── .dockerignore                      # Build context exclusions
 ├── .env.production.example            # Production env template
 ├── biome.json                         # Biome linter and formatter config
@@ -366,10 +388,10 @@ cp .env.production.example .env.production
 # Edit .env.production with real credentials
 
 # 2. Build and start
-docker compose -f docker-compose.prod.yml up -d --build
+docker compose -f docker-compose.yml up -d --build
 
 # 3. Push database schema
-docker compose -f docker-compose.prod.yml exec api \
+docker compose -f docker-compose.yml exec api \
   node -e "import('#/infrastructure/db/client.ts').then(m => m.pushSchema())"
 ```
 
