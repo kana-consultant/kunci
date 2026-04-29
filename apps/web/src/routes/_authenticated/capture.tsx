@@ -27,7 +27,7 @@ function CapturePage() {
 	const { mutate: captureLead, isPending, error } = useMutation(
 		orpc.lead.capture.mutationOptions({
 			onSuccess: () => {
-				navigate({ to: "/_authenticated/leads" })
+				navigate({ to: "/leads" })
 			},
 		}),
 	)

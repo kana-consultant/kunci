@@ -92,7 +92,7 @@ async function callOpenRouter<T>(
 				throw new Error(`OpenRouter ${response.status}: ${errorText}`)
 			}
 
-			const data: OpenRouterResponse = await response.json()
+			const data = (await response.json()) as OpenRouterResponse
 			const content = data.choices[0]?.message?.content
 
 			if (!content) throw new Error("Empty response from OpenRouter")

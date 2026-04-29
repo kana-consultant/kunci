@@ -60,7 +60,7 @@ function LeadDetailPage() {
 						Failed to load lead details. Make sure the API server is running.
 					</CardContent>
 				</Card>
-				<Link to="/_authenticated/leads">
+				<Link to="/leads">
 					<Button variant="ghost" leadingIcon={<ArrowLeft className="w-4 h-4" />}>
 						Back to pipeline
 					</Button>
@@ -75,7 +75,7 @@ function LeadDetailPage() {
 		<div className="space-y-6 max-w-5xl mx-auto">
 			{/* Header */}
 			<div>
-				<Link to="/_authenticated/leads">
+				<Link to="/leads">
 					<Button
 						variant="ghost"
 						size="sm"

@@ -50,7 +50,7 @@ function LeadsPage() {
 						{(data.total as number) ?? 0} leads total
 					</p>
 				</div>
-				<Link to="/_authenticated/capture">
+				<Link to="/capture">
 					<Button leadingIcon={<UserPlus className="w-4 h-4" />}>
 						Add Lead
 					</Button>
@@ -73,7 +73,7 @@ function LeadsPage() {
 						<div className="p-12 text-center text-[var(--color-muted-foreground)]">
 							<p className="mb-3">No leads found in the pipeline.</p>
 							<Link
-								to="/_authenticated/capture"
+								to="/capture"
 								className="text-[var(--color-primary)] font-medium"
 							>
 								Capture your first lead →
@@ -129,14 +129,14 @@ function LeadsPage() {
 												className="hover:bg-[var(--color-surface-alt)] transition-colors cursor-pointer"
 												onClick={() =>
 													navigate({
-														to: "/_authenticated/leads/$leadId",
+														to: "/leads/$leadId",
 														params: { leadId: lead.id as string },
 													})
 												}
 											>
 												<td className="px-6 py-4 whitespace-nowrap">
 													<Link
-														to="/_authenticated/leads/$leadId"
+														to="/leads/$leadId"
 														params={{ leadId: lead.id as string }}
 														className="flex flex-col"
 													>
