@@ -1,4 +1,7 @@
 <p align="center">
+  <img src="./assets/logo.png" alt="KUNCI Logo" width="200" />
+  <br />
+  <br />
   <img src="https://img.shields.io/badge/KUNCI-AI%20SDR-6C3FE8?style=for-the-badge&labelColor=1a1a2e" alt="KUNCI" />
   <br />
   <strong>AI-Powered Sales Development Representative</strong>
