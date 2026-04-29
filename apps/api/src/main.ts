@@ -60,7 +60,10 @@ async function bootstrap() {
 	const app = new Hono()
 
 	app.use("*", requestId())
-	app.use("*", cors({ origin: env.WEB_ORIGIN, credentials: true }))
+	app.use("*", cors({ 
+		origin: (origin) => (origin && origin.startsWith("http://localhost") ? origin : env.WEB_ORIGIN), 
+		credentials: true 
+	}))
 
 	// Logging middleware
 	app.use("*", async (c, next) => {
