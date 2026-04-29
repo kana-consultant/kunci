@@ -8,6 +8,7 @@ import { RPCHandler } from "@orpc/server/fetch"
 import { Hono } from "hono"
 import { cors } from "hono/cors"
 import { requestId } from "hono/request-id"
+import { Webhook } from "svix"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
@@ -119,6 +120,8 @@ async function bootstrap() {
 	// Webhooks
 	app.post("/webhooks/resend", async (c) => {
 		try {
+			const payload = await c.req.text()
+
 			// Verify webhook signature (Resend uses svix)
 			const webhookSecret = env.RESEND_WEBHOOK_SECRET
 			if (webhookSecret) {
@@ -133,14 +136,31 @@ async function bootstrap() {
 
 				// Timestamp tolerance: reject if older than 5 minutes
 				const timestamp = Number(svixTimestamp)
+				if (!Number.isFinite(timestamp)) {
+					logger.warn({ svixTimestamp }, "Webhook timestamp is invalid")
+					return c.json({ error: "Invalid timestamp" }, 401)
+				}
+
 				const now = Math.floor(Date.now() / 1000)
 				if (Math.abs(now - timestamp) > 300) {
 					logger.warn("Webhook timestamp too old")
 					return c.json({ error: "Timestamp expired" }, 401)
 				}
+
+				try {
+					const webhook = new Webhook(webhookSecret)
+					webhook.verify(payload, {
+						"svix-id": svixId,
+						"svix-timestamp": svixTimestamp,
+						"svix-signature": svixSignature,
+					})
+				} catch (error) {
+					logger.warn({ error }, "Invalid webhook signature")
+					return c.json({ error: "Invalid webhook signature" }, 401)
+				}
 			}
 
-			const body = await c.req.json()
+			const body = JSON.parse(payload) as Record<string, any>
 			logger.info({ type: body.type }, "Received Resend Webhook")
 
 			if (body.type === "email.replied" || body.type === "email.received") {
