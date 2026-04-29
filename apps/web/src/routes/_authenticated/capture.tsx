@@ -13,48 +13,38 @@ import {
 	Label,
 	Textarea,
 } from "@kana-consultant/ui-kit"
-import { useState } from "react"
+import { useRef } from "react"
 import { Sparkles } from "lucide-react"
 
-export const Route = createFileRoute("/capture")({
+export const Route = createFileRoute("/_authenticated/capture")({
 	component: CapturePage,
 })
 
 function CapturePage() {
 	const navigate = useNavigate()
-
-	const [form, setForm] = useState({
-		fullName: "",
-		email: "",
-		companyName: "",
-		companyWebsite: "",
-		painPoints: "",
-		leadSource: "Manual Entry",
-	})
+	const formRef = useRef<HTMLFormElement>(null)
 
 	const { mutate: captureLead, isPending, error } = useMutation(
 		orpc.lead.capture.mutationOptions({
 			onSuccess: () => {
-				navigate({ to: "/leads" })
+				navigate({ to: "/_authenticated/leads" })
 			},
 		}),
 	)
 
-	function handleSubmit(e: React.FormEvent) {
+	function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
 		e.preventDefault()
-		const mutate = captureLead as any;
-		mutate({
-			fullName: form.fullName,
-			email: form.email,
-			companyName: form.companyName,
-			companyWebsite: form.companyWebsite,
-			painPoints: form.painPoints || undefined,
-			leadSource: form.leadSource,
-		})
-	}
-
-	function updateField(field: string, value: string) {
-		setForm((prev) => ({ ...prev, [field]: value }))
+		const formData = new FormData(e.currentTarget)
+		const data = {
+			fullName: formData.get("fullName") as string,
+			email: formData.get("email") as string,
+			companyName: formData.get("companyName") as string,
+			companyWebsite: formData.get("companyWebsite") as string,
+			painPoints: (formData.get("painPoints") as string) || undefined,
+			leadSource: "Manual Entry",
+		}
+		const mutate = captureLead as any
+		mutate(data)
 	}
 
 	return (
@@ -67,7 +57,7 @@ function CapturePage() {
 				</p>
 			</div>
 
-			<form onSubmit={handleSubmit}>
+			<form ref={formRef} onSubmit={handleSubmit}>
 				<Card>
 					<CardHeader>
 						<CardTitle>Lead Information</CardTitle>
@@ -84,10 +74,9 @@ function CapturePage() {
 								</Label>
 								<Input
 									id="fullName"
+									name="fullName"
 									type="text"
 									required
-									value={form.fullName}
-									onChange={(e) => updateField("fullName", e.target.value)}
 									placeholder="John Doe"
 								/>
 							</div>
@@ -98,10 +87,9 @@ function CapturePage() {
 								</Label>
 								<Input
 									id="email"
+									name="email"
 									type="email"
 									required
-									value={form.email}
-									onChange={(e) => updateField("email", e.target.value)}
 									placeholder="john@company.com"
 								/>
 							</div>
@@ -114,10 +102,9 @@ function CapturePage() {
 								</Label>
 								<Input
 									id="companyName"
+									name="companyName"
 									type="text"
 									required
-									value={form.companyName}
-									onChange={(e) => updateField("companyName", e.target.value)}
 									placeholder="Acme Corp"
 								/>
 							</div>
@@ -128,12 +115,9 @@ function CapturePage() {
 								</Label>
 								<Input
 									id="companyWebsite"
+									name="companyWebsite"
 									type="url"
 									required
-									value={form.companyWebsite}
-									onChange={(e) =>
-										updateField("companyWebsite", e.target.value)
-									}
 									placeholder="https://acme.com"
 								/>
 							</div>
@@ -148,9 +132,8 @@ function CapturePage() {
 							</Label>
 							<Textarea
 								id="painPoints"
+								name="painPoints"
 								rows={3}
-								value={form.painPoints}
-								onChange={(e) => updateField("painPoints", e.target.value)}
 								placeholder="Any known pain points or specific context for the AI to use..."
 							/>
 						</div>

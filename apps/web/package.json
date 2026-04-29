@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "vitest run"
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@kana-consultant/ui-kit": "latest",
@@ -36,6 +36,6 @@
     "@vitejs/plugin-react": "^4.0.0",
     "tailwindcss": "4.0.0",
     "vite": "^6.0.0",
-    "vitest": "^3.0.0"
+    "typescript": "^5.4.0"
   }
 }
