@@ -1,5 +1,5 @@
-import type { LeadRepository } from "#/domain/lead/lead-repository.ts"
 import type { Lead } from "#/domain/lead/lead.ts"
+import type { LeadRepository } from "#/domain/lead/lead-repository.ts"
 import type { Logger } from "#/domain/ports/logger.ts"
 
 interface SchedulerDeps {

@@ -1,17 +1,17 @@
 {
-  "extends": "../../tsconfig.base.json",
-  "compilerOptions": {
-    "baseUrl": ".",
-    "paths": {
-      "~/*": ["./src/*"],
-      "@kunci/api": ["../api/src/index.ts"],
-      "#/*": ["../api/src/*"]
-    },
-    "jsx": "react-jsx",
-    "lib": ["DOM", "DOM.Iterable", "ESNext"],
-    "moduleDetection": "force",
-    "types": ["node"]
-  },
-  "include": ["env.d.ts", "src/**/*.ts", "src/**/*.tsx"],
-  "exclude": ["node_modules", "dist"]
+	"extends": "../../tsconfig.base.json",
+	"compilerOptions": {
+		"baseUrl": ".",
+		"paths": {
+			"~/*": ["./src/*"],
+			"@kunci/api": ["../api/src/index.ts"],
+			"#/*": ["../api/src/*"]
+		},
+		"jsx": "react-jsx",
+		"lib": ["DOM", "DOM.Iterable", "ESNext"],
+		"moduleDetection": "force",
+		"types": ["node"]
+	},
+	"include": ["env.d.ts", "src/**/*.ts", "src/**/*.tsx"],
+	"exclude": ["node_modules", "dist"]
 }

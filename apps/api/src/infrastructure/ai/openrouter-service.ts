@@ -3,16 +3,25 @@
  * Implements AIService port using fetch() → OpenRouter API
  */
 
+import type { BehaviorAnalysis } from "#/domain/behavior-analysis/behavior-analysis.ts"
+import type { Lead } from "#/domain/lead/lead.ts"
 import type {
 	AIService,
 	CompanyDataInput,
 	EmailTemplateInput,
 } from "#/domain/ports/ai-service.ts"
-import type { BehaviorAnalysis } from "#/domain/behavior-analysis/behavior-analysis.ts"
-import type { Lead } from "#/domain/lead/lead.ts"
 
-import { analyzeBehavior, analyzeWebsite, buildCompanyProfile } from "./analyzers.ts"
-import { convertToHtml, generateEmailSequence, personalizeReply, pickSubjectLine } from "./generators.ts"
+import {
+	analyzeBehavior,
+	analyzeWebsite,
+	buildCompanyProfile,
+} from "./analyzers.ts"
+import {
+	convertToHtml,
+	generateEmailSequence,
+	personalizeReply,
+	pickSubjectLine,
+} from "./generators.ts"
 
 export interface OpenRouterConfig {
 	apiKey: string
@@ -37,11 +46,13 @@ export function createOpenRouterService(config: OpenRouterConfig): AIService {
 		buildCompanyProfile: (data: CompanyDataInput) =>
 			buildCompanyProfile(apiKey, data),
 
-		convertToHtml: (content: string) =>
-			convertToHtml(apiKey, content),
+		convertToHtml: (content: string) => convertToHtml(apiKey, content),
 
-		personalizeReply: (lead: Lead, replyText: string, template: EmailTemplateInput) =>
-			personalizeReply(apiKey, lead, replyText, template),
+		personalizeReply: (
+			lead: Lead,
+			replyText: string,
+			template: EmailTemplateInput,
+		) => personalizeReply(apiKey, lead, replyText, template),
 
 		pickSubjectLine: (lead: Lead, variations: string[]) =>
 			pickSubjectLine(apiKey, lead, variations),

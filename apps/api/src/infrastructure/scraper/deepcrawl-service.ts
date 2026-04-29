@@ -4,8 +4,8 @@
  */
 
 import type {
-	ScraperService,
 	ScrapedPage,
+	ScraperService,
 } from "#/domain/ports/scraper-service.ts"
 import { logger } from "#/infrastructure/observability/logger.ts"
 
@@ -14,7 +14,9 @@ interface DeepcrawlConfig {
 	baseUrl?: string
 }
 
-export function createDeepcrawlService(config: DeepcrawlConfig): ScraperService {
+export function createDeepcrawlService(
+	config: DeepcrawlConfig,
+): ScraperService {
 	// Dynamic import to handle the SDK — avoids issues if not installed yet
 	let clientPromise: Promise<any> | null = null
 
@@ -91,7 +93,12 @@ async function fallbackScrape(url: string): Promise<ScrapedPage> {
 		})
 
 		if (!response.ok) {
-			return { success: false, markdown: null, metadata: null, cleanedHtml: null }
+			return {
+				success: false,
+				markdown: null,
+				metadata: null,
+				cleanedHtml: null,
+			}
 		}
 
 		const html = await response.text()

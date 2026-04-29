@@ -1,9 +1,10 @@
 import {
-	pgTable,
-	text,
 	integer,
-	timestamp,
+	jsonb,
+	pgTable,
 	real,
+	text,
+	timestamp,
 	uuid,
 } from "drizzle-orm/pg-core"
 
@@ -19,10 +20,7 @@ export const leads = pgTable("leads", {
 	stage: integer("stage").notNull().default(0),
 	replyStatus: text("reply_status").notNull().default("pending"),
 	latestMessageId: text("latest_message_id"),
-	messageIds: text("message_ids")
-		.array()
-		.notNull()
-		.default([]),
+	messageIds: text("message_ids").array().notNull().default([]),
 	lastEmailSentAt: timestamp("last_email_sent_at", { withTimezone: true }),
 	createdAt: timestamp("created_at", { withTimezone: true })
 		.notNull()
@@ -38,10 +36,7 @@ export const emailSequences = pgTable("email_sequences", {
 		.notNull()
 		.references(() => leads.id, { onDelete: "cascade" }),
 	emailNumber: integer("email_number").notNull(),
-	subjectLines: text("subject_lines")
-		.array()
-		.notNull()
-		.default([]),
+	subjectLines: text("subject_lines").array().notNull().default([]),
 	content: text("content").notNull(),
 	htmlContent: text("html_content"),
 	cta: text("cta").notNull(),
@@ -77,4 +72,27 @@ export const activityLog = pgTable("activity_log", {
 	createdAt: timestamp("created_at", { withTimezone: true })
 		.notNull()
 		.defaultNow(),
+})
+
+/**
+ * Pipeline Steps — granular, step-by-step tracking of pipeline execution.
+ * Each row is one discrete action (e.g. "Scraping website", "Calling OpenRouter AI").
+ */
+export const pipelineSteps = pgTable("pipeline_steps", {
+	id: uuid("id").primaryKey().defaultRandom(),
+	leadId: uuid("lead_id").references(() => leads.id, { onDelete: "cascade" }),
+	/** Pipeline step identifier: capture, scrape, analyze_website, build_profile, analyze_behavior, generate_sequence, send_email */
+	step: text("step").notNull(),
+	/** Human-readable label, e.g. "Scraping https://cosulagi.id" */
+	label: text("label").notNull(),
+	/** running | completed | failed */
+	status: text("status").notNull().default("running"),
+	/** Duration in milliseconds (filled on completion) */
+	durationMs: integer("duration_ms"),
+	/** Extra context: error message, API URL, model name, etc. */
+	detail: jsonb("detail").$type<Record<string, unknown>>(),
+	startedAt: timestamp("started_at", { withTimezone: true })
+		.notNull()
+		.defaultNow(),
+	completedAt: timestamp("completed_at", { withTimezone: true }),
 })

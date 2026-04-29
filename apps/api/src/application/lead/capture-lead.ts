@@ -1,8 +1,8 @@
-import type { LeadRepository } from "#/domain/lead/lead-repository.ts"
+import { badRequest, conflict } from "#/application/shared/errors.ts"
 import type { CreateLeadInput, Lead } from "#/domain/lead/lead.ts"
+import type { LeadRepository } from "#/domain/lead/lead-repository.ts"
 import type { EmailVerifier } from "#/domain/ports/email-verifier.ts"
 import type { Logger } from "#/domain/ports/logger.ts"
-import { badRequest, conflict } from "#/application/shared/errors.ts"
 
 interface CaptureLeadDeps {
 	leadRepo: LeadRepository
@@ -33,7 +33,12 @@ export function makeCaptureLeadUseCase(deps: CaptureLeadDeps) {
 }
 
 export function makeListLeadsUseCase(deps: { leadRepo: LeadRepository }) {
-	return async (params: { page: number; limit: number; stage?: number; status?: string }) => {
+	return async (params: {
+		page: number
+		limit: number
+		stage?: number
+		status?: string
+	}) => {
 		return deps.leadRepo.list({
 			page: params.page,
 			limit: params.limit,

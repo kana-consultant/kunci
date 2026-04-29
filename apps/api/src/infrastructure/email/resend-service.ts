@@ -5,8 +5,8 @@
 
 import { Resend } from "resend"
 import type {
-	EmailService,
 	EmailSendResult,
+	EmailService,
 	ReplyInThreadParams,
 	SendEmailParams,
 } from "#/domain/ports/email-service.ts"

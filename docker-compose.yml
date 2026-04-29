@@ -12,9 +12,12 @@ services:
       dockerfile: Dockerfile
     restart: unless-stopped
     ports:
-      - "127.0.0.1:${PORT:-3001}:3001"
+      - "127.0.0.1:${PORT:-3001}:${PORT:-3001}"
     env_file:
-      - .env.production
+      - .env
+      # For production: update .env.production with real secrets,
+      # then uncomment the line below and comment out .env above:
+      # - .env.production
     environment:
       NODE_ENV: production
       DATABASE_URL: postgres://kunci:${POSTGRES_PASSWORD:-CHANGE_ME_USE_A_STRONG_PASSWORD}@postgres:7432/kunci
