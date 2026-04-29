@@ -133,6 +133,10 @@ services:
       - /tmp:noexec,nosuid,size=32m
     cap_drop:
       - ALL
+    cap_add:
+      - SETGID
+      - SETUID
+      - CHOWN
     security_opt:
       - no-new-privileges:true
     deploy:
