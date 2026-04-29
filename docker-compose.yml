@@ -12,13 +12,13 @@ services:
       dockerfile: Dockerfile
     restart: unless-stopped
     ports:
-      - "${PORT:-3001}:3001"
+      - "127.0.0.1:${PORT:-3001}:3001"
     env_file:
       - .env.production
     environment:
       NODE_ENV: production
-      DATABASE_URL: postgres://kunci:${POSTGRES_PASSWORD}@postgres:5432/kunci
-      REDIS_URL: redis://redis:6379
+      DATABASE_URL: postgres://kunci:${POSTGRES_PASSWORD}@postgres:7432/kunci
+      REDIS_URL: redis://redis:7379
       WEB_DIST_PATH: /app/apps/web/dist
     depends_on:
       postgres:
@@ -60,6 +60,7 @@ services:
   postgres:
     image: postgres:17-alpine
     restart: unless-stopped
+    command: ["postgres", "-p", "7432"]
     # Security: no port exposure to host in production
     # Uncomment below ONLY if you need external DB access:
     # ports:
@@ -96,7 +97,7 @@ services:
         reservations:
           memory: 128M
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U kunci -d kunci"]
+      test: ["CMD-SHELL", "pg_isready -U kunci -d kunci -p 7432"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -115,6 +116,7 @@ services:
     # Security: no port exposure to host
     command: >
       redis-server
+      --port 7379
       --maxmemory 128mb
       --maxmemory-policy allkeys-lru
       --save ""
@@ -141,7 +143,7 @@ services:
         reservations:
           memory: 64M
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD", "redis-cli", "-p", "7379", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5

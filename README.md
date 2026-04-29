@@ -367,7 +367,7 @@ kunci/
 │
 ├── Dockerfile                         # Multi-stage production build (hardened)
 ├── docker-compose.dev.yml             # Dev infrastructure (PostgreSQL + Redis)
-├── docker-compose.prod.yml            # Production stack (API + DB + Redis)
+├── docker-compose.yml            # Production stack (API + DB + Redis)
 ├── .dockerignore                      # Build context exclusions
 ├── .env.production.example            # Production env template
 ├── biome.json                         # Biome linter and formatter config
@@ -388,10 +388,10 @@ cp .env.production.example .env.production
 # Edit .env.production with real credentials
 
 # 2. Build and start
-docker compose -f docker-compose.prod.yml up -d --build
+docker compose -f docker-compose.yml up -d --build
 
 # 3. Push database schema
-docker compose -f docker-compose.prod.yml exec api \
+docker compose -f docker-compose.yml exec api \
   node -e "import('#/infrastructure/db/client.ts').then(m => m.pushSchema())"
 ```
 
