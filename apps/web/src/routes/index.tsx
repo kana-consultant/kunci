@@ -24,7 +24,7 @@ function DashboardPage() {
 		<div className="space-y-8">
 			<div>
 				<h1 className="text-2xl font-bold">Dashboard</h1>
-				<p className="text-sm text-[var(--color-muted)] mt-1">
+				<p className="text-sm text-[var(--color-muted-foreground)] mt-1">
 					Overview of your AI SDR campaigns.
 				</p>
 			</div>
@@ -94,7 +94,7 @@ function DashboardPage() {
 									{i + 1}. {step}
 								</Badge>
 								{i < 5 && (
-									<span className="text-[var(--color-muted)]">→</span>
+									<span className="text-[var(--color-muted-foreground)]">→</span>
 								)}
 							</div>
 						))}

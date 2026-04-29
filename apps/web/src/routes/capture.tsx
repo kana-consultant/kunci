@@ -61,7 +61,7 @@ function CapturePage() {
 		<div className="max-w-2xl mx-auto">
 			<div className="mb-6">
 				<h1 className="text-2xl font-bold">Add New Lead</h1>
-				<p className="text-sm text-[var(--color-muted)] mt-1">
+				<p className="text-sm text-[var(--color-muted-foreground)] mt-1">
 					The AI pipeline will automatically research, analyze, and generate a
 					personalized email sequence.
 				</p>
@@ -142,7 +142,7 @@ function CapturePage() {
 						<div className="space-y-2">
 							<Label htmlFor="painPoints">
 								Pain Points{" "}
-								<span className="text-[var(--color-muted)] font-normal">
+								<span className="text-[var(--color-muted-foreground)] font-normal">
 									(Optional)
 								</span>
 							</Label>
@@ -162,7 +162,7 @@ function CapturePage() {
 								{error.message || "An error occurred"}
 							</p>
 						) : (
-							<div className="flex items-center gap-2 text-sm text-[var(--color-muted)]">
+							<div className="flex items-center gap-2 text-sm text-[var(--color-muted-foreground)]">
 								<Sparkles className="w-4 h-4 text-[var(--color-warning)]" />
 								The AI pipeline will start automatically after capture.
 							</div>

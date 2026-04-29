@@ -26,7 +26,7 @@ function RootLayout() {
 					activeId={activeId}
 					onNavigate={(id) => navigate({ to: id })}
 					footer={
-						<p className="text-xs text-[var(--color-muted)]">
+						<p className="text-xs text-[var(--color-muted-foreground)]">
 							v0.1.0 • KanA Consultant
 						</p>
 					}

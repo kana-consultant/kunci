@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router"
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router"
 import { useQuery } from "@tanstack/react-query"
 import { orpc } from "~/libs/orpc/client"
 import {
@@ -36,6 +36,7 @@ function LeadsPage() {
 	const query = useQuery(
 		orpc.lead.list.queryOptions({ input: { page: 1, limit: 50 } }),
 	)
+	const navigate = useNavigate()
 
 	const data = (query.data ?? {}) as any
 	const leads = (data.leads ?? []) as any[]
@@ -45,7 +46,7 @@ function LeadsPage() {
 			<div className="flex items-center justify-between">
 				<div>
 					<h1 className="text-2xl font-bold">Leads Pipeline</h1>
-					<p className="text-sm text-[var(--color-muted)] mt-1">
+					<p className="text-sm text-[var(--color-muted-foreground)] mt-1">
 						{(data.total as number) ?? 0} leads total
 					</p>
 				</div>
@@ -69,7 +70,7 @@ function LeadsPage() {
 							Failed to load leads. Make sure the API server is running.
 						</div>
 					) : leads.length === 0 ? (
-						<div className="p-12 text-center text-[var(--color-muted)]">
+						<div className="p-12 text-center text-[var(--color-muted-foreground)]">
 							<p className="mb-3">No leads found in the pipeline.</p>
 							<Link
 								to="/capture"
@@ -85,31 +86,31 @@ function LeadsPage() {
 									<tr>
 										<th
 											scope="col"
-											className="px-6 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-[var(--color-muted)]"
+											className="px-6 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-[var(--color-muted-foreground)]"
 										>
 											Lead
 										</th>
 										<th
 											scope="col"
-											className="px-6 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-[var(--color-muted)]"
+											className="px-6 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-[var(--color-muted-foreground)]"
 										>
 											Company
 										</th>
 										<th
 											scope="col"
-											className="px-6 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-[var(--color-muted)]"
+											className="px-6 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-[var(--color-muted-foreground)]"
 										>
 											Stage
 										</th>
 										<th
 											scope="col"
-											className="px-6 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-[var(--color-muted)]"
+											className="px-6 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-[var(--color-muted-foreground)]"
 										>
 											Status
 										</th>
 										<th
 											scope="col"
-											className="px-6 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-[var(--color-muted)]"
+											className="px-6 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-[var(--color-muted-foreground)]"
 										>
 											Date
 										</th>
@@ -126,6 +127,12 @@ function LeadsPage() {
 											<tr
 												key={lead.id as string}
 												className="hover:bg-[var(--color-surface-alt)] transition-colors cursor-pointer"
+												onClick={() =>
+													navigate({
+														to: "/leads/$leadId",
+														params: { leadId: lead.id as string },
+													})
+												}
 											>
 												<td className="px-6 py-4 whitespace-nowrap">
 													<Link
@@ -136,7 +143,7 @@ function LeadsPage() {
 														<span className="text-sm font-medium">
 															{lead.fullName as string}
 														</span>
-														<span className="text-sm text-[var(--color-muted)]">
+														<span className="text-sm text-[var(--color-muted-foreground)]">
 															{lead.email as string}
 														</span>
 													</Link>
@@ -149,7 +156,8 @@ function LeadsPage() {
 														href={lead.companyWebsite as string}
 														target="_blank"
 														rel="noreferrer"
-														className="text-xs text-[var(--color-primary)]"
+														className="text-xs text-[var(--color-primary)] relative z-10"
+														onClick={(e) => e.stopPropagation()}
 													>
 														{(lead.companyWebsite as string)?.replace(
 															/^https?:\/\//,
@@ -165,7 +173,7 @@ function LeadsPage() {
 														{lead.replyStatus as string}
 													</Badge>
 												</td>
-												<td className="px-6 py-4 whitespace-nowrap text-sm text-[var(--color-muted)]">
+												<td className="px-6 py-4 whitespace-nowrap text-sm text-[var(--color-muted-foreground)]">
 													{new Date(
 														lead.createdAt as string,
 													).toLocaleDateString()}
