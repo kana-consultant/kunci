@@ -113,7 +113,7 @@ async function bootstrap() {
 	app.post("/webhooks/resend", async (c) => {
 		try {
 			// Verify webhook signature (Resend uses svix)
-			const webhookSecret = process.env.RESEND_WEBHOOK_SECRET
+			const webhookSecret = env.RESEND_WEBHOOK_SECRET
 			if (webhookSecret) {
 				const svixId = c.req.header("svix-id")
 				const svixTimestamp = c.req.header("svix-timestamp")
