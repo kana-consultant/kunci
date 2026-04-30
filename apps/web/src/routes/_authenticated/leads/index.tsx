@@ -4,8 +4,8 @@ import { createFileRoute, Link } from "@tanstack/react-router"
 import { UserPlus } from "lucide-react"
 import { orpc } from "~/libs/orpc/client"
 
-import { columns } from "./-columns"
-import { DataTable } from "./-data-table"
+import { columns } from "./_components/columns"
+import { DataTable } from "./_components/data-table"
 
 export const Route = createFileRoute("/_authenticated/leads/")({
   component: LeadsPage,

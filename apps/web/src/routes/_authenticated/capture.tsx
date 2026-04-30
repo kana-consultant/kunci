@@ -13,7 +13,7 @@ import {
 import { createFileRoute } from "@tanstack/react-router"
 import { Sparkles } from "lucide-react"
 
-import { useCaptureLogic } from "./-use-capture"
+import { useCaptureLogic } from "./_hooks/use-capture"
 
 export const Route = createFileRoute("/_authenticated/capture")({
   component: CapturePage,
