@@ -1,7 +1,7 @@
 import { ORPCError, os } from "@orpc/server"
-import { AppError } from "../../application/shared/errors.ts"
-import { env } from "../../infrastructure/config/env.ts"
-import type { ORPCContext } from "./context.ts"
+import { AppError } from "#/application/shared/errors.ts"
+import { env } from "#/infrastructure/config/env.ts"
+import type { ORPCContext } from "#/presentation/orpc/context.ts"
 
 export const baseos = os.$context<ORPCContext>()
 

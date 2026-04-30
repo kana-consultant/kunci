@@ -1,7 +1,10 @@
 import { os } from "@orpc/server"
 import { z } from "zod"
-import { protectedProcedure, publicProcedure } from "../orpc/middleware"
-import type { ORPCContext } from "../orpc/context"
+import type { ORPCContext } from "#/presentation/orpc/context"
+import {
+	protectedProcedure,
+	publicProcedure,
+} from "#/presentation/orpc/middleware"
 
 const captureLeadSchema = z.object({
 	fullName: z.string().min(1, "Name is required"),
