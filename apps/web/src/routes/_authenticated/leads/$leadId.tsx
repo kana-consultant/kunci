@@ -1,131 +1,131 @@
 import {
-  Badge,
-  Button,
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Separator,
-  Skeleton,
+	Badge,
+	Button,
+	Card,
+	CardContent,
+	CardHeader,
+	CardTitle,
+	Separator,
+	Skeleton,
 } from "@kana-consultant/ui-kit"
 import { useQuery } from "@tanstack/react-query"
 import { createFileRoute, Link } from "@tanstack/react-router"
 import {
-  ArrowLeft,
-  Brain,
-  Calendar,
-  CheckCircle2,
-  Clock,
-  ExternalLink,
-  FileText,
-  Globe,
-  Loader2,
-  Mail,
-  Send,
-  UserCheck,
-  XCircle,
+	ArrowLeft,
+	Brain,
+	Calendar,
+	CheckCircle2,
+	Clock,
+	ExternalLink,
+	FileText,
+	Globe,
+	Loader2,
+	Mail,
+	Send,
+	UserCheck,
+	XCircle,
 } from "lucide-react"
 import ReactMarkdown from "react-markdown"
 import remarkBreaks from "remark-breaks"
 import { orpc } from "~/libs/orpc/client"
 
 export const Route = createFileRoute("/_authenticated/leads/$leadId")({
-  component: LeadDetailPage,
+	component: LeadDetailPage,
 })
 
 const statusTones: Record<
-  string,
-  "neutral" | "primary" | "success" | "warning" | "danger" | "info"
+	string,
+	"neutral" | "primary" | "success" | "warning" | "danger" | "info"
 > = {
-  pending: "warning",
-  researching: "info",
-  ready: "success",
-  awaiting: "primary",
-  replied: "success",
-  completed: "neutral",
-  bounced: "danger",
-  research_failed: "warning",
+	pending: "warning",
+	researching: "info",
+	ready: "success",
+	awaiting: "primary",
+	replied: "success",
+	completed: "neutral",
+	bounced: "danger",
+	research_failed: "warning",
 }
 
 /** Map step identifiers to icons and colors */
 const stepMeta: Record<string, { icon: typeof CheckCircle2; color: string }> = {
-  capture: { icon: UserCheck, color: "var(--color-primary)" },
-  scrape: { icon: Globe, color: "var(--color-info)" },
-  analyze_website: { icon: Brain, color: "var(--color-accent)" },
-  build_profile: { icon: FileText, color: "var(--color-success)" },
-  analyze_behavior: { icon: Brain, color: "var(--color-warning)" },
-  generate_sequence: { icon: Mail, color: "var(--color-primary)" },
-  send_email: { icon: Send, color: "var(--color-success)" },
+	capture: { icon: UserCheck, color: "var(--color-primary)" },
+	scrape: { icon: Globe, color: "var(--color-info)" },
+	analyze_website: { icon: Brain, color: "var(--color-accent)" },
+	build_profile: { icon: FileText, color: "var(--color-success)" },
+	analyze_behavior: { icon: Brain, color: "var(--color-warning)" },
+	generate_sequence: { icon: Mail, color: "var(--color-primary)" },
+	send_email: { icon: Send, color: "var(--color-success)" },
 }
 
 function formatDuration(ms: number | null): string {
-  if (!ms) return "—"
-  if (ms < 1000) return `${ms}ms`
-  return `${(ms / 1000).toFixed(1)}s`
+	if (!ms) return "—"
+	if (ms < 1000) return `${ms}ms`
+	return `${(ms / 1000).toFixed(1)}s`
 }
 
 function PipelineStepsTimeline({ leadId }: { leadId: string }) {
-  const {
-    data: steps,
-    isPending,
-    error,
-  } = useQuery(orpc.lead.getPipelineSteps.queryOptions({ input: { leadId } }))
+	const {
+		data: steps,
+		isPending,
+		error,
+	} = useQuery(orpc.lead.getPipelineSteps.queryOptions({ input: { leadId } }))
 
-  const pipelineSteps = steps ?? []
+	const pipelineSteps = steps ?? []
 
-  if (isPending) {
-    return (
-      <div className="space-y-3 p-4">
-        {[1, 2, 3].map((i) => (
-          <Skeleton key={i} className="h-14 rounded-lg" />
-        ))}
-      </div>
-    )
-  }
+	if (isPending) {
+		return (
+			<div className="space-y-3 p-4">
+				{[1, 2, 3].map((i) => (
+					<Skeleton key={i} className="h-14 rounded-lg" />
+				))}
+			</div>
+		)
+	}
 
-  if (error) {
-    return (
-      <div className="p-6 text-center text-sm text-[var(--color-danger)]">
-        Failed to load pipeline steps.
-      </div>
-    )
-  }
+	if (error) {
+		return (
+			<div className="p-6 text-center text-sm text-[var(--color-danger)]">
+				Failed to load pipeline steps.
+			</div>
+		)
+	}
 
-  if (pipelineSteps.length === 0) {
-    return (
-      <div className="text-center py-12 text-[var(--color-muted-foreground)]">
-        <Clock className="w-10 h-10 mx-auto mb-3 opacity-30" />
-        <p className="text-sm">No pipeline steps recorded yet.</p>
-        <p className="text-xs mt-1 opacity-60">
-          Steps will appear here when the pipeline runs.
-        </p>
-      </div>
-    )
-  }
+	if (pipelineSteps.length === 0) {
+		return (
+			<div className="text-center py-12 text-[var(--color-muted-foreground)]">
+				<Clock className="w-10 h-10 mx-auto mb-3 opacity-30" />
+				<p className="text-sm">No pipeline steps recorded yet.</p>
+				<p className="text-xs mt-1 opacity-60">
+					Steps will appear here when the pipeline runs.
+				</p>
+			</div>
+		)
+	}
 
-  return (
-    <div className="relative">
-      {/* Vertical timeline line */}
-      <div
-        className="absolute left-[19px] top-4 bottom-4 w-px"
-        style={{ background: "var(--color-border)" }}
-      />
+	return (
+		<div className="relative">
+			{/* Vertical timeline line */}
+			<div
+				className="absolute left-[19px] top-4 bottom-4 w-px"
+				style={{ background: "var(--color-border)" }}
+			/>
 
-      <div className="space-y-1">
-        {pipelineSteps.map((step: any, idx: number) => {
-          const meta = stepMeta[step.step] ?? {
-            icon: CheckCircle2,
-            color: "var(--color-muted-foreground)",
-          }
-          const StepIcon = meta.icon
-          const isFailed = step.status === "failed"
-          const isRunning = step.status === "running"
+			<div className="space-y-1">
+				{pipelineSteps.map((step: any, idx: number) => {
+					const meta = stepMeta[step.step] ?? {
+						icon: CheckCircle2,
+						color: "var(--color-muted-foreground)",
+					}
+					const StepIcon = meta.icon
+					const isFailed = step.status === "failed"
+					const isRunning = step.status === "running"
 
-          const StatusIcon = isFailed
-            ? XCircle
-            : isRunning
-              ? Loader2
-              : CheckCircle2
+					const StatusIcon = isFailed
+						? XCircle
+						: isRunning
+							? Loader2
+							: CheckCircle2
 
           const statusColor = isFailed
             ? "var(--color-danger)"
