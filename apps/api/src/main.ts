@@ -8,6 +8,7 @@ import { RPCHandler } from "@orpc/server/fetch"
 import { Hono } from "hono"
 import { cors } from "hono/cors"
 import { requestId } from "hono/request-id"
+import { z } from "zod"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
@@ -111,6 +112,22 @@ async function bootstrap() {
 	// Auth
 	app.on(["POST", "GET"], "/api/auth/*", (c) => auth.handler(c.req.raw))
 
+	const ResendWebhookSchema = z
+		.object({
+			type: z.string(),
+			data: z
+				.object({
+					from: z.string().optional(),
+					subject: z.string().optional(),
+					text: z.string().optional(),
+					html: z.string().optional(),
+					message_id: z.string().optional(),
+					email_id: z.string().optional(),
+				})
+				.passthrough(),
+		})
+		.passthrough()
+
 	// Health checks
 	app.get("/healthz", (c) => c.json({ status: "ok", version: APP_VERSION }))
 	app.get("/ready", async (c) => {
@@ -152,27 +169,39 @@ async function bootstrap() {
 				event = JSON.parse(payload);
 			}
 
-			logger.info({ type: event.type }, "Received Resend Webhook")
+			const parsedEvent = ResendWebhookSchema.parse(event)
+			logger.info({ type: parsedEvent.type }, "Received Resend Webhook")
 
-			// 3. Only handle email.received
-			if (event.type === "email.received") {
-				const emailId = event.data?.email_id;
-				
-				if (emailId) {
-					// 4. Fire and forget to return 200 OK fast
-					(async () => {
+			if (parsedEvent.type === "email.received" || parsedEvent.type === "email.replied") {
+				const emailId = parsedEvent.data.email_id
+
+				if (parsedEvent.type === "email.received" && emailId) {
+					// Fire and forget to return 200 OK fast
+					;(async () => {
 						try {
-							const receivedEmail = await services.email.getReceivedEmail(emailId);
+							const receivedEmail = await services.email.getReceivedEmail(emailId)
 							await useCases.email.handleReply({
 								fromEmail: receivedEmail.fromEmail,
 								subject: receivedEmail.subject,
 								textBody: receivedEmail.textBody,
 								messageId: receivedEmail.messageId,
-							});
+							})
 						} catch (err) {
-							logger.error({ err }, "Background reply handling failed");
+							logger.error({ err, emailId }, "Background reply handling failed")
 						}
-					})();
+					})()
+				} else if (parsedEvent.data.from) {
+					// Fallback for cases where data is already present in the payload (e.g. email.replied)
+					useCases.email
+						.handleReply({
+							fromEmail: parsedEvent.data.from,
+							subject: parsedEvent.data.subject || "No Subject",
+							textBody: parsedEvent.data.text || parsedEvent.data.html || "No body",
+							messageId: parsedEvent.data.message_id || "",
+						})
+						.catch((err) =>
+							logger.error({ err }, "Background reply handling failed"),
+						)
 				}
 			}
 
