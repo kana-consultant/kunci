@@ -16,8 +16,8 @@ function LeadsPage() {
     orpc.lead.list.queryOptions({ input: { page: 1, limit: 50 } }),
   )
 
-  const data = (query.data ?? {}) as any
-  const leads = (data.leads ?? []) as any[]
+  const data = query.data ?? { total: 0, leads: [] }
+  const leads = data.leads
 
   return (
     <div className="space-y-6">

@@ -1,8 +1,8 @@
 import { os } from "@orpc/server"
+import type { ORPCContext } from "../orpc/context.ts"
 import { protectedProcedure } from "../orpc/middleware.ts"
 
-export const campaignRouter = os.router({
-  // @ts-expect-error - oRPC constraint mismatch
+export const campaignRouter = os.$context<ORPCContext>().router({
   getStats: protectedProcedure.handler(async ({ context }) => {
     const stats = await context.useCases.lead.getStats()
     const conversionRate =

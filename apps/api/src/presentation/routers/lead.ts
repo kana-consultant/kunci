@@ -1,4 +1,5 @@
 import { os } from "@orpc/server"
+import type { ORPCContext } from "../orpc/context.ts"
 import { z } from "zod"
 import { protectedProcedure, publicProcedure } from "../orpc/middleware.ts"
 
@@ -11,8 +12,7 @@ const captureLeadSchema = z.object({
   leadSource: z.string().optional(),
 })
 
-export const leadRouter = os.router({
-  // @ts-expect-error - oRPC constraint mismatch
+export const leadRouter = os.$context<ORPCContext>().router({
   capture: publicProcedure
     .input(captureLeadSchema)
     .handler(async ({ input, context }) => {
@@ -23,7 +23,6 @@ export const leadRouter = os.router({
       return context.useCases.pipeline.runOutbound(input)
     }),
 
-  // @ts-expect-error - oRPC constraint mismatch
   list: protectedProcedure
     .input(
       z.object({
@@ -37,14 +36,12 @@ export const leadRouter = os.router({
       return context.useCases.lead.list(input)
     }),
 
-  // @ts-expect-error - oRPC constraint mismatch
   getDetail: protectedProcedure
     .input(z.object({ id: z.string().uuid() }))
     .handler(async ({ input, context }) => {
       return context.useCases.lead.getDetail(input.id)
     }),
 
-  // @ts-expect-error - oRPC constraint mismatch
   getPipelineSteps: protectedProcedure
     .input(z.object({ leadId: z.string().uuid() }))
     .handler(async ({ input, context }) => {

@@ -3,18 +3,18 @@ import { AppError } from "#/application/shared/errors.ts"
 import { env } from "../../infrastructure/config/env.ts"
 import type { ORPCContext } from "./context.ts"
 
-export const publicProcedure = os
-  .$context<ORPCContext>()
-  .use(async ({ context, next }) => {
-    try {
-      return await next({ context })
-    } catch (error) {
-      if (error instanceof AppError) {
-        throw new ORPCError(error.code, { message: error.message })
-      }
-      throw error
+export const baseos = os.$context<ORPCContext>()
+
+export const publicProcedure = baseos.use(async ({ context, next }) => {
+  try {
+    return await next({ context })
+  } catch (error) {
+    if (error instanceof AppError) {
+      throw new ORPCError(error.code, { message: error.message })
     }
-  })
+    throw error
+  }
+})
 
 export const protectedProcedure = publicProcedure.use(
   async ({ context, next }) => {

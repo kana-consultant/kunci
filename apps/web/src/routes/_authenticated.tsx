@@ -36,7 +36,7 @@ function AuthenticatedLayout() {
           brandName="KUNCI"
           items={navItems}
           activeId={activeId}
-          onNavigate={(id) => navigate({ to: id as any })}
+          onNavigate={(id) => navigate({ to: id as string })}
           footer={
             <p className="text-xs text-[var(--color-muted-foreground)]">
               v{__APP_VERSION__} • KanA Consultant

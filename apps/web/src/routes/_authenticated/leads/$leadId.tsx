@@ -71,7 +71,7 @@ function PipelineStepsTimeline({ leadId }: { leadId: string }) {
     error,
   } = useQuery(orpc.lead.getPipelineSteps.queryOptions({ input: { leadId } }))
 
-  const pipelineSteps = (steps ?? []) as any[]
+  const pipelineSteps = steps ?? []
 
   if (isPending) {
     return (
@@ -252,7 +252,7 @@ function LeadDetailPage() {
   const { data, isPending, error } = useQuery(
     orpc.lead.getDetail.queryOptions({ input: { id: leadId } }),
   )
-  const lead = (data ?? {}) as any
+  const lead = data
 
   if (isPending) {
     return (
@@ -347,7 +347,7 @@ function LeadDetailPage() {
               <div className="flex items-center gap-3 text-sm text-[var(--color-muted-foreground)]">
                 <Calendar className="w-4 h-4 shrink-0" />
                 Captured on{" "}
-                {new Date(lead.createdAt as string).toLocaleDateString()}
+                {new Date(lead.createdAt).toLocaleDateString()}
               </div>
             </CardContent>
           </Card>
