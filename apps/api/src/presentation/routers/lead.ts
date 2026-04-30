@@ -1,7 +1,7 @@
 import { os } from "@orpc/server"
-import type { ORPCContext } from "../orpc/context.ts"
 import { z } from "zod"
-import { protectedProcedure, publicProcedure } from "../orpc/middleware.ts"
+import { protectedProcedure, publicProcedure } from "../orpc/middleware"
+import type { ORPCContext } from "../orpc/context"
 
 const captureLeadSchema = z.object({
 	fullName: z.string().min(1, "Name is required"),
@@ -16,10 +16,6 @@ export const leadRouter = os.$context<ORPCContext>().router({
 	capture: publicProcedure
 		.input(captureLeadSchema)
 		.handler(async ({ input, context }) => {
-			// We return the result immediately to the client
-			// The pipeline will continue running in the background if we decouple it,
-			// but for simplicity in V1 we await it, or just return the capture result and trigger async.
-			// Here we just trigger the full pipeline
 			return context.useCases.pipeline.runOutbound(input)
 		}),
 
@@ -32,18 +28,26 @@ export const leadRouter = os.$context<ORPCContext>().router({
 				status: z.string().optional(),
 			}),
 		)
+		.output(
+			z.object({
+				leads: z.array(z.any()),
+				total: z.number(),
+			}),
+		)
 		.handler(async ({ input, context }) => {
 			return context.useCases.lead.list(input)
 		}),
 
 	getDetail: protectedProcedure
 		.input(z.object({ id: z.string().uuid() }))
+		.output(z.any())
 		.handler(async ({ input, context }) => {
 			return context.useCases.lead.getDetail(input.id)
 		}),
 
 	getPipelineSteps: protectedProcedure
 		.input(z.object({ leadId: z.string().uuid() }))
+		.output(z.array(z.any()))
 		.handler(async ({ input, context }) => {
 			return context.useCases.pipeline.getSteps(input.leadId)
 		}),

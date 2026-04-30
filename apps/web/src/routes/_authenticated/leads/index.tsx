@@ -4,8 +4,8 @@ import { createFileRoute, Link } from "@tanstack/react-router"
 import { UserPlus } from "lucide-react"
 import { orpc } from "~/libs/orpc/client"
 
-import { columns } from "./_components/columns"
-import { DataTable } from "./_components/data-table"
+import { columns } from "./-columns"
+import { DataTable } from "./-data-table"
 
 export const Route = createFileRoute("/_authenticated/leads/")({
 	component: LeadsPage,
@@ -16,7 +16,7 @@ function LeadsPage() {
 		orpc.lead.list.queryOptions({ input: { page: 1, limit: 50 } }),
 	)
 
-	const data = query.data ?? { total: 0, leads: [] }
+	const data = query.data ?? { leads: [], total: 0 }
 	const leads = data.leads
 
 	return (
@@ -25,7 +25,7 @@ function LeadsPage() {
 				<div>
 					<h1 className="text-2xl font-bold">Leads Pipeline</h1>
 					<p className="text-sm text-[var(--color-muted-foreground)] mt-1">
-						{(data.total as number) ?? 0} leads total
+						{data.total} leads total
 					</p>
 				</div>
 				<Link to="/capture">
@@ -58,7 +58,7 @@ function LeadsPage() {
 							</Link>
 						</div>
 					) : (
-						<DataTable columns={columns} data={leads} />
+						<DataTable columns={columns as any} data={leads} />
 					)}
 				</CardContent>
 			</Card>
