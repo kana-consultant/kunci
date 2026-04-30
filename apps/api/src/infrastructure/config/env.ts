@@ -18,6 +18,8 @@ const envSchema = z.object({
 	API_KEY: z.string().optional(),
 	ADMIN_USER: z.string().default("admin"),
 	ADMIN_PASS: z.string().optional(),
+	BETTER_AUTH_SECRET: z.string().min(1, "BETTER_AUTH_SECRET is required"),
+	BETTER_AUTH_URL: z.string().url().optional(),
 })
 
 export type Env = z.infer<typeof envSchema>

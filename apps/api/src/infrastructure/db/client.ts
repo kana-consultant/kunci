@@ -1,10 +1,13 @@
 import { drizzle } from "drizzle-orm/postgres-js"
 import postgres from "postgres"
+import { env } from "../config/env.ts"
 import * as schema from "./schema.ts"
 
-export function createDb(url: string) {
-	const client = postgres(url, { max: 20, idle_timeout: 30 })
-	return drizzle(client, { schema })
+export const pgClient = postgres(env.DATABASE_URL, { max: 20, idle_timeout: 30 })
+export const db = drizzle(pgClient, { schema })
+
+export function createDb(_url: string) {
+	return db
 }
 
-export type Database = ReturnType<typeof createDb>
+export type Database = typeof db
