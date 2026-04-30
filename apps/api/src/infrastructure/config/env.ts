@@ -9,6 +9,7 @@ const envSchema = z.object({
 	DEEPCRAWL_API_KEY: z.string().min(1, "DEEPCRAWL_API_KEY is required"),
 	SENDER_EMAIL: z.string().email("SENDER_EMAIL must be a valid email"),
 	SENDER_NAME: z.string().default("KUNCI AI SDR"),
+	SENDER_COMPANY: z.string().default("KUNCI.AI"),
 	PORT: z.coerce.number().int().positive().default(3001),
 	WEB_ORIGIN: z.string().url().default("http://localhost:3000"),
 	WEB_DIST_PATH: z.string().optional(),

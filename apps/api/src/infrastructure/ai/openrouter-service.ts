@@ -37,8 +37,11 @@ export function createOpenRouterService(config: OpenRouterConfig): AIService {
 		analyzeBehavior: (lead: Lead, companyProfile: string) =>
 			analyzeBehavior(apiKey, lead, companyProfile),
 
-		generateEmailSequence: (lead: Lead, analysis: BehaviorAnalysis) =>
-			generateEmailSequence(apiKey, lead, analysis),
+		generateEmailSequence: (
+			lead: Lead,
+			analysis: BehaviorAnalysis,
+			senderInfo?: { name: string; company: string },
+		) => generateEmailSequence(apiKey, lead, analysis, senderInfo),
 
 		analyzeWebsite: (websiteMarkdown: string) =>
 			analyzeWebsite(apiKey, websiteMarkdown),
@@ -52,7 +55,8 @@ export function createOpenRouterService(config: OpenRouterConfig): AIService {
 			lead: Lead,
 			replyText: string,
 			template: EmailTemplateInput,
-		) => personalizeReply(apiKey, lead, replyText, template),
+			senderInfo?: { name: string; company: string },
+		) => personalizeReply(apiKey, lead, replyText, template, senderInfo),
 
 		pickSubjectLine: (lead: Lead, variations: string[]) =>
 			pickSubjectLine(apiKey, lead, variations),

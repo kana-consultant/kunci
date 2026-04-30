@@ -36,6 +36,10 @@ export interface AppDependencies {
 	}
 	tracker: PipelineTracker
 	logger: Logger
+	config: {
+		senderName: string
+		senderCompany: string
+	}
 }
 
 export function buildUseCases(deps: AppDependencies) {
@@ -65,6 +69,8 @@ export function buildUseCases(deps: AppDependencies) {
 		ai: deps.services.ai,
 		emailService: deps.services.email,
 		logger,
+		senderName: deps.config.senderName,
+		senderCompany: deps.config.senderCompany,
 	})
 
 	const sendFollowup = makeSendFollowupUseCase({
@@ -73,6 +79,8 @@ export function buildUseCases(deps: AppDependencies) {
 		ai: deps.services.ai,
 		emailService: deps.services.email,
 		logger,
+		senderName: deps.config.senderName,
+		senderCompany: deps.config.senderCompany,
 	})
 
 	const handleReply = makeHandleReplyUseCase({
@@ -81,6 +89,8 @@ export function buildUseCases(deps: AppDependencies) {
 		ai: deps.services.ai,
 		emailService: deps.services.email,
 		logger,
+		senderName: deps.config.senderName,
+		senderCompany: deps.config.senderCompany,
 	})
 
 	// Pipeline orchestrator (with step tracking)
