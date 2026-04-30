@@ -5,8 +5,13 @@ import {
 	CardContent,
 	CardHeader,
 	CardTitle,
+	Progress,
 	Separator,
 	Skeleton,
+	Tooltip,
+	TooltipContent,
+	TooltipProvider,
+	TooltipTrigger,
 } from "@kana-consultant/ui-kit"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute, Link } from "@tanstack/react-router"
@@ -104,8 +109,12 @@ function PipelineStepsTimeline({ leadId }: { leadId: string }) {
 		)
 	}
 
+	const totalSteps = 7
+	const completedSteps = pipelineSteps.filter((s: any) => s.status === "completed").length
+
 	return (
 		<div className="relative">
+			<Progress value={(completedSteps / totalSteps) * 100} tone="primary" className="mb-4 mx-2" />
 			{/* Vertical timeline line */}
 			<div
 				className="absolute left-[19px] top-4 bottom-4 w-px"
@@ -188,12 +197,16 @@ function PipelineStepsTimeline({ leadId }: { leadId: string }) {
 								{detail && (
 									<div className="mt-1 space-y-0.5">
 										{detail.error && (
-											<p
-												className="text-xs text-[var(--color-danger)] truncate"
-												title={detail.error as string}
-											>
-												Error: {detail.error as string}
-											</p>
+											<TooltipProvider>
+												<Tooltip>
+													<TooltipTrigger asChild>
+														<p className="text-xs text-[var(--color-danger)] truncate cursor-help">
+															Error: {detail.error as string}
+														</p>
+													</TooltipTrigger>
+													<TooltipContent>{detail.error as string}</TooltipContent>
+												</Tooltip>
+											</TooltipProvider>
 										)}
 										{detail.provider && (
 											<p className="text-xs text-[var(--color-muted-foreground)]">
@@ -212,20 +225,28 @@ function PipelineStepsTimeline({ leadId }: { leadId: string }) {
 											</p>
 										)}
 										{detail.apiUrl && (
-											<p
-												className="text-xs text-[var(--color-muted-foreground)] font-mono truncate opacity-60"
-												title={detail.apiUrl as string}
-											>
-												→ {detail.apiUrl as string}
-											</p>
+											<TooltipProvider>
+												<Tooltip>
+													<TooltipTrigger asChild>
+														<p className="text-xs text-[var(--color-muted-foreground)] font-mono truncate opacity-60 cursor-help">
+															→ {detail.apiUrl as string}
+														</p>
+													</TooltipTrigger>
+													<TooltipContent>{detail.apiUrl as string}</TooltipContent>
+												</Tooltip>
+											</TooltipProvider>
 										)}
 										{detail.url && !detail.apiUrl && (
-											<p
-												className="text-xs text-[var(--color-muted-foreground)] font-mono truncate opacity-60"
-												title={detail.url as string}
-											>
-												→ {detail.url as string}
-											</p>
+											<TooltipProvider>
+												<Tooltip>
+													<TooltipTrigger asChild>
+														<p className="text-xs text-[var(--color-muted-foreground)] font-mono truncate opacity-60 cursor-help">
+															→ {detail.url as string}
+														</p>
+													</TooltipTrigger>
+													<TooltipContent>{detail.url as string}</TooltipContent>
+												</Tooltip>
+											</TooltipProvider>
 										)}
 									</div>
 								)}

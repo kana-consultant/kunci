@@ -7,6 +7,13 @@ import {
 	CardFooter,
 	CardHeader,
 	CardTitle,
+	Table,
+	TableBody,
+	TableCell,
+	TableHead,
+	TableHeader,
+	TableRow,
+	Textarea,
 } from "@kana-consultant/ui-kit"
 import { createFileRoute, Link } from "@tanstack/react-router"
 import {
@@ -160,28 +167,28 @@ function BulkCapturePage() {
 							</CardTitle>
 						</CardHeader>
 						<CardContent className="p-0">
-							<table className="w-full text-sm">
-								<thead>
-									<tr className="border-b bg-[var(--color-muted-subtle)]">
-										<th className="text-left p-3 font-medium">Name</th>
-										<th className="text-left p-3 font-medium">Email</th>
-										<th className="text-left p-3 font-medium">Reason</th>
-									</tr>
-								</thead>
-								<tbody>
+							<Table>
+								<TableHeader className="bg-[var(--color-muted-subtle)]">
+									<TableRow>
+										<TableHead>Name</TableHead>
+										<TableHead>Email</TableHead>
+										<TableHead>Reason</TableHead>
+									</TableRow>
+								</TableHeader>
+								<TableBody>
 									{result.duplicates.map((d, i) => (
-										<tr key={i} className="border-b last:border-0">
-											<td className="p-3">{d.fullName}</td>
-											<td className="p-3 text-[var(--color-muted-foreground)]">
+										<TableRow key={i}>
+											<TableCell>{d.fullName}</TableCell>
+											<TableCell className="text-[var(--color-muted-foreground)]">
 												{d.email}
-											</td>
-											<td className="p-3">
+											</TableCell>
+											<TableCell>
 												<Badge tone="warning">{d.reason}</Badge>
-											</td>
-										</tr>
+											</TableCell>
+										</TableRow>
 									))}
-								</tbody>
-							</table>
+								</TableBody>
+							</Table>
 						</CardContent>
 					</Card>
 				)}
@@ -196,28 +203,28 @@ function BulkCapturePage() {
 							</CardTitle>
 						</CardHeader>
 						<CardContent className="p-0">
-							<table className="w-full text-sm">
-								<thead>
-									<tr className="border-b bg-[var(--color-muted-subtle)]">
-										<th className="text-left p-3 font-medium">Name</th>
-										<th className="text-left p-3 font-medium">Email</th>
-										<th className="text-left p-3 font-medium">Reason</th>
-									</tr>
-								</thead>
-								<tbody>
+							<Table>
+								<TableHeader className="bg-[var(--color-muted-subtle)]">
+									<TableRow>
+										<TableHead>Name</TableHead>
+										<TableHead>Email</TableHead>
+										<TableHead>Reason</TableHead>
+									</TableRow>
+								</TableHeader>
+								<TableBody>
 									{result.invalid.map((inv, i) => (
-										<tr key={i} className="border-b last:border-0">
-											<td className="p-3">{inv.fullName}</td>
-											<td className="p-3 text-[var(--color-muted-foreground)]">
+										<TableRow key={i}>
+											<TableCell>{inv.fullName}</TableCell>
+											<TableCell className="text-[var(--color-muted-foreground)]">
 												{inv.email}
-											</td>
-											<td className="p-3">
+											</TableCell>
+											<TableCell>
 												<Badge tone="danger">{inv.reason}</Badge>
-											</td>
-										</tr>
+											</TableCell>
+										</TableRow>
 									))}
-								</tbody>
-							</table>
+								</TableBody>
+							</Table>
 						</CardContent>
 					</Card>
 				)}
@@ -336,8 +343,8 @@ function BulkCapturePage() {
 					</div>
 
 					{/* Text Area */}
-					<textarea
-						className="w-full min-h-[160px] p-4 rounded-lg border border-[var(--color-border)] bg-[var(--color-background)] text-sm font-mono focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] resize-y"
+					<Textarea
+						className="min-h-[160px] font-mono"
 						placeholder="Paste your CSV data here...&#10;fullName,email,companyName,companyWebsite&#10;John Doe,john@acme.com,Acme Corp,https://acme.com"
 						value={csvText}
 						onChange={(e) => setCsvText(e.target.value)}
@@ -404,34 +411,34 @@ function BulkCapturePage() {
 						</div>
 					</CardHeader>
 					<CardContent className="p-0 overflow-x-auto">
-						<table className="w-full text-sm">
-							<thead>
-								<tr className="border-b bg-[var(--color-muted-subtle)]">
-									<th className="text-left p-3 font-medium">#</th>
-									<th className="text-left p-3 font-medium">Name</th>
-									<th className="text-left p-3 font-medium">Email</th>
-									<th className="text-left p-3 font-medium">Company</th>
-									<th className="text-left p-3 font-medium">Website</th>
-								</tr>
-							</thead>
-							<tbody>
+						<Table>
+							<TableHeader className="bg-[var(--color-muted-subtle)]">
+								<TableRow>
+									<TableHead className="w-12">#</TableHead>
+									<TableHead>Name</TableHead>
+									<TableHead>Email</TableHead>
+									<TableHead>Company</TableHead>
+									<TableHead>Website</TableHead>
+								</TableRow>
+							</TableHeader>
+							<TableBody>
 								{parsedRows.map((row, i) => (
-									<tr key={i} className="border-b last:border-0">
-										<td className="p-3 text-[var(--color-muted-foreground)]">
+									<TableRow key={i}>
+										<TableCell className="text-[var(--color-muted-foreground)]">
 											{i + 1}
-										</td>
-										<td className="p-3 font-medium">{row.fullName}</td>
-										<td className="p-3 text-[var(--color-muted-foreground)]">
+										</TableCell>
+										<TableCell className="font-medium">{row.fullName}</TableCell>
+										<TableCell className="text-[var(--color-muted-foreground)]">
 											{row.email}
-										</td>
-										<td className="p-3">{row.companyName}</td>
-										<td className="p-3 text-[var(--color-primary)]">
+										</TableCell>
+										<TableCell>{row.companyName}</TableCell>
+										<TableCell className="text-[var(--color-primary)]">
 											{row.companyWebsite.replace(/^https?:\/\//, "")}
-										</td>
-									</tr>
+										</TableCell>
+									</TableRow>
 								))}
-							</tbody>
-						</table>
+							</TableBody>
+						</Table>
 					</CardContent>
 					<CardFooter className="flex justify-end gap-3 border-t p-6 bg-[var(--color-muted-subtle)]">
 						<Button variant="ghost" onClick={reset}>

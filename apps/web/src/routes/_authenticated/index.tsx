@@ -1,29 +1,28 @@
 import {
+	ActivityFeed,
 	Card,
 	CardContent,
 	CardHeader,
 	CardTitle,
+	Progress,
 	Skeleton,
 	StatCard,
+	Tabs,
+	TabsList,
+	TabsTrigger,
 } from "@kana-consultant/ui-kit"
 import { useQuery } from "@tanstack/react-query"
 import { createFileRoute, Link } from "@tanstack/react-router"
 import {
 	Activity,
-	Brain,
-	CheckCircle2,
 	Clock,
 	FileSpreadsheet,
-	Globe,
 	ListTodo,
 	Mail,
 	MessageCircle,
-	Send,
 	TrendingUp,
-	UserCheck,
 	UserPlus,
 	Users,
-	XCircle,
 } from "lucide-react"
 import { useState } from "react"
 import { orpc } from "~/libs/orpc/client"
@@ -32,15 +31,7 @@ export const Route = createFileRoute("/_authenticated/")({
 	component: DashboardPage,
 })
 
-const stepMeta: Record<string, { icon: any; color: string }> = {
-	capture: { icon: UserCheck, color: "var(--color-primary)" },
-	scrape: { icon: Globe, color: "var(--color-info)" },
-	analyze_website: { icon: Brain, color: "var(--color-accent)" },
-	build_profile: { icon: ListTodo, color: "var(--color-success)" },
-	analyze_behavior: { icon: Brain, color: "var(--color-warning)" },
-	generate_sequence: { icon: Mail, color: "var(--color-primary)" },
-	send_email: { icon: Send, color: "var(--color-success)" },
-}
+
 
 function getRelativeTime(dateString: string) {
 	const diff = Date.now() - new Date(dateString).getTime()
@@ -94,25 +85,13 @@ function DashboardPage() {
 					</p>
 				</div>
 
-				<div className="flex bg-[var(--color-surface-alt)] p-1 rounded-lg border border-[var(--color-border)]">
-					{[
-						{ value: "7d", label: "Last 7 Days" },
-						{ value: "30d", label: "Last 30 Days" },
-						{ value: "all", label: "All Time" },
-					].map((p) => (
-						<button
-							key={p.value}
-							onClick={() => setPeriod(p.value as Period)}
-							className={`px-3 py-1.5 rounded-md text-sm transition-colors ${
-								period === p.value
-									? "bg-[var(--color-surface)] shadow-sm font-medium text-[var(--color-foreground)]"
-									: "text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]"
-							}`}
-						>
-							{p.label}
-						</button>
-					))}
-				</div>
+				<Tabs value={period} onValueChange={(val) => setPeriod(val as Period)}>
+					<TabsList>
+						<TabsTrigger value="7d">Last 7 Days</TabsTrigger>
+						<TabsTrigger value="30d">Last 30 Days</TabsTrigger>
+						<TabsTrigger value="all">All Time</TabsTrigger>
+					</TabsList>
+				</Tabs>
 			</div>
 
 			{/* Quick Actions */}
@@ -257,12 +236,7 @@ function DashboardPage() {
 														{stage.count} leads
 													</span>
 												</div>
-												<div className="h-3 w-full bg-[var(--color-surface-alt)] rounded-full overflow-hidden">
-													<div
-														className="h-full bg-[var(--color-primary)] rounded-full transition-all duration-500 ease-out"
-														style={{ width: `${Math.max(percentage, 2)}%` }}
-													/>
-												</div>
+												<Progress value={Math.max(percentage, 2)} tone="primary" />
 											</div>
 										)
 									})}
@@ -349,70 +323,20 @@ function DashboardPage() {
 									<p className="text-sm">No recent activity.</p>
 								</div>
 							) : (
-								<div className="relative mt-2">
-									<div
-										className="absolute left-[15px] top-2 bottom-2 w-px"
-										style={{ background: "var(--color-border)" }}
+								<div className="mt-2">
+									<ActivityFeed
+										items={activityQuery.data?.map((step) => ({
+											id: step.id,
+											actor: {
+												id: step.leadId ?? "unknown",
+												name: step.leadName ?? "Unknown Lead",
+												fallback: (step.leadName ?? "U")[0].toUpperCase(),
+											},
+											verb: step.label,
+											target: step.step,
+											at: getRelativeTime(step.startedAt),
+										}))}
 									/>
-									<div className="space-y-4">
-										{activityQuery.data?.map((step) => {
-											const meta = stepMeta[step.step] ?? {
-												icon: CheckCircle2,
-												color: "var(--color-muted-foreground)",
-											}
-											const StepIcon = meta.icon
-											const isFailed = step.status === "failed"
-											const isRunning = step.status === "running"
-
-											return (
-												<div
-													key={step.id}
-													className="relative flex items-start gap-3"
-												>
-													<div
-														className="relative z-10 flex items-center justify-center w-[30px] h-[30px] rounded-full shrink-0 bg-[var(--color-surface)]"
-														style={{
-															border: `2px solid ${
-																isFailed
-																	? "var(--color-danger)"
-																	: isRunning
-																		? "var(--color-warning)"
-																		: meta.color
-															}`,
-														}}
-													>
-														{isFailed ? (
-															<XCircle className="w-3.5 h-3.5 text-[var(--color-danger)]" />
-														) : (
-															<StepIcon
-																className={`w-3.5 h-3.5 ${isRunning ? "animate-pulse" : ""}`}
-																style={{
-																	color: isRunning
-																		? "var(--color-warning)"
-																		: meta.color,
-																}}
-															/>
-														)}
-													</div>
-													<div className="flex-1 min-w-0 pt-1">
-														<div className="flex items-center justify-between gap-2">
-															<p className="text-sm font-medium truncate">
-																{step.label}
-															</p>
-															<span className="text-[10px] text-[var(--color-muted-foreground)] shrink-0">
-																{getRelativeTime(step.startedAt)}
-															</span>
-														</div>
-														<p className="text-xs text-[var(--color-muted-foreground)] mt-0.5 truncate">
-															{step.leadName ?? "Unknown Lead"}
-															{step.durationMs &&
-																` • ${(step.durationMs / 1000).toFixed(1)}s`}
-														</p>
-													</div>
-												</div>
-											)
-										})}
-									</div>
 								</div>
 							)}
 						</CardContent>
