@@ -12,6 +12,7 @@ import {
 	makeSendFollowupUseCase,
 	makeSendInitialEmailUseCase,
 } from "./email/send-email.ts"
+import { makeBulkCaptureLeadUseCase } from "./lead/bulk-capture-lead.ts"
 import {
 	makeCaptureLeadUseCase,
 	makeGetLeadDetailUseCase,
@@ -36,6 +37,10 @@ export interface AppDependencies {
 	}
 	tracker: PipelineTracker
 	logger: Logger
+	config: {
+		senderName: string
+		senderCompany: string
+	}
 }
 
 export function buildUseCases(deps: AppDependencies) {
@@ -43,6 +48,11 @@ export function buildUseCases(deps: AppDependencies) {
 
 	// Lead use cases
 	const captureLead = makeCaptureLeadUseCase({
+		leadRepo: deps.repos.lead,
+		emailVerifier: deps.services.emailVerifier,
+		logger,
+	})
+	const bulkCaptureLead = makeBulkCaptureLeadUseCase({
 		leadRepo: deps.repos.lead,
 		emailVerifier: deps.services.emailVerifier,
 		logger,
@@ -65,6 +75,8 @@ export function buildUseCases(deps: AppDependencies) {
 		ai: deps.services.ai,
 		emailService: deps.services.email,
 		logger,
+		senderName: deps.config.senderName,
+		senderCompany: deps.config.senderCompany,
 	})
 
 	const sendFollowup = makeSendFollowupUseCase({
@@ -73,6 +85,8 @@ export function buildUseCases(deps: AppDependencies) {
 		ai: deps.services.ai,
 		emailService: deps.services.email,
 		logger,
+		senderName: deps.config.senderName,
+		senderCompany: deps.config.senderCompany,
 	})
 
 	const handleReply = makeHandleReplyUseCase({
@@ -81,6 +95,8 @@ export function buildUseCases(deps: AppDependencies) {
 		ai: deps.services.ai,
 		emailService: deps.services.email,
 		logger,
+		senderName: deps.config.senderName,
+		senderCompany: deps.config.senderCompany,
 	})
 
 	// Pipeline orchestrator (with step tracking)
@@ -117,6 +133,7 @@ export function buildUseCases(deps: AppDependencies) {
 	return {
 		lead: {
 			capture: captureLead,
+			bulkCapture: bulkCaptureLead,
 			list: listLeads,
 			getDetail: getLeadDetail,
 			getStats: async () => deps.repos.lead.getStats(),

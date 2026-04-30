@@ -17,14 +17,19 @@ export async function generateEmailSequence(
 	apiKey: string,
 	lead: Lead,
 	analysis: BehaviorAnalysis,
+	senderInfo?: { name: string; company: string },
 ): Promise<GeneratedSequence> {
+	const senderContext = senderInfo
+		? `\nSender: ${senderInfo.name} at ${senderInfo.company}`
+		: ""
+
 	return callOpenRouter<GeneratedSequence>(apiKey, {
 		model: "openai/gpt-4o-mini",
 		messages: [
 			{ role: "system", content: SEQUENCE_GENERATOR_PROMPT },
 			{
 				role: "user",
-				content: `Lead: ${lead.fullName} at ${lead.companyName}\nBehavioral Profile: ${analysis.behavioralProfile}\nPain Points: ${analysis.painPoints}\nJourney Stage: ${analysis.journeyStage}\nPsychological Triggers: ${analysis.psychologicalTriggers}\nOptimal Approach: ${analysis.optimalApproach}`,
+				content: `Lead: ${lead.fullName} at ${lead.companyName}${senderContext}\nBehavioral Profile: ${analysis.behavioralProfile}\nPain Points: ${analysis.painPoints}\nJourney Stage: ${analysis.journeyStage}\nPsychological Triggers: ${analysis.psychologicalTriggers}\nOptimal Approach: ${analysis.optimalApproach}`,
 			},
 		],
 		schema: {
@@ -84,14 +89,19 @@ export async function personalizeReply(
 	lead: Lead,
 	replyText: string,
 	template: EmailTemplateInput,
+	senderInfo?: { name: string; company: string },
 ): Promise<PersonalizedReply> {
+	const senderContext = senderInfo
+		? `\nSender: ${senderInfo.name} at ${senderInfo.company}`
+		: ""
+
 	return callOpenRouter<PersonalizedReply>(apiKey, {
 		model: "openai/o3-mini",
 		messages: [
 			{ role: "system", content: REPLY_PERSONALIZER_PROMPT },
 			{
 				role: "user",
-				content: `Lead: ${lead.fullName} at ${lead.companyName}\nPain Points: ${lead.painPoints ?? "N/A"}\n\nTheir Reply:\n${replyText}\n\nEmail Template:\nContent: ${template.content}\nCTA: ${template.cta}\nTrigger: ${template.psychologicalTrigger}`,
+				content: `Lead: ${lead.fullName} at ${lead.companyName}${senderContext}\nPain Points: ${lead.painPoints ?? "N/A"}\n\nTheir Reply:\n${replyText}\n\nEmail Template:\nContent: ${template.content}\nCTA: ${template.cta}\nTrigger: ${template.psychologicalTrigger}`,
 			},
 		],
 		schema: {

@@ -13,6 +13,7 @@ import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as AuthLoginRouteImport } from './routes/auth/login'
 import { Route as AuthenticatedCaptureRouteImport } from './routes/_authenticated/capture'
+import { Route as AuthenticatedBulkCaptureRouteImport } from './routes/_authenticated/bulk-capture'
 import { Route as AuthenticatedLeadsIndexRouteImport } from './routes/_authenticated/leads/index'
 import { Route as AuthenticatedLeadsLeadIdRouteImport } from './routes/_authenticated/leads/$leadId'
 
@@ -35,6 +36,12 @@ const AuthenticatedCaptureRoute = AuthenticatedCaptureRouteImport.update({
   path: '/capture',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedBulkCaptureRoute =
+  AuthenticatedBulkCaptureRouteImport.update({
+    id: '/bulk-capture',
+    path: '/bulk-capture',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedLeadsIndexRoute = AuthenticatedLeadsIndexRouteImport.update({
   id: '/leads/',
   path: '/leads/',
@@ -49,12 +56,14 @@ const AuthenticatedLeadsLeadIdRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
+  '/bulk-capture': typeof AuthenticatedBulkCaptureRoute
   '/capture': typeof AuthenticatedCaptureRoute
   '/auth/login': typeof AuthLoginRoute
   '/leads/$leadId': typeof AuthenticatedLeadsLeadIdRoute
   '/leads/': typeof AuthenticatedLeadsIndexRoute
 }
 export interface FileRoutesByTo {
+  '/bulk-capture': typeof AuthenticatedBulkCaptureRoute
   '/capture': typeof AuthenticatedCaptureRoute
   '/auth/login': typeof AuthLoginRoute
   '/': typeof AuthenticatedIndexRoute
@@ -64,6 +73,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_authenticated': typeof AuthenticatedRouteWithChildren
+  '/_authenticated/bulk-capture': typeof AuthenticatedBulkCaptureRoute
   '/_authenticated/capture': typeof AuthenticatedCaptureRoute
   '/auth/login': typeof AuthLoginRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
@@ -72,12 +82,25 @@ export interface FileRoutesById {
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/capture' | '/auth/login' | '/leads/$leadId' | '/leads/'
+  fullPaths:
+    | '/'
+    | '/bulk-capture'
+    | '/capture'
+    | '/auth/login'
+    | '/leads/$leadId'
+    | '/leads/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/capture' | '/auth/login' | '/' | '/leads/$leadId' | '/leads'
+  to:
+    | '/bulk-capture'
+    | '/capture'
+    | '/auth/login'
+    | '/'
+    | '/leads/$leadId'
+    | '/leads'
   id:
     | '__root__'
     | '/_authenticated'
+    | '/_authenticated/bulk-capture'
     | '/_authenticated/capture'
     | '/auth/login'
     | '/_authenticated/'
@@ -120,6 +143,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCaptureRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/bulk-capture': {
+      id: '/_authenticated/bulk-capture'
+      path: '/bulk-capture'
+      fullPath: '/bulk-capture'
+      preLoaderRoute: typeof AuthenticatedBulkCaptureRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/leads/': {
       id: '/_authenticated/leads/'
       path: '/leads'
@@ -138,6 +168,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteChildren {
+  AuthenticatedBulkCaptureRoute: typeof AuthenticatedBulkCaptureRoute
   AuthenticatedCaptureRoute: typeof AuthenticatedCaptureRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
   AuthenticatedLeadsLeadIdRoute: typeof AuthenticatedLeadsLeadIdRoute
@@ -145,6 +176,7 @@ interface AuthenticatedRouteChildren {
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
+  AuthenticatedBulkCaptureRoute: AuthenticatedBulkCaptureRoute,
   AuthenticatedCaptureRoute: AuthenticatedCaptureRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
   AuthenticatedLeadsLeadIdRoute: AuthenticatedLeadsLeadIdRoute,

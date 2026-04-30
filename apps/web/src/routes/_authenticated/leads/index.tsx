@@ -1,7 +1,7 @@
 import { Button, Card, CardContent, Skeleton } from "@kana-consultant/ui-kit"
 import { useQuery } from "@tanstack/react-query"
 import { createFileRoute, Link } from "@tanstack/react-router"
-import { UserPlus } from "lucide-react"
+import { FileSpreadsheet, UserPlus } from "lucide-react"
 import { orpc } from "~/libs/orpc/client"
 
 import { columns } from "./-columns"
@@ -28,11 +28,21 @@ function LeadsPage() {
 						{data.total} leads total
 					</p>
 				</div>
-				<Link to="/capture">
-					<Button leadingIcon={<UserPlus className="w-4 h-4" />}>
-						Add Lead
-					</Button>
-				</Link>
+				<div className="flex gap-3">
+					<Link to="/bulk-capture">
+						<Button
+							variant="outline"
+							leadingIcon={<FileSpreadsheet className="w-4 h-4" />}
+						>
+							Bulk Import
+						</Button>
+					</Link>
+					<Link to="/capture">
+						<Button leadingIcon={<UserPlus className="w-4 h-4" />}>
+							Add Lead
+						</Button>
+					</Link>
+				</div>
 			</div>
 
 			<Card>

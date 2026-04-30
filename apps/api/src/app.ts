@@ -69,7 +69,16 @@ export async function createServerApp() {
 	const tracker = createPipelineStepRepository(db)
 
 	// 2. Build Application Use Cases
-	const useCases = buildUseCases({ repos, services, tracker, logger })
+	const useCases = buildUseCases({
+		repos,
+		services,
+		tracker,
+		logger,
+		config: {
+			senderName: env.SENDER_NAME,
+			senderCompany: env.SENDER_COMPANY,
+		},
+	})
 
 	// 3. Setup oRPC
 	const rpcHandler = new RPCHandler(appRouter, {
