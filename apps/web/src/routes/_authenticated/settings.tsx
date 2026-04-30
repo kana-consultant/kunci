@@ -6,7 +6,15 @@ import {
 	CardFooter,
 	CardHeader,
 	CardTitle,
+	Input,
+	Label,
 	Skeleton,
+	Switch,
+	Tabs,
+	TabsContent,
+	TabsList,
+	TabsTrigger,
+	Textarea,
 } from "@kana-consultant/ui-kit"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
@@ -94,43 +102,37 @@ function SettingsPage() {
 				</p>
 			</div>
 
-			<div className="flex flex-wrap gap-2 bg-[var(--color-surface-alt)] p-1.5 rounded-lg border border-[var(--color-border)] w-max">
-				{categories.map((cat) => (
-					<button
-						key={cat}
-						onClick={() => setActiveCategory(cat)}
-						className={`px-4 py-2 rounded-md text-sm font-medium transition-colors capitalize ${
-							activeCategory === cat
-								? "bg-[var(--color-surface)] shadow-sm text-[var(--color-foreground)]"
-								: "text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]"
-						}`}
-					>
-						{cat}
-					</button>
-				))}
-			</div>
+			<Tabs value={activeCategory} onValueChange={setActiveCategory}>
+				<TabsList className="mb-4">
+					{categories.map((cat) => (
+						<TabsTrigger key={cat} value={cat} className="capitalize">
+							{cat}
+						</TabsTrigger>
+					))}
+				</TabsList>
 
-			<Card>
-				<CardHeader>
-					<CardTitle className="capitalize text-lg">{activeCategory} Configuration</CardTitle>
-					<CardDescription>
-						Update global system configuration for the {activeCategory} context.
-					</CardDescription>
-				</CardHeader>
-				<CardContent className="space-y-6">
+				<TabsContent value={activeCategory}>
+					<Card>
+						<CardHeader>
+							<CardTitle className="capitalize text-lg">{activeCategory} Configuration</CardTitle>
+							<CardDescription>
+								Update global system configuration for the {activeCategory} context.
+							</CardDescription>
+						</CardHeader>
+						<CardContent className="space-y-6">
 					{settingsByCategory.map((setting) => (
 						<div key={setting.key} className="space-y-2">
-							<label className="text-sm font-semibold text-[var(--color-foreground)]">
+							<Label className="text-sm font-semibold">
 								{setting.label}
-							</label>
+							</Label>
 							{setting.description && (
-								<p className="text-xs text-[var(--color-muted-foreground)] mt-0.5">
+								<p className="text-xs text-[var(--color-muted-foreground)] mt-0.5 mb-2">
 									{setting.description}
 								</p>
 							)}
 
 							{setting.valueType === "text" ? (
-								<textarea
+								<Textarea
 									value={formState[setting.key] ?? ""}
 									onChange={(e) =>
 										setFormState((prev) => ({
@@ -138,28 +140,26 @@ function SettingsPage() {
 											[setting.key]: e.target.value,
 										}))
 									}
-									className="w-full min-h-[160px] p-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-background)] text-sm font-mono focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] resize-y"
+									className="min-h-[160px] font-mono"
 								/>
 							) : setting.valueType === "boolean" ? (
 								<div className="flex items-center gap-3 pt-1">
-									<input
-										type="checkbox"
+									<Switch
 										checked={
 											formState[setting.key] === true ||
 											formState[setting.key] === "true"
 										}
-										onChange={(e) =>
+										onCheckedChange={(checked) =>
 											setFormState((prev) => ({
 												...prev,
-												[setting.key]: e.target.checked,
+												[setting.key]: checked,
 											}))
 										}
-										className="h-4 w-4 rounded border-[var(--color-border)] text-[var(--color-primary)] focus:ring-[var(--color-primary)] bg-[var(--color-background)] cursor-pointer"
 									/>
 									<span className="text-sm text-[var(--color-foreground)] font-medium">Enabled</span>
 								</div>
 							) : setting.valueType === "number" ? (
-								<input
+								<Input
 									type="number"
 									step={setting.key.includes("TEMPERATURE") ? "0.1" : "1"}
 									value={formState[setting.key] ?? ""}
@@ -169,12 +169,11 @@ function SettingsPage() {
 											[setting.key]: parseFloat(e.target.value),
 										}))
 									}
-									className="w-full p-2.5 rounded-lg border border-[var(--color-border)] bg-[var(--color-background)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
 								/>
 							) : (
 								<div className="flex items-center gap-2">
 									{setting.key.includes("COLOR") && (
-										<input
+										<Input
 											type="color"
 											value={formState[setting.key] ?? "#000000"}
 											onChange={(e) =>
@@ -183,10 +182,10 @@ function SettingsPage() {
 													[setting.key]: e.target.value,
 												}))
 											}
-											className="h-10 w-12 p-1 rounded-lg border border-[var(--color-border)] bg-[var(--color-background)] cursor-pointer"
+											className="h-10 w-12 p-1 cursor-pointer"
 										/>
 									)}
-									<input
+									<Input
 										type="text"
 										value={formState[setting.key] ?? ""}
 										onChange={(e) =>
@@ -195,7 +194,7 @@ function SettingsPage() {
 												[setting.key]: e.target.value,
 											}))
 										}
-										className="w-full flex-1 p-2.5 rounded-lg border border-[var(--color-border)] bg-[var(--color-background)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+										className="flex-1"
 									/>
 								</div>
 							)}
@@ -244,7 +243,9 @@ function SettingsPage() {
 						{updateBulk.isPending ? "Saving..." : "Save Settings"}
 					</Button>
 				</CardFooter>
-			</Card>
+					</Card>
+				</TabsContent>
+			</Tabs>
 		</div>
 	)
 }
