@@ -142,7 +142,7 @@ async function bootstrap() {
 			const payload = await c.req.text()
 			const webhookSecret = env.RESEND_WEBHOOK_SECRET
 
-			let event: any;
+			let event: any
 
 			if (webhookSecret) {
 				const svixId = c.req.header("svix-id")
@@ -156,30 +156,38 @@ async function bootstrap() {
 
 				// 2. Use SDK verification function
 				try {
-					event = services.email.verifyWebhook(payload, {
-						"svix-id": svixId,
-						"svix-timestamp": svixTimestamp,
-						"svix-signature": svixSignature
-					}, webhookSecret);
-				} catch (err) {
+					event = services.email.verifyWebhook(
+						payload,
+						{
+							"svix-id": svixId,
+							"svix-timestamp": svixTimestamp,
+							"svix-signature": svixSignature,
+						},
+						webhookSecret,
+					)
+				} catch (_err) {
 					logger.warn("Invalid webhook signature")
 					return c.json({ error: "Invalid signature" }, 401)
 				}
 			} else {
-				event = JSON.parse(payload);
+				event = JSON.parse(payload)
 			}
 
 			const parsedEvent = ResendWebhookSchema.parse(event)
 			logger.info({ type: parsedEvent.type }, "Received Resend Webhook")
 
-			if (parsedEvent.type === "email.received" || parsedEvent.type === "email.replied") {
+			if (
+				parsedEvent.type === "email.received" ||
+				parsedEvent.type === "email.replied"
+			) {
 				const emailId = parsedEvent.data.email_id
 
 				if (parsedEvent.type === "email.received" && emailId) {
 					// Fire and forget to return 200 OK fast
 					;(async () => {
 						try {
-							const receivedEmail = await services.email.getReceivedEmail(emailId)
+							const receivedEmail =
+								await services.email.getReceivedEmail(emailId)
 							await useCases.email.handleReply({
 								fromEmail: receivedEmail.fromEmail,
 								subject: receivedEmail.subject,
@@ -196,7 +204,8 @@ async function bootstrap() {
 						.handleReply({
 							fromEmail: parsedEvent.data.from,
 							subject: parsedEvent.data.subject || "No Subject",
-							textBody: parsedEvent.data.text || parsedEvent.data.html || "No body",
+							textBody:
+								parsedEvent.data.text || parsedEvent.data.html || "No body",
 							messageId: parsedEvent.data.message_id || "",
 						})
 						.catch((err) =>
