@@ -1,10 +1,10 @@
-import { asc, eq } from "drizzle-orm"
+import { asc, eq, desc } from "drizzle-orm"
 import type {
 	PipelineStep,
 	PipelineTracker,
 } from "#/domain/ports/pipeline-tracker.ts"
 import type { Database } from "../client.ts"
-import { pipelineSteps } from "../schema.ts"
+import { pipelineSteps, leads } from "../schema.ts"
 
 export function createPipelineStepRepository(db: Database): PipelineTracker {
 	return {
@@ -90,6 +90,31 @@ export function createPipelineStepRepository(db: Database): PipelineTracker {
 				detail: r.detail as Record<string, unknown> | null,
 				startedAt: r.startedAt,
 				completedAt: r.completedAt,
+			}))
+		},
+
+		async getRecentActivity(limit) {
+			const rows = await db
+				.select({
+					step: pipelineSteps,
+					leadName: leads.fullName,
+				})
+				.from(pipelineSteps)
+				.leftJoin(leads, eq(pipelineSteps.leadId, leads.id))
+				.orderBy(desc(pipelineSteps.startedAt))
+				.limit(limit)
+
+			return rows.map((r) => ({
+				id: r.step.id,
+				leadId: r.step.leadId,
+				step: r.step.step,
+				label: r.step.label,
+				status: r.step.status as PipelineStep["status"],
+				durationMs: r.step.durationMs,
+				detail: r.step.detail as Record<string, unknown> | null,
+				startedAt: r.step.startedAt,
+				completedAt: r.step.completedAt,
+				leadName: r.leadName,
 			}))
 		},
 	}

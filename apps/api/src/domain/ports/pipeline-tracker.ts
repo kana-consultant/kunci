@@ -35,4 +35,7 @@ export interface PipelineTracker {
 
 	/** Get all steps for a lead, ordered by startedAt ascending */
 	getStepsForLead(leadId: string): Promise<PipelineStep[]>
+
+	/** Get recent pipeline steps across all leads */
+	getRecentActivity(limit: number): Promise<(PipelineStep & { leadName: string | null })[]>
 }

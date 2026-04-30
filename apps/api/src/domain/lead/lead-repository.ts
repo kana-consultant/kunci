@@ -7,12 +7,17 @@ export interface LeadRepository {
 	list(params: ListLeadsParams): Promise<{ leads: Lead[]; total: number }>
 	update(id: string, data: Partial<UpdateLeadData>): Promise<Lead>
 	findPendingFollowups(params: PendingFollowupsParams): Promise<Lead[]>
-	getStats(): Promise<{
+	getStats(period?: "7d" | "30d" | "all"): Promise<{
 		total: number
 		sent: number
 		replied: number
 		bounced: number
+		pending: number
+		researching: number
+		researchFailed: number
+		awaiting: number
 	}>
+	getStageDistribution(period?: "7d" | "30d" | "all"): Promise<Array<{ stage: number; count: number }>>
 }
 
 export interface ListLeadsParams {
