@@ -48,106 +48,106 @@ export function createLeadRepository(db: Database): LeadRepository {
 			},
 
 			async list(params: ListLeadsParams) {
-      const offset = (params.page - 1) * params.limit
-      const conditions = []
+				 const offset = (params.page - 1) * params.limit
+				 const conditions = []
 
-      if (params.stage !== undefined) {
-        conditions.push(eq(leads.stage, params.stage))
-      }
-      if (params.status) {
-        conditions.push(eq(leads.replyStatus, params.status))
-      }
+				 if (params.stage !== undefined) {
+				   conditions.push(eq(leads.stage, params.stage))
+				 }
+				 if (params.status) {
+				   conditions.push(eq(leads.replyStatus, params.status))
+				 }
 
-      const where = conditions.length > 0 ? and(...conditions) : undefined
+				 const where = conditions.length > 0 ? and(...conditions) : undefined
 
-      const [rows, countResult] = await Promise.all([
-        db
-          .select()
-          .from(leads)
-          .where(where)
-          .orderBy(leads.createdAt)
-          .limit(params.limit)
-          .offset(offset),
-        db
-          .select({ count: sql<number>`count(*)::int` })
-          .from(leads)
-          .where(where),
-      ])
+				 const [rows, countResult] = await Promise.all([
+				   db
+				     .select()
+				     .from(leads)
+				     .where(where)
+				     .orderBy(leads.createdAt)
+				     .limit(params.limit)
+				     .offset(offset),
+				   db
+				     .select({ count: sql<number>`count(*)::int` })
+				     .from(leads)
+				     .where(where),
+				 ])
 
-      return {
-        leads: rows.map(mapRowToLead),
-        total: countResult[0]?.count ?? 0,
-      }
-    },
+				 return {
+				   leads: rows.map(mapRowToLead),
+				   total: countResult[0]?.count ?? 0,
+				 }
+			},
 
-    async update(id: string, data: Partial<UpdateLeadData>): Promise<Lead> {
-      const [row] = await db
-        .update(leads)
-        .set({
-          ...(data.stage !== undefined ? { stage: data.stage } : {}),
-          ...(data.replyStatus ? { replyStatus: data.replyStatus } : {}),
-          ...(data.companyResearch
-            ? { companyResearch: data.companyResearch }
-            : {}),
-          ...(data.latestMessageId
-            ? { latestMessageId: data.latestMessageId }
-            : {}),
-          ...(data.messageIds ? { messageIds: data.messageIds } : {}),
-          ...(data.lastEmailSentAt
-            ? { lastEmailSentAt: data.lastEmailSentAt }
-            : {}),
-          updatedAt: new Date(),
-        })
-        .where(eq(leads.id, id))
-        .returning()
+			async update(id: string, data: Partial<UpdateLeadData>): Promise<Lead> {
+				 const [row] = await db
+				   .update(leads)
+				   .set({
+				     ...(data.stage !== undefined ? { stage: data.stage } : {}),
+				     ...(data.replyStatus ? { replyStatus: data.replyStatus } : {}),
+				     ...(data.companyResearch
+				       ? { companyResearch: data.companyResearch }
+				       : {}),
+				     ...(data.latestMessageId
+				       ? { latestMessageId: data.latestMessageId }
+				       : {}),
+				     ...(data.messageIds ? { messageIds: data.messageIds } : {}),
+				     ...(data.lastEmailSentAt
+				       ? { lastEmailSentAt: data.lastEmailSentAt }
+				       : {}),
+				     updatedAt: new Date(),
+				   })
+				   .where(eq(leads.id, id))
+				   .returning()
 
-      return mapRowToLead(row)
-    },
+				 return mapRowToLead(row)
+			},
 
-    async findPendingFollowups(
-      params: PendingFollowupsParams,
-    ): Promise<Lead[]> {
-      const rows = await db
-        .select()
-        .from(leads)
-        .where(
-          and(
-            eq(leads.replyStatus, params.replyStatus),
-            lte(leads.stage, params.maxStage),
-            lte(leads.lastEmailSentAt, params.lastEmailBefore),
-            ne(leads.replyStatus, "bounced"),
-          ),
-        )
+			async findPendingFollowups(
+				 params: PendingFollowupsParams,
+			): Promise<Lead[]> {
+				 const rows = await db
+				   .select()
+				   .from(leads)
+				   .where(
+				     and(
+				       eq(leads.replyStatus, params.replyStatus),
+				       lte(leads.stage, params.maxStage),
+				       lte(leads.lastEmailSentAt, params.lastEmailBefore),
+				       ne(leads.replyStatus, "bounced"),
+				     ),
+				   )
 
-      return rows.map(mapRowToLead)
-    },
+				 return rows.map(mapRowToLead)
+			},
 
-    async getStats() {
-      const [total, sent, replied, bounced] = await Promise.all([
-        db
-          .select({ count: sql<number>`count(*)::int` })
-          .from(leads)
-          .then((r) => r[0]?.count ?? 0),
-        db
-          .select({ count: sql<number>`count(*)::int` })
-          .from(leads)
-          .where(ne(leads.stage, 0))
-          .then((r) => r[0]?.count ?? 0),
-        db
-          .select({ count: sql<number>`count(*)::int` })
-          .from(leads)
-          .where(eq(leads.replyStatus, "replied"))
-          .then((r) => r[0]?.count ?? 0),
-        db
-          .select({ count: sql<number>`count(*)::int` })
-          .from(leads)
-          .where(eq(leads.replyStatus, "bounced"))
-          .then((r) => r[0]?.count ?? 0),
-      ])
+			async getStats() {
+				 const [total, sent, replied, bounced] = await Promise.all([
+				   db
+				     .select({ count: sql<number>`count(*)::int` })
+				     .from(leads)
+				     .then((r) => r[0]?.count ?? 0),
+				   db
+				     .select({ count: sql<number>`count(*)::int` })
+				     .from(leads)
+				     .where(ne(leads.stage, 0))
+				     .then((r) => r[0]?.count ?? 0),
+				   db
+				     .select({ count: sql<number>`count(*)::int` })
+				     .from(leads)
+				     .where(eq(leads.replyStatus, "replied"))
+				     .then((r) => r[0]?.count ?? 0),
+				   db
+				     .select({ count: sql<number>`count(*)::int` })
+				     .from(leads)
+				     .where(eq(leads.replyStatus, "bounced"))
+				     .then((r) => r[0]?.count ?? 0),
+				 ])
 
-      return { total, sent, replied, bounced }
-    },
-  }
+				 return { total, sent, replied, bounced }
+			},
+	}
 }
 
 function mapRowToLead(row: any): Lead {
