@@ -33,8 +33,8 @@ const APP_VERSION = readAppVersion()
 
 import { buildUseCases } from "./application/use-cases.ts"
 import { createOpenRouterService } from "./infrastructure/ai/openrouter-service.ts"
-import { createRedisCache } from "./infrastructure/cache/redis.ts"
 import { auth } from "./infrastructure/auth/better-auth.ts"
+import { createRedisCache } from "./infrastructure/cache/redis.ts"
 import { env } from "./infrastructure/config/env.ts"
 import { createDb } from "./infrastructure/db/client.ts"
 import { createEmailSequenceRepository } from "./infrastructure/db/repositories/email-sequence-repository.ts"

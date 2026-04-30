@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest"
+import { describe, expect, it } from "vitest"
 
 describe("web-e2e", () => {
 	const WEB_URL = "http://localhost:8020"

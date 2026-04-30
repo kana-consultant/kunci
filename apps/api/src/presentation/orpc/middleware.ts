@@ -29,7 +29,9 @@ export const protectedProcedure = publicProcedure.use(
 		const isProgrammatic = envApiKey && apiKey === envApiKey
 
 		if (!session && !isProgrammatic) {
-			throw new ORPCError("UNAUTHORIZED", { message: "Authentication required" })
+			throw new ORPCError("UNAUTHORIZED", {
+				message: "Authentication required",
+			})
 		}
 
 		return next({
