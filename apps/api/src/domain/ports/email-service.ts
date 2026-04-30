@@ -9,6 +9,9 @@ export interface EmailService {
 
 	/** Reply in an existing email thread */
 	replyInThread(params: ReplyInThreadParams): Promise<EmailSendResult>
+
+	getReceivedEmail(emailId: string): Promise<{ textBody: string, subject: string, fromEmail: string, messageId: string }>
+	verifyWebhook(payload: string, headers: Record<string, string>, secret: string): any
 }
 
 export interface SendEmailParams {

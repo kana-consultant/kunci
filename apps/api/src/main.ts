@@ -117,8 +117,12 @@ async function bootstrap() {
 	// Webhooks
 	app.post("/webhooks/resend", async (c) => {
 		try {
-			// Verify webhook signature (Resend uses svix)
+			// 1. Get RAW TEXT for verification
+			const payload = await c.req.text()
 			const webhookSecret = env.RESEND_WEBHOOK_SECRET
+
+			let event: any;
+
 			if (webhookSecret) {
 				const svixId = c.req.header("svix-id")
 				const svixTimestamp = c.req.header("svix-timestamp")
@@ -129,37 +133,42 @@ async function bootstrap() {
 					return c.json({ error: "Missing webhook signature" }, 401)
 				}
 
-				// Timestamp tolerance: reject if older than 5 minutes
-				const timestamp = Number(svixTimestamp)
-				const now = Math.floor(Date.now() / 1000)
-				if (Math.abs(now - timestamp) > 300) {
-					logger.warn("Webhook timestamp too old")
-					return c.json({ error: "Timestamp expired" }, 401)
+				// 2. Use SDK verification function
+				try {
+					event = services.email.verifyWebhook(payload, {
+						"svix-id": svixId,
+						"svix-timestamp": svixTimestamp,
+						"svix-signature": svixSignature
+					}, webhookSecret);
+				} catch (err) {
+					logger.warn("Invalid webhook signature")
+					return c.json({ error: "Invalid signature" }, 401)
 				}
+			} else {
+				event = JSON.parse(payload);
 			}
 
-			const body = await c.req.json()
-			logger.info({ type: body.type }, "Received Resend Webhook")
+			logger.info({ type: event.type }, "Received Resend Webhook")
 
-			if (body.type === "email.replied" || body.type === "email.received") {
-				// Format might vary depending on whether we use inbound routing or tracking
-				const fromEmail = body.data?.from
-				const subject = body.data?.subject
-				const textBody = body.data?.text || body.data?.html || "No body"
-				const messageId = body.data?.message_id || ""
-
-				if (fromEmail) {
-					// Don't await if we want to return 200 immediately to Resend
-					useCases.email
-						.handleReply({
-							fromEmail,
-							subject,
-							textBody,
-							messageId,
-						})
-						.catch((err) =>
-							logger.error({ err }, "Background reply handling failed"),
-						)
+			// 3. Only handle email.received
+			if (event.type === "email.received") {
+				const emailId = event.data?.email_id;
+				
+				if (emailId) {
+					// 4. Fire and forget to return 200 OK fast
+					(async () => {
+						try {
+							const receivedEmail = await services.email.getReceivedEmail(emailId);
+							await useCases.email.handleReply({
+								fromEmail: receivedEmail.fromEmail,
+								subject: receivedEmail.subject,
+								textBody: receivedEmail.textBody,
+								messageId: receivedEmail.messageId,
+							});
+						} catch (err) {
+							logger.error({ err }, "Background reply handling failed");
+						}
+					})();
 				}
 			}
 
