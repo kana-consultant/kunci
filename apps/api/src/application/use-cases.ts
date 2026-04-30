@@ -7,6 +7,7 @@ import type { EmailVerifier } from "#/domain/ports/email-verifier.ts"
 import type { Logger } from "#/domain/ports/logger.ts"
 import type { PipelineTracker } from "#/domain/ports/pipeline-tracker.ts"
 import type { ScraperService } from "#/domain/ports/scraper-service.ts"
+import type { SettingsService } from "./shared/settings-service.ts"
 import { makeHandleReplyUseCase } from "./email/handle-reply.ts"
 import {
 	makeSendFollowupUseCase,
@@ -34,6 +35,7 @@ export interface AppDependencies {
 		ai: AIService
 		email: EmailService
 		cache: Cache
+		settings: SettingsService
 	}
 	tracker: PipelineTracker
 	logger: Logger
@@ -157,6 +159,7 @@ export function buildUseCases(deps: AppDependencies) {
 		scheduler: {
 			processPendingFollowups,
 		},
+		settings: deps.services.settings,
 	}
 }
 

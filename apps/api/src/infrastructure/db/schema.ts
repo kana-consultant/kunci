@@ -149,3 +149,16 @@ export const verification = pgTable("verification", {
 	createdAt: timestamp("created_at"),
 	updatedAt: timestamp("updated_at"),
 })
+
+export const appSettings = pgTable("app_settings", {
+	key: text("key").primaryKey(),
+	value: jsonb("value").notNull(),
+	category: text("category").notNull(),
+	label: text("label").notNull(),
+	description: text("description"),
+	valueType: text("value_type").notNull().default("string"),
+	updatedAt: timestamp("updated_at", { withTimezone: true })
+		.notNull()
+		.defaultNow(),
+	updatedBy: text("updated_by").references(() => user.id, { onDelete: "set null" }),
+})

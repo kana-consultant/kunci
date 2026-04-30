@@ -2,7 +2,8 @@ import { eq } from "drizzle-orm"
 import { auth } from "../auth/better-auth.ts"
 import { env } from "../config/env.ts"
 import { db, pgClient } from "./client.ts"
-import { user } from "./schema.ts"
+import { user, appSettings } from "./schema.ts"
+import { DEFAULT_SETTINGS } from "./seed-settings.ts"
 
 async function seed() {
 	console.log("🌱 Seeding database...")
@@ -59,6 +60,22 @@ async function seed() {
 
 			console.log("✅ Admin user created successfully!")
 		}
+
+		console.log("⚙️ Seeding default settings...")
+		for (const setting of DEFAULT_SETTINGS) {
+			await db
+				.insert(appSettings)
+				.values({
+					key: setting.key,
+					value: setting.value,
+					category: setting.category,
+					label: setting.label,
+					description: setting.description,
+					valueType: setting.valueType,
+				})
+				.onConflictDoNothing()
+		}
+		console.log("✅ Default settings seeded successfully!")
 	} catch (error) {
 		console.error("❌ Seeding failed:", error)
 		process.exit(1)
