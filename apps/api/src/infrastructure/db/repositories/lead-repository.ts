@@ -1,53 +1,53 @@
 import { and, eq, lte, ne, sql } from "drizzle-orm"
 import type { CreateLeadInput, Lead } from "#/domain/lead/lead.ts"
 import type {
-  LeadRepository,
-  ListLeadsParams,
-  PendingFollowupsParams,
-  UpdateLeadData,
+	LeadRepository,
+	ListLeadsParams,
+	PendingFollowupsParams,
+	UpdateLeadData,
 } from "#/domain/lead/lead-repository.ts"
 import type { Database } from "#/infrastructure/db/client.ts"
 import { leads } from "#/infrastructure/db/schema.ts"
 
 export function createLeadRepository(db: Database): LeadRepository {
-  return {
-    async create(input: CreateLeadInput): Promise<Lead> {
-      const [row] = await db
-        .insert(leads)
-        .values({
-          fullName: input.fullName,
-          email: input.email,
-          companyName: input.companyName,
-          companyWebsite: input.companyWebsite,
-          painPoints: input.painPoints ?? null,
-          leadSource: input.leadSource ?? null,
-        })
-        .returning()
+	return {
+			async create(input: CreateLeadInput): Promise<Lead> {
+				 const [row] = await db
+				   .insert(leads)
+				   .values({
+				     fullName: input.fullName,
+				     email: input.email,
+				     companyName: input.companyName,
+				     companyWebsite: input.companyWebsite,
+				     painPoints: input.painPoints ?? null,
+				     leadSource: input.leadSource ?? null,
+				   })
+				   .returning()
 
-      return mapRowToLead(row)
-    },
+				 return mapRowToLead(row)
+			},
 
-    async findById(id: string): Promise<Lead | null> {
-      const [row] = await db
-        .select()
-        .from(leads)
-        .where(eq(leads.id, id))
-        .limit(1)
+			async findById(id: string): Promise<Lead | null> {
+				 const [row] = await db
+				   .select()
+				   .from(leads)
+				   .where(eq(leads.id, id))
+				   .limit(1)
 
-      return row ? mapRowToLead(row) : null
-    },
+				 return row ? mapRowToLead(row) : null
+			},
 
-    async findByEmail(email: string): Promise<Lead | null> {
-      const [row] = await db
-        .select()
-        .from(leads)
-        .where(eq(leads.email, email))
-        .limit(1)
+			async findByEmail(email: string): Promise<Lead | null> {
+				 const [row] = await db
+				   .select()
+				   .from(leads)
+				   .where(eq(leads.email, email))
+				   .limit(1)
 
-      return row ? mapRowToLead(row) : null
-    },
+				 return row ? mapRowToLead(row) : null
+			},
 
-    async list(params: ListLeadsParams) {
+			async list(params: ListLeadsParams) {
       const offset = (params.page - 1) * params.limit
       const conditions = []
 
