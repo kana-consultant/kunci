@@ -6,55 +6,55 @@
 import type { BehaviorAnalysis } from "#/domain/behavior-analysis/behavior-analysis.ts"
 import type { Lead } from "#/domain/lead/lead.ts"
 import type {
-  AIService,
-  CompanyDataInput,
-  EmailTemplateInput,
+	AIService,
+	CompanyDataInput,
+	EmailTemplateInput,
 } from "#/domain/ports/ai-service.ts"
 
 import {
-  analyzeBehavior,
-  analyzeWebsite,
-  buildCompanyProfile,
+	analyzeBehavior,
+	analyzeWebsite,
+	buildCompanyProfile,
 } from "./analyzers.ts"
 import {
-  convertToHtml,
-  generateEmailSequence,
-  personalizeReply,
-  pickSubjectLine,
+	convertToHtml,
+	generateEmailSequence,
+	personalizeReply,
+	pickSubjectLine,
 } from "./generators.ts"
 
 export interface OpenRouterConfig {
-  apiKey: string
-  defaultModel?: string
+	apiKey: string
+	defaultModel?: string
 }
 
 // ── Factory ──────────────────────────────────────────────────────────────────
 
 export function createOpenRouterService(config: OpenRouterConfig): AIService {
-  const { apiKey } = config
+	const { apiKey } = config
 
-  return {
-    analyzeBehavior: (lead: Lead, companyProfile: string) =>
-      analyzeBehavior(apiKey, lead, companyProfile),
+	return {
+		analyzeBehavior: (lead: Lead, companyProfile: string) =>
+			analyzeBehavior(apiKey, lead, companyProfile),
 
-    generateEmailSequence: (lead: Lead, analysis: BehaviorAnalysis) =>
-      generateEmailSequence(apiKey, lead, analysis),
+		generateEmailSequence: (lead: Lead, analysis: BehaviorAnalysis) =>
+			generateEmailSequence(apiKey, lead, analysis),
 
-    analyzeWebsite: (websiteMarkdown: string) =>
-      analyzeWebsite(apiKey, websiteMarkdown),
+		analyzeWebsite: (websiteMarkdown: string) =>
+			analyzeWebsite(apiKey, websiteMarkdown),
 
-    buildCompanyProfile: (data: CompanyDataInput) =>
-      buildCompanyProfile(apiKey, data),
+		buildCompanyProfile: (data: CompanyDataInput) =>
+			buildCompanyProfile(apiKey, data),
 
-    convertToHtml: (content: string) => convertToHtml(apiKey, content),
+		convertToHtml: (content: string) => convertToHtml(apiKey, content),
 
-    personalizeReply: (
-      lead: Lead,
-      replyText: string,
-      template: EmailTemplateInput,
-    ) => personalizeReply(apiKey, lead, replyText, template),
+		personalizeReply: (
+			lead: Lead,
+			replyText: string,
+			template: EmailTemplateInput,
+		) => personalizeReply(apiKey, lead, replyText, template),
 
-    pickSubjectLine: (lead: Lead, variations: string[]) =>
-      pickSubjectLine(apiKey, lead, variations),
-  }
+		pickSubjectLine: (lead: Lead, variations: string[]) =>
+			pickSubjectLine(apiKey, lead, variations),
+	}
 }
