@@ -1,27 +1,29 @@
 {
-	"name": "@kunci/root",
-	"version": "0.1.0",
-	"private": true,
-	"scripts": {
-		"dev": "pnpm --filter @kunci/api dev & pnpm --filter @kunci/web dev",
-		"dev:api": "pnpm --filter @kunci/api dev",
-		"dev:web": "pnpm --filter @kunci/web dev",
-		"build": "pnpm --filter @kunci/api build && pnpm --filter @kunci/web build",
-		"db:generate": "pnpm --filter @kunci/api db:generate",
-		"db:push": "pnpm --filter @kunci/api db:push",
-		"db:studio": "pnpm --filter @kunci/api db:studio",
-		"lint": "pnpm -r run lint",
-		"test": "pnpm -r run test",
-		"typecheck": "pnpm -r run typecheck"
-	},
-	"devDependencies": {
-		"@biomejs/biome": "^2.4.13",
-		"lint-staged": "^16.4.0",
-		"typescript": "^5.4.0"
-	},
-	"lint-staged": {
-		"*.{ts,tsx,js,json}": [
-			"biome check --write --no-errors-on-unmatched"
-		]
-	}
+  "name": "@kunci/root",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm --filter @kunci/api dev & pnpm --filter @kunci/web dev",
+    "dev:api": "pnpm --filter @kunci/api dev",
+    "dev:web": "pnpm --filter @kunci/web dev",
+    "build": "pnpm --filter @kunci/api build && pnpm --filter @kunci/web build",
+    "db:generate": "pnpm --filter @kunci/api db:generate",
+    "db:push": "pnpm --filter @kunci/api db:push",
+    "db:studio": "pnpm --filter @kunci/api db:studio",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "format": "biome format --write .",
+    "test": "pnpm -r run test",
+    "typecheck": "pnpm -r run typecheck"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.4.13",
+    "lint-staged": "^16.4.0",
+    "typescript": "^5.4.0"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,json}": [
+      "biome check --write --no-errors-on-unmatched"
+    ]
+  }
 }

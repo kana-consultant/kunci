@@ -6,30 +6,30 @@ import { routeTree } from "./routeTree.gen"
 import "./styles.css"
 
 const queryClient = new QueryClient({
-	defaultOptions: {
-		queries: {
-			retry: 1,
-			refetchOnWindowFocus: false,
-		},
-	},
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
 })
 
 const router = createRouter({
-	routeTree,
-	context: { queryClient },
-	defaultPreload: "intent",
+  routeTree,
+  context: { queryClient },
+  defaultPreload: "intent",
 })
 
 declare module "@tanstack/react-router" {
-	interface Register {
-		router: typeof router
-	}
+  interface Register {
+    router: typeof router
+  }
 }
 
 createRoot(document.getElementById("app")!).render(
-	<StrictMode>
-		<QueryClientProvider client={queryClient}>
-			<RouterProvider router={router} />
-		</QueryClientProvider>
-	</StrictMode>,
+  <StrictMode>
+    <QueryClientProvider client={queryClient}>
+      <RouterProvider router={router} />
+    </QueryClientProvider>
+  </StrictMode>,
 )

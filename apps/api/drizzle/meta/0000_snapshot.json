@@ -1,350 +1,350 @@
 {
-	"id": "7af6950e-92d3-4752-ba76-9815fe35c16a",
-	"prevId": "00000000-0000-0000-0000-000000000000",
-	"version": "7",
-	"dialect": "postgresql",
-	"tables": {
-		"public.activity_log": {
-			"name": "activity_log",
-			"schema": "",
-			"columns": {
-				"id": {
-					"name": "id",
-					"type": "uuid",
-					"primaryKey": true,
-					"notNull": true,
-					"default": "gen_random_uuid()"
-				},
-				"action": {
-					"name": "action",
-					"type": "text",
-					"primaryKey": false,
-					"notNull": true
-				},
-				"resource": {
-					"name": "resource",
-					"type": "text",
-					"primaryKey": false,
-					"notNull": true
-				},
-				"resource_id": {
-					"name": "resource_id",
-					"type": "text",
-					"primaryKey": false,
-					"notNull": false
-				},
-				"metadata": {
-					"name": "metadata",
-					"type": "text",
-					"primaryKey": false,
-					"notNull": false
-				},
-				"created_at": {
-					"name": "created_at",
-					"type": "timestamp with time zone",
-					"primaryKey": false,
-					"notNull": true,
-					"default": "now()"
-				}
-			},
-			"indexes": {},
-			"foreignKeys": {},
-			"compositePrimaryKeys": {},
-			"uniqueConstraints": {},
-			"policies": {},
-			"checkConstraints": {},
-			"isRLSEnabled": false
-		},
-		"public.behavior_analyses": {
-			"name": "behavior_analyses",
-			"schema": "",
-			"columns": {
-				"id": {
-					"name": "id",
-					"type": "uuid",
-					"primaryKey": true,
-					"notNull": true,
-					"default": "gen_random_uuid()"
-				},
-				"lead_id": {
-					"name": "lead_id",
-					"type": "uuid",
-					"primaryKey": false,
-					"notNull": true
-				},
-				"pain_points": {
-					"name": "pain_points",
-					"type": "text",
-					"primaryKey": false,
-					"notNull": true
-				},
-				"behavioral_profile": {
-					"name": "behavioral_profile",
-					"type": "text",
-					"primaryKey": false,
-					"notNull": true
-				},
-				"journey_stage": {
-					"name": "journey_stage",
-					"type": "text",
-					"primaryKey": false,
-					"notNull": true
-				},
-				"psychological_triggers": {
-					"name": "psychological_triggers",
-					"type": "text",
-					"primaryKey": false,
-					"notNull": true
-				},
-				"optimal_approach": {
-					"name": "optimal_approach",
-					"type": "text",
-					"primaryKey": false,
-					"notNull": true
-				},
-				"conversion_probability": {
-					"name": "conversion_probability",
-					"type": "real",
-					"primaryKey": false,
-					"notNull": true
-				},
-				"created_at": {
-					"name": "created_at",
-					"type": "timestamp with time zone",
-					"primaryKey": false,
-					"notNull": true,
-					"default": "now()"
-				}
-			},
-			"indexes": {},
-			"foreignKeys": {
-				"behavior_analyses_lead_id_leads_id_fk": {
-					"name": "behavior_analyses_lead_id_leads_id_fk",
-					"tableFrom": "behavior_analyses",
-					"tableTo": "leads",
-					"columnsFrom": ["lead_id"],
-					"columnsTo": ["id"],
-					"onDelete": "cascade",
-					"onUpdate": "no action"
-				}
-			},
-			"compositePrimaryKeys": {},
-			"uniqueConstraints": {},
-			"policies": {},
-			"checkConstraints": {},
-			"isRLSEnabled": false
-		},
-		"public.email_sequences": {
-			"name": "email_sequences",
-			"schema": "",
-			"columns": {
-				"id": {
-					"name": "id",
-					"type": "uuid",
-					"primaryKey": true,
-					"notNull": true,
-					"default": "gen_random_uuid()"
-				},
-				"lead_id": {
-					"name": "lead_id",
-					"type": "uuid",
-					"primaryKey": false,
-					"notNull": true
-				},
-				"email_number": {
-					"name": "email_number",
-					"type": "integer",
-					"primaryKey": false,
-					"notNull": true
-				},
-				"subject_lines": {
-					"name": "subject_lines",
-					"type": "text[]",
-					"primaryKey": false,
-					"notNull": true,
-					"default": "'{}'"
-				},
-				"content": {
-					"name": "content",
-					"type": "text",
-					"primaryKey": false,
-					"notNull": true
-				},
-				"html_content": {
-					"name": "html_content",
-					"type": "text",
-					"primaryKey": false,
-					"notNull": false
-				},
-				"cta": {
-					"name": "cta",
-					"type": "text",
-					"primaryKey": false,
-					"notNull": true
-				},
-				"psychological_trigger": {
-					"name": "psychological_trigger",
-					"type": "text",
-					"primaryKey": false,
-					"notNull": true
-				},
-				"sent_at": {
-					"name": "sent_at",
-					"type": "timestamp with time zone",
-					"primaryKey": false,
-					"notNull": false
-				},
-				"created_at": {
-					"name": "created_at",
-					"type": "timestamp with time zone",
-					"primaryKey": false,
-					"notNull": true,
-					"default": "now()"
-				}
-			},
-			"indexes": {},
-			"foreignKeys": {
-				"email_sequences_lead_id_leads_id_fk": {
-					"name": "email_sequences_lead_id_leads_id_fk",
-					"tableFrom": "email_sequences",
-					"tableTo": "leads",
-					"columnsFrom": ["lead_id"],
-					"columnsTo": ["id"],
-					"onDelete": "cascade",
-					"onUpdate": "no action"
-				}
-			},
-			"compositePrimaryKeys": {},
-			"uniqueConstraints": {},
-			"policies": {},
-			"checkConstraints": {},
-			"isRLSEnabled": false
-		},
-		"public.leads": {
-			"name": "leads",
-			"schema": "",
-			"columns": {
-				"id": {
-					"name": "id",
-					"type": "uuid",
-					"primaryKey": true,
-					"notNull": true,
-					"default": "gen_random_uuid()"
-				},
-				"full_name": {
-					"name": "full_name",
-					"type": "text",
-					"primaryKey": false,
-					"notNull": true
-				},
-				"email": {
-					"name": "email",
-					"type": "text",
-					"primaryKey": false,
-					"notNull": true
-				},
-				"company_name": {
-					"name": "company_name",
-					"type": "text",
-					"primaryKey": false,
-					"notNull": true
-				},
-				"company_website": {
-					"name": "company_website",
-					"type": "text",
-					"primaryKey": false,
-					"notNull": true
-				},
-				"pain_points": {
-					"name": "pain_points",
-					"type": "text",
-					"primaryKey": false,
-					"notNull": false
-				},
-				"lead_source": {
-					"name": "lead_source",
-					"type": "text",
-					"primaryKey": false,
-					"notNull": false
-				},
-				"company_research": {
-					"name": "company_research",
-					"type": "text",
-					"primaryKey": false,
-					"notNull": false
-				},
-				"stage": {
-					"name": "stage",
-					"type": "integer",
-					"primaryKey": false,
-					"notNull": true,
-					"default": 0
-				},
-				"reply_status": {
-					"name": "reply_status",
-					"type": "text",
-					"primaryKey": false,
-					"notNull": true,
-					"default": "'pending'"
-				},
-				"latest_message_id": {
-					"name": "latest_message_id",
-					"type": "text",
-					"primaryKey": false,
-					"notNull": false
-				},
-				"message_ids": {
-					"name": "message_ids",
-					"type": "text[]",
-					"primaryKey": false,
-					"notNull": true,
-					"default": "'{}'"
-				},
-				"last_email_sent_at": {
-					"name": "last_email_sent_at",
-					"type": "timestamp with time zone",
-					"primaryKey": false,
-					"notNull": false
-				},
-				"created_at": {
-					"name": "created_at",
-					"type": "timestamp with time zone",
-					"primaryKey": false,
-					"notNull": true,
-					"default": "now()"
-				},
-				"updated_at": {
-					"name": "updated_at",
-					"type": "timestamp with time zone",
-					"primaryKey": false,
-					"notNull": true,
-					"default": "now()"
-				}
-			},
-			"indexes": {},
-			"foreignKeys": {},
-			"compositePrimaryKeys": {},
-			"uniqueConstraints": {
-				"leads_email_unique": {
-					"name": "leads_email_unique",
-					"nullsNotDistinct": false,
-					"columns": ["email"]
-				}
-			},
-			"policies": {},
-			"checkConstraints": {},
-			"isRLSEnabled": false
-		}
-	},
-	"enums": {},
-	"schemas": {},
-	"sequences": {},
-	"roles": {},
-	"policies": {},
-	"views": {},
-	"_meta": {
-		"columns": {},
-		"schemas": {},
-		"tables": {}
-	}
+  "id": "7af6950e-92d3-4752-ba76-9815fe35c16a",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.activity_log": {
+      "name": "activity_log",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "action": {
+          "name": "action",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "resource": {
+          "name": "resource",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "resource_id": {
+          "name": "resource_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "metadata": {
+          "name": "metadata",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.behavior_analyses": {
+      "name": "behavior_analyses",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "lead_id": {
+          "name": "lead_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "pain_points": {
+          "name": "pain_points",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "behavioral_profile": {
+          "name": "behavioral_profile",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "journey_stage": {
+          "name": "journey_stage",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "psychological_triggers": {
+          "name": "psychological_triggers",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "optimal_approach": {
+          "name": "optimal_approach",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "conversion_probability": {
+          "name": "conversion_probability",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "behavior_analyses_lead_id_leads_id_fk": {
+          "name": "behavior_analyses_lead_id_leads_id_fk",
+          "tableFrom": "behavior_analyses",
+          "tableTo": "leads",
+          "columnsFrom": ["lead_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.email_sequences": {
+      "name": "email_sequences",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "lead_id": {
+          "name": "lead_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "email_number": {
+          "name": "email_number",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "subject_lines": {
+          "name": "subject_lines",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{}'"
+        },
+        "content": {
+          "name": "content",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "html_content": {
+          "name": "html_content",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "cta": {
+          "name": "cta",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "psychological_trigger": {
+          "name": "psychological_trigger",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "sent_at": {
+          "name": "sent_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "email_sequences_lead_id_leads_id_fk": {
+          "name": "email_sequences_lead_id_leads_id_fk",
+          "tableFrom": "email_sequences",
+          "tableTo": "leads",
+          "columnsFrom": ["lead_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.leads": {
+      "name": "leads",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "full_name": {
+          "name": "full_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "company_name": {
+          "name": "company_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "company_website": {
+          "name": "company_website",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "pain_points": {
+          "name": "pain_points",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "lead_source": {
+          "name": "lead_source",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "company_research": {
+          "name": "company_research",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "stage": {
+          "name": "stage",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "reply_status": {
+          "name": "reply_status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'pending'"
+        },
+        "latest_message_id": {
+          "name": "latest_message_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "message_ids": {
+          "name": "message_ids",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{}'"
+        },
+        "last_email_sent_at": {
+          "name": "last_email_sent_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "leads_email_unique": {
+          "name": "leads_email_unique",
+          "nullsNotDistinct": false,
+          "columns": ["email"]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
 }

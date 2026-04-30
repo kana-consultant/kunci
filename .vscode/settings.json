@@ -1,12 +1,12 @@
 {
-	"files.eol": "\n",
-	"python.defaultInterpreterPath": "${workspaceFolder}/apps/api/.venv/Scripts/python.exe",
-	"python.analysis.extraPaths": ["${workspaceFolder}/apps/api/src"],
-	"python.analysis.typeCheckingMode": "basic",
-	"python.terminal.activateEnvironment": true,
-	"ruff.interpreter": ["${workspaceFolder}/apps/api/.venv/Scripts/python.exe"],
-	"[python]": {
-		"editor.defaultFormatter": "charliermarsh.ruff",
-		"editor.formatOnSave": true
-	}
+  "files.eol": "\n",
+  "python.defaultInterpreterPath": "${workspaceFolder}/apps/api/.venv/Scripts/python.exe",
+  "python.analysis.extraPaths": ["${workspaceFolder}/apps/api/src"],
+  "python.analysis.typeCheckingMode": "basic",
+  "python.terminal.activateEnvironment": true,
+  "ruff.interpreter": ["${workspaceFolder}/apps/api/.venv/Scripts/python.exe"],
+  "[python]": {
+    "editor.defaultFormatter": "charliermarsh.ruff",
+    "editor.formatOnSave": true
+  }
 }
