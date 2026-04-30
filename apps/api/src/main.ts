@@ -33,6 +33,7 @@ const APP_VERSION = readAppVersion()
 import { buildUseCases } from "./application/use-cases.ts"
 import { createOpenRouterService } from "./infrastructure/ai/openrouter-service.ts"
 import { createRedisCache } from "./infrastructure/cache/redis.ts"
+import { auth } from "./infrastructure/auth/better-auth.ts"
 import { env } from "./infrastructure/config/env.ts"
 import { createDb } from "./infrastructure/db/client.ts"
 import { createEmailSequenceRepository } from "./infrastructure/db/repositories/email-sequence-repository.ts"
@@ -106,6 +107,9 @@ async function bootstrap() {
 			"HTTP Request",
 		)
 	})
+
+	// Auth
+	app.on(["POST", "GET"], "/api/auth/*", (c) => auth.handler(c.req.raw))
 
 	// Health checks
 	app.get("/healthz", (c) => c.json({ status: "ok", version: APP_VERSION }))
