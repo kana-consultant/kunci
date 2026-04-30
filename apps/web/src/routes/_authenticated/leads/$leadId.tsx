@@ -127,161 +127,161 @@ function PipelineStepsTimeline({ leadId }: { leadId: string }) {
 							? Loader2
 							: CheckCircle2
 
-          const statusColor = isFailed
-            ? "var(--color-danger)"
-            : isRunning
-              ? "var(--color-warning)"
-              : "var(--color-success)"
+					const statusColor = isFailed
+						? "var(--color-danger)"
+						: isRunning
+							? "var(--color-warning)"
+							: "var(--color-success)"
 
-          const detail = step.detail as Record<string, string> | null
+					const detail = step.detail as Record<string, string> | null
 
-          return (
-            <div
-              key={step.id ?? idx}
-              className="relative flex items-start gap-3 px-2 py-2.5 group"
-            >
-              {/* Timeline dot */}
-              <div
-                className="relative z-10 flex items-center justify-center w-[22px] h-[22px] rounded-full shrink-0 mt-0.5"
-                style={{
-                  background: `color-mix(in srgb, ${statusColor} 20%, transparent)`,
-                  border: `2px solid ${statusColor}`,
-                }}
-              >
-                <StatusIcon
-                  className={`w-3 h-3 ${isRunning ? "animate-spin" : ""}`}
-                  style={{ color: statusColor }}
-                />
-              </div>
+					return (
+						<div
+							key={step.id ?? idx}
+							className="relative flex items-start gap-3 px-2 py-2.5 group"
+						>
+							{/* Timeline dot */}
+							<div
+								className="relative z-10 flex items-center justify-center w-[22px] h-[22px] rounded-full shrink-0 mt-0.5"
+								style={{
+									background: `color-mix(in srgb, ${statusColor} 20%, transparent)`,
+									border: `2px solid ${statusColor}`,
+								}}
+							>
+								<StatusIcon
+									className={`w-3 h-3 ${isRunning ? "animate-spin" : ""}`}
+									style={{ color: statusColor }}
+								/>
+							</div>
 
-              {/* Content */}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <StepIcon
-                      className="w-3.5 h-3.5 shrink-0"
-                      style={{ color: meta.color }}
-                    />
-                    <span className="text-sm font-medium truncate">
-                      {step.label}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    {step.durationMs != null && (
-                      <span className="text-xs font-mono text-[var(--color-muted-foreground)] tabular-nums">
-                        {formatDuration(step.durationMs)}
-                      </span>
-                    )}
-                    <Badge
-                      tone={
-                        isFailed ? "danger" : isRunning ? "warning" : "success"
-                      }
-                      className="text-[10px] px-1.5 py-0"
-                    >
-                      {step.status}
-                    </Badge>
-                  </div>
-                </div>
+							{/* Content */}
+							<div className="flex-1 min-w-0">
+								<div className="flex items-center justify-between gap-2">
+									<div className="flex items-center gap-2 min-w-0">
+										<StepIcon
+											className="w-3.5 h-3.5 shrink-0"
+											style={{ color: meta.color }}
+										/>
+										<span className="text-sm font-medium truncate">
+											{step.label}
+										</span>
+									</div>
+									<div className="flex items-center gap-2 shrink-0">
+										{step.durationMs != null && (
+											<span className="text-xs font-mono text-[var(--color-muted-foreground)] tabular-nums">
+												{formatDuration(step.durationMs)}
+											</span>
+										)}
+										<Badge
+											tone={
+												isFailed ? "danger" : isRunning ? "warning" : "success"
+											}
+											className="text-[10px] px-1.5 py-0"
+										>
+											{step.status}
+										</Badge>
+									</div>
+								</div>
 
-                {/* Detail info */}
-                {detail && (
-                  <div className="mt-1 space-y-0.5">
-                    {detail.error && (
-                      <p
-                        className="text-xs text-[var(--color-danger)] truncate"
-                        title={detail.error as string}
-                      >
-                        Error: {detail.error as string}
-                      </p>
-                    )}
-                    {detail.provider && (
-                      <p className="text-xs text-[var(--color-muted-foreground)]">
-                        Provider:{" "}
-                        <span className="font-medium">
-                          {detail.provider as string}
-                        </span>
-                        {detail.model && (
-                          <>
-                            {" · "}Model:{" "}
-                            <span className="font-mono">
-                              {detail.model as string}
-                            </span>
-                          </>
-                        )}
-                      </p>
-                    )}
-                    {detail.apiUrl && (
-                      <p
-                        className="text-xs text-[var(--color-muted-foreground)] font-mono truncate opacity-60"
-                        title={detail.apiUrl as string}
-                      >
-                        → {detail.apiUrl as string}
-                      </p>
-                    )}
-                    {detail.url && !detail.apiUrl && (
-                      <p
-                        className="text-xs text-[var(--color-muted-foreground)] font-mono truncate opacity-60"
-                        title={detail.url as string}
-                      >
-                        → {detail.url as string}
-                      </p>
-                    )}
-                  </div>
-                )}
+								{/* Detail info */}
+								{detail && (
+									<div className="mt-1 space-y-0.5">
+										{detail.error && (
+											<p
+												className="text-xs text-[var(--color-danger)] truncate"
+												title={detail.error as string}
+											>
+												Error: {detail.error as string}
+											</p>
+										)}
+										{detail.provider && (
+											<p className="text-xs text-[var(--color-muted-foreground)]">
+												Provider:{" "}
+												<span className="font-medium">
+													{detail.provider as string}
+												</span>
+												{detail.model && (
+													<>
+														{" · "}Model:{" "}
+														<span className="font-mono">
+															{detail.model as string}
+														</span>
+													</>
+												)}
+											</p>
+										)}
+										{detail.apiUrl && (
+											<p
+												className="text-xs text-[var(--color-muted-foreground)] font-mono truncate opacity-60"
+												title={detail.apiUrl as string}
+											>
+												→ {detail.apiUrl as string}
+											</p>
+										)}
+										{detail.url && !detail.apiUrl && (
+											<p
+												className="text-xs text-[var(--color-muted-foreground)] font-mono truncate opacity-60"
+												title={detail.url as string}
+											>
+												→ {detail.url as string}
+											</p>
+										)}
+									</div>
+								)}
 
-                {/* Timestamp */}
-                <p className="text-[10px] text-[var(--color-muted-foreground)] mt-1 opacity-50 tabular-nums">
-                  {new Date(step.startedAt as string).toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                    second: "2-digit",
-                  })}
-                </p>
-              </div>
-            </div>
-          )
-        })}
-      </div>
-    </div>
-  )
+								{/* Timestamp */}
+								<p className="text-[10px] text-[var(--color-muted-foreground)] mt-1 opacity-50 tabular-nums">
+									{new Date(step.startedAt as string).toLocaleTimeString([], {
+										hour: "2-digit",
+										minute: "2-digit",
+										second: "2-digit",
+									})}
+								</p>
+							</div>
+						</div>
+					)
+				})}
+			</div>
+		</div>
+	)
 }
 
 function LeadDetailPage() {
-  const { leadId } = Route.useParams()
+	const { leadId } = Route.useParams()
 
-  const { data, isPending, error } = useQuery(
-    orpc.lead.getDetail.queryOptions({ input: { id: leadId } }),
-  )
-  const lead = data
+	const { data, isPending, error } = useQuery(
+		orpc.lead.getDetail.queryOptions({ input: { id: leadId } }),
+	)
+	const lead = data
 
-  if (isPending) {
-    return (
-      <div className="space-y-6 max-w-5xl mx-auto">
-        <Skeleton className="h-8 w-48" />
-        <Skeleton className="h-64 rounded-xl" />
-      </div>
-    )
-  }
+	if (isPending) {
+		return (
+			<div className="space-y-6 max-w-5xl mx-auto">
+				<Skeleton className="h-8 w-48" />
+				<Skeleton className="h-64 rounded-xl" />
+			</div>
+		)
+	}
 
-  if (error || !lead) {
-    return (
-      <div className="max-w-5xl mx-auto space-y-4">
-        <Card>
-          <CardContent className="p-4 text-[var(--color-danger)]">
-            Failed to load lead details. Make sure the API server is running.
-          </CardContent>
-        </Card>
-        <Link to="/leads">
-          <Button
-            variant="ghost"
-            leadingIcon={<ArrowLeft className="w-4 h-4" />}
-          >
-            Back to pipeline
-          </Button>
-        </Link>
-      </div>
-    )
-  }
+	if (error || !lead) {
+		return (
+			<div className="max-w-5xl mx-auto space-y-4">
+				<Card>
+					<CardContent className="p-4 text-[var(--color-danger)]">
+						Failed to load lead details. Make sure the API server is running.
+					</CardContent>
+				</Card>
+				<Link to="/leads">
+					<Button
+						variant="ghost"
+						leadingIcon={<ArrowLeft className="w-4 h-4" />}
+					>
+						Back to pipeline
+					</Button>
+				</Link>
+			</div>
+		)
+	}
 
   const statusTone = statusTones[lead.replyStatus as string] ?? "neutral"
 
