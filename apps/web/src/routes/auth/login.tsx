@@ -19,7 +19,7 @@ const loginSchema = z.object({
 	password: z.string().min(1, "Password wajib diisi"),
 })
 
-function LoginPage() {
+export function LoginPage() {
 	const navigate = useNavigate()
 
 	const form = useAppForm({

@@ -1,7 +1,12 @@
 {
 	"extends": "../../tsconfig.base.json",
 	"compilerOptions": {
-		"outDir": "./dist"
+		"outDir": "./dist",
+		"paths": {
+			"~/*": ["../web/src/*"],
+			"@kunci/api": ["../api/src/index.ts"],
+			"#/*": ["../api/src/*"]
+		}
 	},
 	"include": ["src"]
 }

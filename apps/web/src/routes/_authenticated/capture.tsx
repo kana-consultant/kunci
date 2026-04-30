@@ -16,7 +16,7 @@ export const Route = createFileRoute("/_authenticated/capture")({
 	component: CapturePage,
 })
 
-function CapturePage() {
+export function CapturePage() {
 	const { form, isPending, error } = useCaptureLogic()
 
 	return (

@@ -253,6 +253,27 @@ POST https://your-domain.com/webhooks/resend
 
 Subscribe to `email.replied` and `email.received` events.
 
+#### UAT Scenario: "Inbound Email triggers AI Auto-Reply"
+
+**Prerequisites:**
+1. Backend running in an internet-accessible environment (or use `ngrok` for local: `ngrok http 3001`).
+2. Add `https://<ngrok-url>/webhooks/resend` in Resend Dashboard -> Webhooks.
+3. Check events: `email.received` and `email.replied`.
+4. Copy *Webhook Secret* to `.env`: `RESEND_WEBHOOK_SECRET=whsec_...`
+
+**Test Steps:**
+1. Open KUNCI Frontend (`/capture`).
+2. Input Lead data with **your real email** (so you can reply to it).
+3. Click **"Capture & Run Pipeline"**.
+4. Wait ~30s for the first email to arrive in your inbox.
+5. **Reply** to that email from your email client. Example: *"Interesting, how much does it cost?"*
+
+**Expected Results:**
+1. **Server Logs:** Should show `Received Resend Webhook` and `Personalizing reply via AI`.
+2. **Dashboard:** Lead `Reply Status` changes from `replied` to `awaiting`, and `Stage` increases.
+3. **Inbox:** You receive an automated AI response in the same thread.
+
+
 ---
 
 ## Monorepo & Tooling
