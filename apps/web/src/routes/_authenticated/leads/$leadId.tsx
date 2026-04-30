@@ -283,150 +283,149 @@ function LeadDetailPage() {
 		)
 	}
 
-  const statusTone = statusTones[lead.replyStatus as string] ?? "neutral"
+	const statusTone = statusTones[lead.replyStatus as string] ?? "neutral"
 
-  return (
-    <div className="space-y-6 max-w-5xl mx-auto">
-      {/* Header */}
-      <div>
-        <Link to="/leads">
-          <Button
-            variant="ghost"
-            size="sm"
-            leadingIcon={<ArrowLeft className="w-4 h-4" />}
-            className="mb-4"
-          >
-            Back to pipeline
-          </Button>
-        </Link>
-        <div className="flex items-start justify-between">
-          <div>
-            <h1 className="text-3xl font-bold">{lead.fullName as string}</h1>
-            <p className="text-lg text-[var(--color-muted-foreground)] mt-1 flex items-center gap-2">
-              {lead.companyName as string}
-              {lead.companyWebsite && (
-                <a
-                  href={lead.companyWebsite as string}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-[var(--color-primary)] inline-flex items-center gap-1 text-sm"
-                >
-                  <ExternalLink className="w-3.5 h-3.5" />
-                </a>
-              )}
-            </p>
-          </div>
-          <div className="flex items-center gap-3">
-            <Badge tone={statusTone} className="capitalize">
-              {(lead.replyStatus as string).replace("_", " ")}
-            </Badge>
-            <Badge tone="neutral">Stage {lead.stage as number}</Badge>
-          </div>
-        </div>
-      </div>
+	return (
+		<div className="space-y-6 max-w-5xl mx-auto">
+			{/* Header */}
+			<div>
+				<Link to="/leads">
+					<Button
+						variant="ghost"
+						size="sm"
+						leadingIcon={<ArrowLeft className="w-4 h-4" />}
+						className="mb-4"
+					>
+						Back to pipeline
+					</Button>
+				</Link>
+				<div className="flex items-start justify-between">
+					<div>
+						<h1 className="text-3xl font-bold">{lead.fullName as string}</h1>
+						<p className="text-lg text-[var(--color-muted-foreground)] mt-1 flex items-center gap-2">
+							{lead.companyName as string}
+							{lead.companyWebsite && (
+								<a
+									href={lead.companyWebsite as string}
+									target="_blank"
+									rel="noreferrer"
+									className="text-[var(--color-primary)] inline-flex items-center gap-1 text-sm"
+								>
+									<ExternalLink className="w-3.5 h-3.5" />
+								</a>
+							)}
+						</p>
+					</div>
+					<div className="flex items-center gap-3">
+						<Badge tone={statusTone} className="capitalize">
+							{(lead.replyStatus as string).replace("_", " ")}
+						</Badge>
+						<Badge tone="neutral">Stage {lead.stage as number}</Badge>
+					</div>
+				</div>
+			</div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Column: Details & Research */}
-        <div className="lg:col-span-1 space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-sm uppercase tracking-wider">
-                Contact Info
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex items-center gap-3 text-sm">
-                <Mail className="w-4 h-4 text-[var(--color-muted-foreground)] shrink-0" />
-                <a
-                  href={`mailto:${lead.email}`}
-                  className="text-[var(--color-primary)] break-all"
-                >
-                  {lead.email as string}
-                </a>
-              </div>
-              <div className="flex items-center gap-3 text-sm text-[var(--color-muted-foreground)]">
-                <Calendar className="w-4 h-4 shrink-0" />
-                Captured on{" "}
-                {new Date(lead.createdAt).toLocaleDateString()}
-              </div>
-            </CardContent>
-          </Card>
+			<div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+				{/* Left Column: Details & Research */}
+				<div className="lg:col-span-1 space-y-6">
+					<Card>
+						<CardHeader>
+							<CardTitle className="text-sm uppercase tracking-wider">
+								Contact Info
+							</CardTitle>
+						</CardHeader>
+						<CardContent className="space-y-3">
+							<div className="flex items-center gap-3 text-sm">
+								<Mail className="w-4 h-4 text-[var(--color-muted-foreground)] shrink-0" />
+								<a
+									href={`mailto:${lead.email}`}
+									className="text-[var(--color-primary)] break-all"
+								>
+									{lead.email as string}
+								</a>
+							</div>
+							<div className="flex items-center gap-3 text-sm text-[var(--color-muted-foreground)]">
+								<Calendar className="w-4 h-4 shrink-0" />
+								Captured on {new Date(lead.createdAt).toLocaleDateString()}
+							</div>
+						</CardContent>
+					</Card>
 
-          {(lead.painPoints as string) && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-sm uppercase tracking-wider">
-                  Pain Points
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm leading-relaxed whitespace-pre-wrap">
-                  {lead.painPoints as string}
-                </p>
-              </CardContent>
-            </Card>
-          )}
+					{(lead.painPoints as string) && (
+						<Card>
+							<CardHeader>
+								<CardTitle className="text-sm uppercase tracking-wider">
+									Pain Points
+								</CardTitle>
+							</CardHeader>
+							<CardContent>
+								<p className="text-sm leading-relaxed whitespace-pre-wrap">
+									{lead.painPoints as string}
+								</p>
+							</CardContent>
+						</Card>
+					)}
 
-          {(lead.companyResearch as string) && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-sm uppercase tracking-wider">
-                  AI Company Analysis
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="prose prose-sm max-w-none text-sm leading-relaxed prose-invert">
-                  <ReactMarkdown remarkPlugins={[remarkBreaks]}>
-                    {lead.companyResearch as string}
-                  </ReactMarkdown>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </div>
+					{(lead.companyResearch as string) && (
+						<Card>
+							<CardHeader>
+								<CardTitle className="text-sm uppercase tracking-wider">
+									AI Company Analysis
+								</CardTitle>
+							</CardHeader>
+							<CardContent>
+								<div className="prose prose-sm max-w-none text-sm leading-relaxed prose-invert">
+									<ReactMarkdown remarkPlugins={[remarkBreaks]}>
+										{lead.companyResearch as string}
+									</ReactMarkdown>
+								</div>
+							</CardContent>
+						</Card>
+					)}
+				</div>
 
-        {/* Right Column: Pipeline Steps + Sequence */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Pipeline Execution Steps */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="flex items-center gap-2">
-                <Clock className="w-4 h-4" />
-                Pipeline Execution
-              </CardTitle>
-              <span className="text-xs font-medium text-[var(--color-muted-foreground)] uppercase tracking-wider">
-                Step-by-Step
-              </span>
-            </CardHeader>
-            <Separator />
-            <CardContent className="p-2">
-              <PipelineStepsTimeline leadId={leadId} />
-            </CardContent>
-          </Card>
+				{/* Right Column: Pipeline Steps + Sequence */}
+				<div className="lg:col-span-2 space-y-6">
+					{/* Pipeline Execution Steps */}
+					<Card>
+						<CardHeader className="flex flex-row items-center justify-between">
+							<CardTitle className="flex items-center gap-2">
+								<Clock className="w-4 h-4" />
+								Pipeline Execution
+							</CardTitle>
+							<span className="text-xs font-medium text-[var(--color-muted-foreground)] uppercase tracking-wider">
+								Step-by-Step
+							</span>
+						</CardHeader>
+						<Separator />
+						<CardContent className="p-2">
+							<PipelineStepsTimeline leadId={leadId} />
+						</CardContent>
+					</Card>
 
-          {/* Email Sequence */}
-          <Card className="flex flex-col">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Email Sequence</CardTitle>
-              <span className="text-xs font-medium text-[var(--color-muted-foreground)] uppercase tracking-wider">
-                Timeline
-              </span>
-            </CardHeader>
+					{/* Email Sequence */}
+					<Card className="flex flex-col">
+						<CardHeader className="flex flex-row items-center justify-between">
+							<CardTitle>Email Sequence</CardTitle>
+							<span className="text-xs font-medium text-[var(--color-muted-foreground)] uppercase tracking-wider">
+								Timeline
+							</span>
+						</CardHeader>
 
-            <Separator />
+						<Separator />
 
-            <CardContent className="flex-1">
-              <div className="text-center py-12 text-[var(--color-muted-foreground)]">
-                <Mail className="w-12 h-12 mx-auto mb-3 opacity-30" />
-                <p>
-                  The AI is currently crafting the sequence or no emails have
-                  been sent yet.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    </div>
-  )
+						<CardContent className="flex-1">
+							<div className="text-center py-12 text-[var(--color-muted-foreground)]">
+								<Mail className="w-12 h-12 mx-auto mb-3 opacity-30" />
+								<p>
+									The AI is currently crafting the sequence or no emails have
+									been sent yet.
+								</p>
+							</div>
+						</CardContent>
+					</Card>
+				</div>
+			</div>
+		</div>
+	)
 }
