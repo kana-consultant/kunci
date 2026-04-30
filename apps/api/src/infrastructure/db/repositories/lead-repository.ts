@@ -124,30 +124,97 @@ export function createLeadRepository(db: Database): LeadRepository {
 			return rows.map(mapRowToLead)
 		},
 
-		async getStats() {
-			const [total, sent, replied, bounced] = await Promise.all([
+		async getStats(period = "all") {
+			const periodFilter =
+				period === "7d"
+					? sql`created_at >= now() - interval '7 days'`
+					: period === "30d"
+						? sql`created_at >= now() - interval '30 days'`
+						: undefined
+
+			const [
+				total,
+				sent,
+				replied,
+				bounced,
+				pending,
+				researching,
+				researchFailed,
+				awaiting,
+			] = await Promise.all([
 				db
 					.select({ count: sql<number>`count(*)::int` })
 					.from(leads)
+					.where(periodFilter)
 					.then((r) => r[0]?.count ?? 0),
 				db
 					.select({ count: sql<number>`count(*)::int` })
 					.from(leads)
-					.where(ne(leads.stage, 0))
+					.where(and(ne(leads.stage, 0), periodFilter))
 					.then((r) => r[0]?.count ?? 0),
 				db
 					.select({ count: sql<number>`count(*)::int` })
 					.from(leads)
-					.where(eq(leads.replyStatus, "replied"))
+					.where(and(eq(leads.replyStatus, "replied"), periodFilter))
 					.then((r) => r[0]?.count ?? 0),
 				db
 					.select({ count: sql<number>`count(*)::int` })
 					.from(leads)
-					.where(eq(leads.replyStatus, "bounced"))
+					.where(and(eq(leads.replyStatus, "bounced"), periodFilter))
+					.then((r) => r[0]?.count ?? 0),
+				db
+					.select({ count: sql<number>`count(*)::int` })
+					.from(leads)
+					.where(and(eq(leads.replyStatus, "pending"), periodFilter))
+					.then((r) => r[0]?.count ?? 0),
+				db
+					.select({ count: sql<number>`count(*)::int` })
+					.from(leads)
+					.where(and(eq(leads.replyStatus, "researching"), periodFilter))
+					.then((r) => r[0]?.count ?? 0),
+				db
+					.select({ count: sql<number>`count(*)::int` })
+					.from(leads)
+					.where(and(eq(leads.replyStatus, "research_failed"), periodFilter))
+					.then((r) => r[0]?.count ?? 0),
+				db
+					.select({ count: sql<number>`count(*)::int` })
+					.from(leads)
+					.where(and(eq(leads.replyStatus, "awaiting"), periodFilter))
 					.then((r) => r[0]?.count ?? 0),
 			])
 
-			return { total, sent, replied, bounced }
+			return {
+				total,
+				sent,
+				replied,
+				bounced,
+				pending,
+				researching,
+				researchFailed,
+				awaiting,
+			}
+		},
+
+		async getStageDistribution(period = "all") {
+			const periodFilter =
+				period === "7d"
+					? sql`created_at >= now() - interval '7 days'`
+					: period === "30d"
+						? sql`created_at >= now() - interval '30 days'`
+						: undefined
+
+			const rows = await db
+				.select({
+					stage: leads.stage,
+					count: sql<number>`count(*)::int`,
+				})
+				.from(leads)
+				.where(periodFilter)
+				.groupBy(leads.stage)
+				.orderBy(leads.stage)
+
+			return rows
 		},
 	}
 }

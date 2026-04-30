@@ -138,7 +138,9 @@ export function buildUseCases(deps: AppDependencies) {
 			bulkCapture: bulkCaptureLead,
 			list: listLeads,
 			getDetail: getLeadDetail,
-			getStats: async () => deps.repos.lead.getStats(),
+			getStats: async (period?: "7d" | "30d" | "all") => deps.repos.lead.getStats(period),
+			getStageDistribution: async (period?: "7d" | "30d" | "all") => deps.repos.lead.getStageDistribution(period),
+			getRecentActivity: async (limit: number) => deps.tracker.getRecentActivity(limit),
 			updateStatus: async (id: string, status: string) => {
 				await deps.repos.lead.update(id, { replyStatus: status as any })
 			},

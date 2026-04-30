@@ -11,7 +11,7 @@ import {
 	useNavigate,
 	useRouterState,
 } from "@tanstack/react-router"
-import { LayoutDashboard, FileSpreadsheet, UserPlus, Users } from "lucide-react"
+import { LayoutDashboard, FileSpreadsheet, UserPlus, Users, Settings } from "lucide-react"
 import { authClient } from "~/libs/auth/client"
 
 const navItems: TNavItem[] = [
@@ -19,6 +19,7 @@ const navItems: TNavItem[] = [
 	{ id: "/leads", label: "Leads Pipeline", icon: Users },
 	{ id: "/capture", label: "Add Lead", icon: UserPlus },
 	{ id: "/bulk-capture", label: "Bulk Import", icon: FileSpreadsheet },
+	{ id: "/settings", label: "Settings", icon: Settings },
 ]
 
 function AuthenticatedLayout() {
