@@ -2,7 +2,7 @@ import Redis from "ioredis"
 import type { Cache } from "#/domain/ports/cache.ts"
 
 export function createRedisCache(url: string): Cache {
-	const redis = new Redis(url, { maxRetriesPerRequest: 3 })
+	const redis = new Redis(url, { maxRetriesPerRequest: 3, family: 4 })
 
 	return {
 		async get<T>(key: string): Promise<T | null> {
