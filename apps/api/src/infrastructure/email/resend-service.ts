@@ -5,90 +5,90 @@
 
 import { Resend } from "resend"
 import type {
-  EmailSendResult,
-  EmailService,
-  ReplyInThreadParams,
-  SendEmailParams,
+	EmailSendResult,
+	EmailService,
+	ReplyInThreadParams,
+	SendEmailParams,
 } from "#/domain/ports/email-service.ts"
 import { logger } from "#/infrastructure/observability/logger.ts"
 
 interface ResendConfig {
-  apiKey: string
-  senderEmail: string
-  senderName: string
+	apiKey: string
+	senderEmail: string
+	senderName: string
 }
 
 export function createResendService(config: ResendConfig): EmailService {
-  const resend = new Resend(config.apiKey)
-  const from = `${config.senderName} <${config.senderEmail}>`
+	const resend = new Resend(config.apiKey)
+	const from = `${config.senderName} <${config.senderEmail}>`
 
-  return {
-    async send(params: SendEmailParams): Promise<EmailSendResult> {
-      const { data, error } = await resend.emails.send({
-        from,
-        to: [params.to],
-        subject: params.subject,
-        html: params.html,
-        tags: [
-          { name: "lead_id", value: params.leadId },
-          { name: "stage", value: String(params.stage) },
-          { name: "type", value: "outbound" },
-        ],
-      })
+	return {
+		async send(params: SendEmailParams): Promise<EmailSendResult> {
+			const { data, error } = await resend.emails.send({
+				from,
+				to: [params.to],
+				subject: params.subject,
+				html: params.html,
+				tags: [
+					{ name: "lead_id", value: params.leadId },
+					{ name: "stage", value: String(params.stage) },
+					{ name: "type", value: "outbound" },
+				],
+			})
 
-      if (error) {
-        logger.error({ error, to: params.to }, "Resend send failed")
-        throw new Error(`Resend error: ${error.message}`)
-      }
+			if (error) {
+				logger.error({ error, to: params.to }, "Resend send failed")
+				throw new Error(`Resend error: ${error.message}`)
+			}
 
-      logger.info(
-        { messageId: data!.id, to: params.to, stage: params.stage },
-        "Email sent",
-      )
+			logger.info(
+				{ messageId: data!.id, to: params.to, stage: params.stage },
+				"Email sent",
+			)
 
-      return {
-        messageId: data!.id,
-        sentAt: new Date(),
-      }
-    },
+			return {
+				messageId: data!.id,
+				sentAt: new Date(),
+			}
+		},
 
-    async replyInThread(params: ReplyInThreadParams): Promise<EmailSendResult> {
-      const subject = params.subject.startsWith("Re:")
-        ? params.subject
-        : `Re: ${params.subject}`
+		async replyInThread(params: ReplyInThreadParams): Promise<EmailSendResult> {
+			const subject = params.subject.startsWith("Re:")
+				? params.subject
+				: `Re: ${params.subject}`
 
-      const { data, error } = await resend.emails.send({
-        from,
-        to: [params.to],
-        subject,
-        html: params.html,
-        headers: {
-          "In-Reply-To": params.originalMessageId,
-          References: [...params.previousRefs, params.originalMessageId].join(
-            " ",
-          ),
-        },
-        tags: [
-          { name: "lead_id", value: params.leadId },
-          { name: "stage", value: String(params.stage) },
-          { name: "type", value: "follow_up" },
-        ],
-      })
+			const { data, error } = await resend.emails.send({
+				from,
+				to: [params.to],
+				subject,
+				html: params.html,
+				headers: {
+					"In-Reply-To": params.originalMessageId,
+					References: [...params.previousRefs, params.originalMessageId].join(
+						" ",
+					),
+				},
+				tags: [
+					{ name: "lead_id", value: params.leadId },
+					{ name: "stage", value: String(params.stage) },
+					{ name: "type", value: "follow_up" },
+				],
+			})
 
-      if (error) {
-        logger.error({ error, to: params.to }, "Resend reply failed")
-        throw new Error(`Resend reply error: ${error.message}`)
-      }
+			if (error) {
+				logger.error({ error, to: params.to }, "Resend reply failed")
+				throw new Error(`Resend reply error: ${error.message}`)
+			}
 
-      logger.info(
-        { messageId: data!.id, to: params.to, stage: params.stage },
-        "Reply sent in thread",
-      )
+			logger.info(
+				{ messageId: data!.id, to: params.to, stage: params.stage },
+				"Reply sent in thread",
+			)
 
-      return {
-        messageId: data!.id,
-        sentAt: new Date(),
-      }
-    },
-  }
+			return {
+				messageId: data!.id,
+				sentAt: new Date(),
+			}
+		},
+	}
 }
