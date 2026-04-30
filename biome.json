@@ -9,7 +9,7 @@
   },
   "formatter": {
     "enabled": true,
-    "indentStyle": "space",
+    "indentStyle": "tab",
     "indentWidth": 2
   },
   "javascript": {
