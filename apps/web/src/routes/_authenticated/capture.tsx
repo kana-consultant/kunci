@@ -20,7 +20,7 @@ export const Route = createFileRoute("/_authenticated/capture")({
 })
 
 function CapturePage() {
-  const { formRef, handleSubmit, isPending, error } = useCaptureLogic()
+  const { form, isPending, error } = useCaptureLogic()
 
   return (
     <div className="max-w-2xl mx-auto">
@@ -32,7 +32,13 @@ function CapturePage() {
         </p>
       </div>
 
-      <form ref={formRef} onSubmit={handleSubmit}>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault()
+          e.stopPropagation()
+          form.handleSubmit()
+        }}
+      >
         <Card>
           <CardHeader>
             <CardTitle>Lead Information</CardTitle>
@@ -43,81 +49,140 @@ function CapturePage() {
 
           <CardContent className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <Label htmlFor="fullName" required>
-                  Full Name
-                </Label>
-                <Input
-                  id="fullName"
-                  name="fullName"
-                  type="text"
-                  required
-                  placeholder="John Doe"
-                />
-              </div>
+              <form.Field
+                name="fullName"
+                children={(field: any) => (
+                  <div className="space-y-2">
+                    <Label htmlFor={field.name} required>
+                      Full Name
+                    </Label>
+                    <Input
+                      id={field.name}
+                      name={field.name}
+                      value={field.state.value}
+                      onBlur={field.handleBlur}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                      placeholder="John Doe"
+                    />
+                    {field.state.meta.errors ? (
+                      <p className="text-xs text-[var(--color-danger)]">
+                        {field.state.meta.errors.join(", ")}
+                      </p>
+                    ) : null}
+                  </div>
+                )}
+              />
 
-              <div className="space-y-2">
-                <Label htmlFor="email" required>
-                  Email Address
-                </Label>
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  required
-                  placeholder="john@company.com"
-                />
-              </div>
+              <form.Field
+                name="email"
+                children={(field: any) => (
+                  <div className="space-y-2">
+                    <Label htmlFor={field.name} required>
+                      Email Address
+                    </Label>
+                    <Input
+                      id={field.name}
+                      name={field.name}
+                      type="email"
+                      value={field.state.value}
+                      onBlur={field.handleBlur}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                      placeholder="john@company.com"
+                    />
+                    {field.state.meta.errors ? (
+                      <p className="text-xs text-[var(--color-danger)]">
+                        {field.state.meta.errors.join(", ")}
+                      </p>
+                    ) : null}
+                  </div>
+                )}
+              />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <Label htmlFor="companyName" required>
-                  Company Name
-                </Label>
-                <Input
-                  id="companyName"
-                  name="companyName"
-                  type="text"
-                  required
-                  placeholder="Acme Corp"
-                />
-              </div>
+              <form.Field
+                name="companyName"
+                children={(field: any) => (
+                  <div className="space-y-2">
+                    <Label htmlFor={field.name} required>
+                      Company Name
+                    </Label>
+                    <Input
+                      id={field.name}
+                      name={field.name}
+                      value={field.state.value}
+                      onBlur={field.handleBlur}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                      placeholder="Acme Corp"
+                    />
+                    {field.state.meta.errors ? (
+                      <p className="text-xs text-[var(--color-danger)]">
+                        {field.state.meta.errors.join(", ")}
+                      </p>
+                    ) : null}
+                  </div>
+                )}
+              />
 
-              <div className="space-y-2">
-                <Label htmlFor="companyWebsite" required>
-                  Company Website
-                </Label>
-                <Input
-                  id="companyWebsite"
-                  name="companyWebsite"
-                  type="url"
-                  required
-                  placeholder="https://acme.com"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="painPoints">
-                Pain Points{" "}
-                <span className="text-[var(--color-muted-foreground)] font-normal">
-                  (Optional)
-                </span>
-              </Label>
-              <Textarea
-                id="painPoints"
-                name="painPoints"
-                rows={3}
-                placeholder="Any known pain points or specific context for the AI to use..."
+              <form.Field
+                name="companyWebsite"
+                children={(field: any) => (
+                  <div className="space-y-2">
+                    <Label htmlFor={field.name} required>
+                      Company Website
+                    </Label>
+                    <Input
+                      id={field.name}
+                      name={field.name}
+                      type="url"
+                      value={field.state.value}
+                      onBlur={field.handleBlur}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                      placeholder="https://acme.com"
+                    />
+                    {field.state.meta.errors ? (
+                      <p className="text-xs text-[var(--color-danger)]">
+                        {field.state.meta.errors.join(", ")}
+                      </p>
+                    ) : null}
+                  </div>
+                )}
               />
             </div>
+
+            <form.Field
+              name="painPoints"
+              children={(field: any) => (
+                <div className="space-y-2">
+                  <Label htmlFor={field.name}>
+                    Pain Points{" "}
+                    <span className="text-[var(--color-muted-foreground)] font-normal">
+                      (Optional)
+                    </span>
+                  </Label>
+                  <Textarea
+                    id={field.name}
+                    name={field.name}
+                    rows={3}
+                    value={field.state.value}
+                    onBlur={field.handleBlur}
+                    onChange={(e) => field.handleChange(e.target.value)}
+                    placeholder="Any known pain points or specific context for the AI to use..."
+                  />
+                  {field.state.meta.errors ? (
+                    <p className="text-xs text-[var(--color-danger)]">
+                      {field.state.meta.errors.join(", ")}
+                    </p>
+                  ) : null}
+                </div>
+              )}
+            />
           </CardContent>
 
           <CardFooter className="flex items-center justify-between">
             {error ? (
               <p className="text-sm text-[var(--color-danger)]">
-                {error.message || "An error occurred"}
+                {(error as any).message || "An error occurred"}
               </p>
             ) : (
               <div className="flex items-center gap-2 text-sm text-[var(--color-muted-foreground)]">
@@ -126,9 +191,18 @@ function CapturePage() {
               </div>
             )}
 
-            <Button type="submit" loading={isPending}>
-              Capture Lead
-            </Button>
+            <form.Subscribe
+              selector={(state: any) => [state.canSubmit, state.isSubmitting]}
+              children={([canSubmit, isSubmitting]: any) => (
+                <Button
+                  type="submit"
+                  loading={isPending || isSubmitting}
+                  disabled={!canSubmit}
+                >
+                  Capture Lead
+                </Button>
+              )}
+            />
           </CardFooter>
         </Card>
       </form>
