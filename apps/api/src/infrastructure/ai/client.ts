@@ -23,9 +23,9 @@ function sleep(ms: number): Promise<void> {
 export async function callOpenRouter<T>(
 	apiKey: string,
 	params: CallParams,
+	maxRetries: number = 3
 ): Promise<T> {
 	const { model, messages, schema, temperature = 0.7 } = params
-	const maxRetries = 3
 
 	const body: Record<string, unknown> = { model, messages, temperature }
 

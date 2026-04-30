@@ -18,11 +18,13 @@ import { createDb } from "./infrastructure/db/client.ts"
 import { createEmailSequenceRepository } from "./infrastructure/db/repositories/email-sequence-repository.ts"
 import { createLeadRepository } from "./infrastructure/db/repositories/lead-repository.ts"
 import { createPipelineStepRepository } from "./infrastructure/db/repositories/pipeline-step-repository.ts"
+import { createSettingsRepository } from "./infrastructure/db/repositories/settings-repository.ts"
 import { createResendService } from "./infrastructure/email/resend-service.ts"
 import { createMxVerifier } from "./infrastructure/email-verification/mx-verifier.ts"
 import { logger } from "./infrastructure/observability/logger.ts"
 import { createDeepcrawlService } from "./infrastructure/scraper/deepcrawl-service.ts"
 import { appRouter } from "./presentation/routers/index.ts"
+import { SettingsService } from "./application/shared/settings-service.ts"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
@@ -52,18 +54,22 @@ export async function createServerApp() {
 	const repos = {
 		lead: createLeadRepository(db),
 		sequence: createEmailSequenceRepository(db),
+		settings: createSettingsRepository(db),
 	}
+
+	const settingsService = new SettingsService(repos.settings, cache)
 
 	const services = {
 		emailVerifier: createMxVerifier(),
 		scraper: createDeepcrawlService({ apiKey: env.DEEPCRAWL_API_KEY }),
-		ai: createOpenRouterService({ apiKey: env.OPENROUTER_API_KEY }),
+		ai: createOpenRouterService({ apiKey: env.OPENROUTER_API_KEY, settings: settingsService }),
 		email: createResendService({
 			apiKey: env.RESEND_API_KEY,
 			senderEmail: env.SENDER_EMAIL,
 			senderName: env.SENDER_NAME,
 		}),
 		cache,
+		settings: settingsService,
 	}
 
 	const tracker = createPipelineStepRepository(db)
