@@ -12,6 +12,7 @@ import {
 	makeSendFollowupUseCase,
 	makeSendInitialEmailUseCase,
 } from "./email/send-email.ts"
+import { makeBulkCaptureLeadUseCase } from "./lead/bulk-capture-lead.ts"
 import {
 	makeCaptureLeadUseCase,
 	makeGetLeadDetailUseCase,
@@ -47,6 +48,11 @@ export function buildUseCases(deps: AppDependencies) {
 
 	// Lead use cases
 	const captureLead = makeCaptureLeadUseCase({
+		leadRepo: deps.repos.lead,
+		emailVerifier: deps.services.emailVerifier,
+		logger,
+	})
+	const bulkCaptureLead = makeBulkCaptureLeadUseCase({
 		leadRepo: deps.repos.lead,
 		emailVerifier: deps.services.emailVerifier,
 		logger,
@@ -127,6 +133,7 @@ export function buildUseCases(deps: AppDependencies) {
 	return {
 		lead: {
 			capture: captureLead,
+			bulkCapture: bulkCaptureLead,
 			list: listLeads,
 			getDetail: getLeadDetail,
 			getStats: async () => deps.repos.lead.getStats(),

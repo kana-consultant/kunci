@@ -16,11 +16,43 @@ const captureLeadSchema = z.object({
 	linkedinUrl: z.string().url("Valid LinkedIn URL is required").optional(),
 })
 
+const bulkCaptureLeadSchema = z.object({
+	leads: z
+		.array(captureLeadSchema)
+		.min(1, "At least one lead is required")
+		.max(100, "Maximum 100 leads per batch"),
+})
+
 export const leadRouter = os.$context<ORPCContext>().router({
 	capture: publicProcedure
 		.input(captureLeadSchema)
 		.handler(async ({ input, context }) => {
 			return context.useCases.pipeline.runOutbound(input)
+		}),
+
+	captureBulk: protectedProcedure
+		.input(bulkCaptureLeadSchema)
+		.output(
+			z.object({
+				created: z.array(z.any()),
+				duplicates: z.array(
+					z.object({
+						email: z.string(),
+						fullName: z.string(),
+						reason: z.string(),
+					}),
+				),
+				invalid: z.array(
+					z.object({
+						email: z.string(),
+						fullName: z.string(),
+						reason: z.string(),
+					}),
+				),
+			}),
+		)
+		.handler(async ({ input, context }) => {
+			return context.useCases.lead.bulkCapture(input.leads)
 		}),
 
 	list: protectedProcedure
