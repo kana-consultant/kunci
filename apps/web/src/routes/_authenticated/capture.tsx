@@ -16,8 +16,8 @@ export const Route = createFileRoute("/_authenticated/capture")({
 	component: CapturePage,
 })
 
-function CapturePage() {
-	const { form, error } = useCaptureLogic()
+export function CapturePage() {
+	const { form, isPending, error } = useCaptureLogic()
 
 	return (
 		<div className="max-w-2xl mx-auto">
@@ -165,6 +165,7 @@ function CapturePage() {
 						<form.AppForm>
 							<form.SubmitButton
 								leadingIcon={<Sparkles className="w-4 h-4" />}
+								loading={isPending}
 							>
 								Capture & Run Pipeline
 							</form.SubmitButton>

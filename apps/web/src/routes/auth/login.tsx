@@ -16,7 +16,7 @@ export const Route = createFileRoute("/auth/login")({
 const emailSchema = z.string().email("Email tidak valid")
 const passwordSchema = z.string().min(1, "Password wajib diisi")
 
-function LoginPage() {
+export function LoginPage() {
 	const navigate = useNavigate()
 
 	const form = useAppForm({
