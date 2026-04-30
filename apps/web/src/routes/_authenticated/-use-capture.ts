@@ -30,7 +30,7 @@ export function useCaptureLogic() {
       painPoints: (formData.get("painPoints") as string) || undefined,
       leadSource: "Manual Entry",
     }
-    const mutate = captureLead as any
+    const mutate = captureLead
     mutate(data)
   }
 

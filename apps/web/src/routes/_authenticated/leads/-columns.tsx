@@ -10,7 +10,7 @@ export type Lead = {
   companyWebsite: string
   stage: number
   replyStatus: string
-  createdAt: string
+  createdAt: Date | string
 }
 
 export const stageLabels: Record<

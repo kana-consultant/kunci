@@ -11,6 +11,7 @@ const link = new RPCLink({
       : "/rpc",
 })
 
-// @ts-expect-error - oRPC v1.4.0 constraint mismatch
-export const orpcClient = createORPCClient<AppRouter>(link as any) as any
-export const orpc = createORPCReactQueryUtils(orpcClient) as any
+import type { RouterClient } from "@orpc/server"
+
+export const orpcClient: RouterClient<AppRouter> = createORPCClient(link as any)
+export const orpc = createORPCReactQueryUtils(orpcClient)

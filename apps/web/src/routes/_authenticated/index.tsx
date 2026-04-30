@@ -18,7 +18,7 @@ export const Route = createFileRoute("/_authenticated/")({
 
 function DashboardPage() {
   const query = useQuery(orpc.campaign.getStats.queryOptions())
-  const stats = (query.data ?? {}) as any
+  const stats = query.data
 
   return (
     <div className="space-y-8">
@@ -46,28 +46,28 @@ function DashboardPage() {
           <StatCard
             id="totalLeads"
             label="Total Leads"
-            value={stats.totalLeads ?? 0}
+            value={stats?.totalLeads ?? 0}
             icon={Users}
             tone="primary"
           />
           <StatCard
             id="awaiting"
             label="Awaiting Reply"
-            value={stats.awaiting ?? 0}
+            value={stats?.awaiting ?? 0}
             icon={Mail}
             tone="warning"
           />
           <StatCard
             id="replied"
             label="Replied"
-            value={stats.replied ?? 0}
+            value={stats?.replied ?? 0}
             icon={MessageCircle}
             tone="success"
           />
           <StatCard
             id="conversion"
             label="Conversion Rate"
-            value={`${stats.conversionRate ?? 0}%`}
+            value={`${stats?.conversionRate ?? 0}%`}
             icon={TrendingUp}
             tone="accent"
           />

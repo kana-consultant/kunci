@@ -73,7 +73,7 @@ export function DataTable<TData, TValue>({
                   data-state={row.getIsSelected() && "selected"}
                   className="cursor-pointer"
                   onClick={() => {
-                    const leadId = (row.original as any).id
+                    const leadId = (row.original as { id: string }).id
                     if (leadId) {
                       navigate({
                         to: "/leads/$leadId",
