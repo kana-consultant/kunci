@@ -1,5 +1,5 @@
 import { ORPCError, os } from "@orpc/server"
-import { AppError } from "#/application/shared/errors.ts"
+import { AppError } from "../../application/shared/errors.ts"
 import { env } from "../../infrastructure/config/env.ts"
 import type { ORPCContext } from "./context.ts"
 
