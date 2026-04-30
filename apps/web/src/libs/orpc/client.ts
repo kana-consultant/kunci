@@ -2,6 +2,7 @@ import type { AppRouter } from "@kunci/api"
 import { createORPCClient } from "@orpc/client"
 import { RPCLink } from "@orpc/client/fetch"
 import { createORPCReactQueryUtils } from "@orpc/react-query"
+import type { RouterClient } from "@orpc/server"
 
 const link = new RPCLink({
   url: import.meta.env.DEV
@@ -11,7 +12,5 @@ const link = new RPCLink({
       : "/rpc",
 })
 
-import type { RouterClient } from "@orpc/server"
-
-export const orpcClient: RouterClient<AppRouter> = createORPCClient(link as any)
+export const orpcClient = createORPCClient(link) as RouterClient<AppRouter>
 export const orpc = createORPCReactQueryUtils(orpcClient)

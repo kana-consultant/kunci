@@ -1,3 +1,2 @@
-import type { AppRouter } from "./presentation/routers/index.ts"
-
-export type { AppRouter }
+export type { AppRouter } from "./presentation/routers/index.ts"
+export { appRouter } from "./presentation/routers/index.ts"

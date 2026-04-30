@@ -25,5 +25,8 @@
     "*.{ts,tsx,js,json}": [
       "biome check --write --no-errors-on-unmatched"
     ]
+  },
+  "dependencies": {
+    "@orpc/server": "^1.14.0"
   }
 }
