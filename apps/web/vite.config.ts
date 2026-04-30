@@ -31,6 +31,7 @@ export default defineConfig({
 		port: 8020,
 		proxy: {
 			"/rpc": "http://localhost:3005",
+			"/api/auth": "http://localhost:3005",
 			"/webhooks": "http://localhost:3005",
 			"/healthz": "http://localhost:3005",
 		},
