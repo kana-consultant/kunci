@@ -7,10 +7,12 @@ import {
 import {
 	createFileRoute,
 	Outlet,
+	redirect,
 	useNavigate,
 	useRouterState,
 } from "@tanstack/react-router"
 import { LayoutDashboard, UserPlus, Users } from "lucide-react"
+import { authClient } from "~/libs/auth/client"
 
 const navItems: TNavItem[] = [
 	{ id: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -54,5 +56,16 @@ function AuthenticatedLayout() {
 }
 
 export const Route = createFileRoute("/_authenticated")({
+	beforeLoad: async ({ location }) => {
+		const { data: session } = await authClient.getSession()
+		if (!session) {
+			throw redirect({
+				to: "/auth/login",
+				search: {
+					redirect: location.href,
+				},
+			})
+		}
+	},
 	component: AuthenticatedLayout,
 })

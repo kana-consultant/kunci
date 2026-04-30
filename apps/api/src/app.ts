@@ -6,6 +6,7 @@ import { RPCHandler } from "@orpc/server/fetch"
 import { Hono } from "hono"
 import { cors } from "hono/cors"
 import { requestId } from "hono/request-id"
+import { serveStatic } from "@hono/node-server/serve-static"
 import { z } from "zod"
 
 import { buildUseCases } from "./application/use-cases.ts"
@@ -224,6 +225,16 @@ export async function createServerApp() {
 		if (matched) return c.newResponse(response.body, response)
 		await next()
 	})
+
+	// Serve frontend SPA (must be last — after all API routes)
+	if (env.WEB_DIST_PATH) {
+		app.use(
+			"*",
+			serveStatic({ root: env.WEB_DIST_PATH }),
+		)
+		// SPA fallback: any unmatched route → index.html (for client-side routing)
+		app.get("*", serveStatic({ root: env.WEB_DIST_PATH, path: "index.html" }))
+	}
 
 	return { app, useCases }
 }

@@ -49,8 +49,11 @@ RUN pnpm install --frozen-lockfile --prod
 # ── Stage 6: Final runtime ────────────────────────────────────────────────────
 FROM node:22-alpine AS runtime
 
-# Security: add tini + dumb-init for proper signal handling
+# Security: add tini + busybox (for nc)
 RUN apk add --no-cache tini
+
+# Install pnpm for migrations
+RUN npm install -g pnpm
 
 # Security: non-root user
 RUN addgroup -g 1001 -S kunci && \
@@ -65,15 +68,19 @@ COPY --from=prod-deps /app/apps/api/node_modules ./apps/api/node_modules
 # Copy API build output
 COPY --from=build-api /app/apps/api/dist ./apps/api/dist
 COPY --from=build-api /app/apps/api/package.json ./apps/api/package.json
+COPY --from=build-api /app/apps/api/drizzle ./apps/api/drizzle
+# We need src for tsx db:migrate and db:seed to work
+COPY --from=build-api /app/apps/api/src ./apps/api/src
 
-# Copy Web build output (served by API via static file serving)
+# Copy Web build output
 COPY --from=build-web /app/apps/web/dist ./apps/web/dist
 
-# Copy root package.json for module resolution
-COPY package.json ./
+# Copy root config and scripts
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY apps/api/scripts/bootstrap.sh ./apps/api/scripts/bootstrap.sh
 
-# Security: ensure non-root ownership
-RUN chown -R kunci:kunci /app
+# Security: ensure non-root ownership and execution rights
+RUN chown -R kunci:kunci /app && chmod +x /app/apps/api/scripts/bootstrap.sh
 
 # Security: drop to non-root user
 USER kunci
@@ -81,11 +88,11 @@ USER kunci
 # Expose API port
 EXPOSE 3001
 
-# Security: read-only filesystem marker (enforced in compose)
+# Security: read-only filesystem marker
 ENV NODE_ENV=production
 
-# Use tini as PID 1 for proper signal forwarding (SIGTERM, SIGINT)
+# Use tini as PID 1
 ENTRYPOINT ["/sbin/tini", "--"]
 
-# Start the API server (serves both API + static web assets)
-CMD ["node", "apps/api/dist/main.js"]
+# Run bootstrap script
+CMD ["/app/apps/api/scripts/bootstrap.sh"]
