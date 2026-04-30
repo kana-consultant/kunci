@@ -34,6 +34,8 @@ export function createResendService(config: ResendConfig): EmailService {
 					{ name: "stage", value: String(params.stage) },
 					{ name: "type", value: "outbound" },
 				],
+			}, {
+				idempotencyKey: `outbound-${params.leadId}-stage-${params.stage}`
 			})
 
 			if (error) {
@@ -73,6 +75,8 @@ export function createResendService(config: ResendConfig): EmailService {
 					{ name: "stage", value: String(params.stage) },
 					{ name: "type", value: "follow_up" },
 				],
+			}, {
+				idempotencyKey: `reply-${params.leadId}-stage-${params.stage}`
 			})
 
 			if (error) {
@@ -90,5 +94,25 @@ export function createResendService(config: ResendConfig): EmailService {
 				sentAt: new Date(),
 			}
 		},
+
+		async getReceivedEmail(emailId: string) {
+			const { data, error } = await resend.emails.receiving.get(emailId);
+			if (error || !data) throw new Error(`Failed to get inbound email: ${error?.message}`);
+			
+			return {
+				textBody: data.text || data.html || "No content",
+				subject: data.subject || "No subject",
+				fromEmail: data.from,
+				messageId: data.message_id || ""
+			}
+		},
+
+		verifyWebhook(payload: string, headers: any, secret: string) {
+			return resend.webhooks.verify({
+				payload,
+				headers,
+				webhookSecret: secret,
+			});
+		}
 	}
 }
