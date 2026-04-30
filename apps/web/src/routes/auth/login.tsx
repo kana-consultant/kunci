@@ -1,5 +1,4 @@
 import {
-	Button,
 	Card,
 	CardContent,
 	CardHeader,
@@ -14,10 +13,8 @@ export const Route = createFileRoute("/auth/login")({
 	component: LoginPage,
 })
 
-const loginSchema = z.object({
-	email: z.string().email("Email tidak valid"),
-	password: z.string().min(1, "Password wajib diisi"),
-})
+const emailSchema = z.string().email("Email tidak valid")
+const passwordSchema = z.string().min(1, "Password wajib diisi")
 
 function LoginPage() {
 	const navigate = useNavigate()
@@ -26,9 +23,6 @@ function LoginPage() {
 		defaultValues: {
 			email: "",
 			password: "",
-		},
-		validators: {
-			onChange: loginSchema,
 		},
 		onSubmit: async ({ value }) => {
 			const { error } = await authClient.signIn.email({
@@ -39,8 +33,7 @@ function LoginPage() {
 			if (!error) {
 				navigate({ to: "/" })
 			} else {
-				// Biasanya ditangani dengan Toast di Kana best-practice
-				alert(error.message)
+				alert(error.message || "Login failed")
 			}
 		},
 	})
@@ -60,7 +53,10 @@ function LoginPage() {
 						}}
 						className="space-y-4"
 					>
-						<form.AppField name="email">
+						<form.AppField
+							name="email"
+							validators={{ onChange: emailSchema, onBlur: emailSchema }}
+						>
 							{(field) => (
 								<field.TextField
 									label="Email Address"
@@ -71,7 +67,10 @@ function LoginPage() {
 							)}
 						</form.AppField>
 
-						<form.AppField name="password">
+						<form.AppField
+							name="password"
+							validators={{ onChange: passwordSchema, onBlur: passwordSchema }}
+						>
 							{(field) => (
 								<field.TextField
 									label="Password"
@@ -82,20 +81,11 @@ function LoginPage() {
 							)}
 						</form.AppField>
 
-						<form.Subscribe
-							selector={(state) => [state.canSubmit, state.isSubmitting]}
-						>
-							{([canSubmit, isSubmitting]) => (
-								<Button
-									type="submit"
-									className="w-full mt-4"
-									loading={isSubmitting}
-									disabled={!canSubmit}
-								>
-									Sign In
-								</Button>
-							)}
-						</form.Subscribe>
+						<form.AppForm>
+							<form.SubmitButton className="w-full mt-4">
+								Sign In
+							</form.SubmitButton>
+						</form.AppForm>
 					</form>
 				</CardContent>
 			</Card>

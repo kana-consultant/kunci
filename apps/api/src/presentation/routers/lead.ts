@@ -13,6 +13,7 @@ const captureLeadSchema = z.object({
 	companyWebsite: z.string().url("Valid website URL is required"),
 	painPoints: z.string().optional(),
 	leadSource: z.string().optional(),
+	linkedinUrl: z.string().url("Valid LinkedIn URL is required").optional(),
 })
 
 export const leadRouter = os.$context<ORPCContext>().router({
@@ -53,5 +54,11 @@ export const leadRouter = os.$context<ORPCContext>().router({
 		.output(z.array(z.any()))
 		.handler(async ({ input, context }) => {
 			return context.useCases.pipeline.getSteps(input.leadId)
+		}),
+	retry: protectedProcedure
+		.input(z.object({ leadId: z.string().uuid() }))
+		.output(z.object({ status: z.string() }))
+		.handler(async ({ input, context }) => {
+			return context.useCases.pipeline.retry(input.leadId)
 		}),
 })

@@ -21,6 +21,7 @@ export const leads = pgTable("leads", {
 	stage: integer("stage").notNull().default(0),
 	replyStatus: text("reply_status").notNull().default("pending"),
 	latestMessageId: text("latest_message_id"),
+	linkedinUrl: text("linkedin_url"),
 	messageIds: text("message_ids").array().notNull().default([]),
 	lastEmailSentAt: timestamp("last_email_sent_at", { withTimezone: true }),
 	createdAt: timestamp("created_at", { withTimezone: true })

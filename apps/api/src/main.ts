@@ -123,6 +123,7 @@ async function bootstrap() {
 					html: z.string().optional(),
 					message_id: z.string().optional(),
 					email_id: z.string().optional(),
+					tags: z.record(z.string()).optional(),
 				})
 				.passthrough(),
 		})
@@ -210,6 +211,20 @@ async function bootstrap() {
 						})
 						.catch((err) =>
 							logger.error({ err }, "Background reply handling failed"),
+						)
+				}
+			}
+
+			if (parsedEvent.type === "email.bounced") {
+				const leadId = parsedEvent.data.tags?.lead_id
+				if (leadId) {
+					useCases.lead
+						.updateStatus(leadId, "bounced")
+						.catch((err) =>
+							logger.error(
+								{ err, leadId },
+								"Failed to update lead status to bounced",
+							),
 						)
 				}
 			}

@@ -4,15 +4,27 @@ import { useNavigate } from "@tanstack/react-router"
 import { z } from "zod"
 import { orpc } from "~/libs/orpc/client"
 
-export const captureSchema = z.object({
+export const captureFieldSchemas = {
 	fullName: z.string().min(1, "Name is required"),
 	email: z.string().email("Valid email is required"),
 	companyName: z.string().min(1, "Company name is required"),
 	companyWebsite: z.string().url("Valid website URL is required"),
 	painPoints: z.string().optional(),
-})
+	linkedinUrl: z
+		.string()
+		.url("Valid LinkedIn URL is required")
+		.optional()
+		.or(z.literal("")),
+}
 
-export type CaptureFormValues = z.infer<typeof captureSchema>
+export type CaptureFormValues = {
+	fullName: string
+	email: string
+	companyName: string
+	companyWebsite: string
+	painPoints?: string
+	linkedinUrl?: string
+}
 
 export function useCaptureLogic() {
 	const navigate = useNavigate()
@@ -30,10 +42,8 @@ export function useCaptureLogic() {
 			companyName: "",
 			companyWebsite: "",
 			painPoints: "",
+			linkedinUrl: "",
 		} as CaptureFormValues,
-		validators: {
-			onChange: captureSchema,
-		},
 		onSubmit: async ({ value }) => {
 			await captureLead({
 				...value,
