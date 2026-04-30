@@ -52,8 +52,8 @@ FROM node:22-alpine AS runtime
 # Security: add tini + busybox (for nc)
 RUN apk add --no-cache tini
 
-# Install pnpm for migrations
-RUN npm install -g pnpm
+# Install pnpm and tsx for migrations
+RUN npm install -g pnpm tsx
 
 # Security: non-root user
 RUN addgroup -g 1001 -S kunci && \
