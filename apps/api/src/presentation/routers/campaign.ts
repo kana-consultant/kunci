@@ -1,7 +1,7 @@
 import { os } from "@orpc/server"
 import { z } from "zod"
-import { protectedProcedure } from "../orpc/middleware"
-import type { ORPCContext } from "../orpc/context"
+import type { ORPCContext } from "#/presentation/orpc/context"
+import { protectedProcedure } from "#/presentation/orpc/middleware"
 
 export const campaignRouter = os.$context<ORPCContext>().router({
 	getStats: protectedProcedure

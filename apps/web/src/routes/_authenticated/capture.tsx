@@ -6,9 +6,6 @@ import {
 	CardFooter,
 	CardHeader,
 	CardTitle,
-	Input,
-	Label,
-	Textarea,
 } from "@kana-consultant/ui-kit"
 import { createFileRoute } from "@tanstack/react-router"
 import { Sparkles } from "lucide-react"
@@ -49,127 +46,60 @@ function CapturePage() {
 
 					<CardContent className="space-y-6">
 						<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-							<form.Field
-								name="fullName"
-								children={(field: any) => (
-									<div className="space-y-2">
-										<Label htmlFor={field.name} required>
-											Full Name
-										</Label>
-										<Input
-											id={field.name}
-											name={field.name}
-											value={field.state.value}
-											onBlur={field.handleBlur}
-											onChange={(e) => field.handleChange(e.target.value)}
-											placeholder="John Doe"
-										/>
-										{field.state.meta.errors ? (
-											<p className="text-xs text-[var(--color-danger)]">
-												{field.state.meta.errors.join(", ")}
-											</p>
-										) : null}
-									</div>
+							<form.AppField name="fullName">
+								{(field) => (
+									<field.TextField
+										label="Full Name"
+										required
+										placeholder="John Doe"
+									/>
 								)}
-							/>
+							</form.AppField>
 
-							<form.Field
-								name="email"
-								children={(field: any) => (
-									<div className="space-y-2">
-										<Label htmlFor={field.name} required>
-											Email Address
-										</Label>
-										<Input
-											id={field.name}
-											name={field.name}
-											type="email"
-											value={field.state.value}
-											onBlur={field.handleBlur}
-											onChange={(e) => field.handleChange(e.target.value)}
-											placeholder="john@company.com"
-										/>
-										{field.state.meta.errors ? (
-											<p className="text-xs text-[var(--color-danger)]">
-												{field.state.meta.errors.join(", ")}
-											</p>
-										) : null}
-									</div>
+							<form.AppField name="email">
+								{(field) => (
+									<field.TextField
+										label="Email Address"
+										required
+										type="email"
+										placeholder="john@company.com"
+									/>
 								)}
-							/>
+							</form.AppField>
 						</div>
 
 						<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-							<form.Field
-								name="companyName"
-								children={(field: any) => (
-									<div className="space-y-2">
-										<Label htmlFor={field.name} required>
-											Company Name
-										</Label>
-										<Input
-											id={field.name}
-											name={field.name}
-											value={field.state.value}
-											onBlur={field.handleBlur}
-											onChange={(e) => field.handleChange(e.target.value)}
-											placeholder="Acme Corp"
-										/>
-										{field.state.meta.errors ? (
-											<p className="text-xs text-[var(--color-danger)]">
-												{field.state.meta.errors.join(", ")}
-											</p>
-										) : null}
-									</div>
+							<form.AppField name="companyName">
+								{(field) => (
+									<field.TextField
+										label="Company Name"
+										required
+										placeholder="Acme Corp"
+									/>
 								)}
-							/>
+							</form.AppField>
 
-							<form.Field
-								name="companyWebsite"
-								children={(field: any) => (
-									<div className="space-y-2">
-										<Label htmlFor={field.name} required>
-											Company Website
-										</Label>
-										<Input
-											id={field.name}
-											name={field.name}
-											value={field.state.value}
-											onBlur={field.handleBlur}
-											onChange={(e) => field.handleChange(e.target.value)}
-											placeholder="https://acme.com"
-										/>
-										{field.state.meta.errors ? (
-											<p className="text-xs text-[var(--color-danger)]">
-												{field.state.meta.errors.join(", ")}
-											</p>
-										) : null}
-									</div>
+							<form.AppField name="companyWebsite">
+								{(field) => (
+									<field.TextField
+										label="Company Website"
+										required
+										placeholder="https://acme.com"
+									/>
 								)}
-							/>
+							</form.AppField>
 						</div>
 
-						<form.Field
-							name="painPoints"
-							children={(field: any) => (
-								<div className="space-y-2">
-									<Label htmlFor={field.name}>Pain Points (Optional)</Label>
-									<Textarea
-										id={field.name}
-										name={field.name}
-										value={field.state.value}
-										onBlur={field.handleBlur}
-										onChange={(e) => field.handleChange(e.target.value)}
-										placeholder="e.g. Struggling with lead quality, slow response times..."
-										rows={4}
-									/>
-									<p className="text-[10px] text-[var(--color-muted-foreground)]">
-										Adding specific pain points helps the AI craft a more
-										relevant message.
-									</p>
-								</div>
+						<form.AppField name="painPoints">
+							{(field) => (
+								<field.TextareaField
+									label="Pain Points (Optional)"
+									placeholder="e.g. Struggling with lead quality, slow response times..."
+									rows={4}
+									description="Adding specific pain points helps the AI craft a more relevant message."
+								/>
 							)}
-						/>
+						</form.AppField>
 
 						{error && (
 							<div className="p-3 text-sm bg-[var(--color-danger-muted)] text-[var(--color-danger)] rounded-lg border border-[var(--color-danger)]">
@@ -179,12 +109,17 @@ function CapturePage() {
 					</CardContent>
 
 					<CardFooter className="flex justify-end gap-3 border-t p-6 bg-[var(--color-muted-subtle)]">
-						<Button type="button" variant="ghost" onClick={() => window.history.back()}>
+						<Button
+							type="button"
+							variant="ghost"
+							onClick={() => window.history.back()}
+						>
 							Cancel
 						</Button>
 						<form.Subscribe
 							selector={(state) => [state.canSubmit, state.isSubmitting]}
-							children={([canSubmit, isSubmitting]) => (
+						>
+							{([canSubmit, isSubmitting]) => (
 								<Button
 									type="submit"
 									loading={isPending || isSubmitting}
@@ -194,7 +129,7 @@ function CapturePage() {
 									Capture & Run Pipeline
 								</Button>
 							)}
-						/>
+						</form.Subscribe>
 					</CardFooter>
 				</Card>
 			</form>

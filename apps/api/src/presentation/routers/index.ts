@@ -1,7 +1,7 @@
 import { os } from "@orpc/server"
-import { campaignRouter } from "./campaign"
-import { leadRouter } from "./lead"
-import type { ORPCContext } from "../orpc/context"
+import type { ORPCContext } from "#/presentation/orpc/context"
+import { campaignRouter } from "#/presentation/routers/campaign"
+import { leadRouter } from "#/presentation/routers/lead"
 
 export const appRouter = os.$context<ORPCContext>().router({
 	campaign: campaignRouter,
