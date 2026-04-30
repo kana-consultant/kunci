@@ -21,6 +21,7 @@ export function createLeadRepository(db: Database): LeadRepository {
 					companyWebsite: input.companyWebsite,
 					painPoints: input.painPoints ?? null,
 					leadSource: input.leadSource ?? null,
+					linkedinUrl: input.linkedinUrl ?? null,
 				})
 				.returning()
 
@@ -96,6 +97,7 @@ export function createLeadRepository(db: Database): LeadRepository {
 					...(data.lastEmailSentAt
 						? { lastEmailSentAt: data.lastEmailSentAt }
 						: {}),
+					...(data.linkedinUrl ? { linkedinUrl: data.linkedinUrl } : {}),
 					updatedAt: new Date(),
 				})
 				.where(eq(leads.id, id))
@@ -163,6 +165,7 @@ function mapRowToLead(row: any): Lead {
 		stage: row.stage as Lead["stage"],
 		replyStatus: row.replyStatus as Lead["replyStatus"],
 		latestMessageId: row.latestMessageId,
+		linkedinUrl: row.linkedinUrl,
 		messageIds: row.messageIds ?? [],
 		lastEmailSentAt: row.lastEmailSentAt,
 		createdAt: row.createdAt,

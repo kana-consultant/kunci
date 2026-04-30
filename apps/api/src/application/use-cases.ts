@@ -17,6 +17,7 @@ import {
 	makeGetLeadDetailUseCase,
 	makeListLeadsUseCase,
 } from "./lead/capture-lead.ts"
+import { makeRetryPipelineUseCase } from "./pipeline/retry-pipeline.ts"
 import { makeRunOutboundPipelineUseCase } from "./pipeline/run-outbound-pipeline.ts"
 import { makeResearchCompanyUseCase } from "./research/research-company.ts"
 import { makeProcessPendingFollowupsUseCase } from "./scheduler/process-followups.ts"
@@ -94,6 +95,17 @@ export function buildUseCases(deps: AppDependencies) {
 		tracker,
 		logger,
 	})
+	const retryPipeline = makeRetryPipelineUseCase({
+		getLeadById: deps.repos.lead.findById,
+		researchCompany,
+		analyzeBehavior: deps.services.ai.analyzeBehavior,
+		sendInitialEmail,
+		updateLeadStatus: async (id, status) => {
+			await deps.repos.lead.update(id, { replyStatus: status })
+		},
+		tracker,
+		logger,
+	})
 
 	// Scheduler
 	const processPendingFollowups = makeProcessPendingFollowupsUseCase({
@@ -108,6 +120,9 @@ export function buildUseCases(deps: AppDependencies) {
 			list: listLeads,
 			getDetail: getLeadDetail,
 			getStats: async () => deps.repos.lead.getStats(),
+			updateStatus: async (id: string, status: string) => {
+				await deps.repos.lead.update(id, { replyStatus: status as any })
+			},
 		},
 		research: {
 			company: researchCompany,
@@ -119,6 +134,7 @@ export function buildUseCases(deps: AppDependencies) {
 		},
 		pipeline: {
 			runOutbound: runOutboundPipeline,
+			retry: retryPipeline,
 			getSteps: tracker.getStepsForLead,
 		},
 		scheduler: {

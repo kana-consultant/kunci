@@ -10,6 +10,7 @@ export interface Lead {
 	stage: LeadStage
 	replyStatus: ReplyStatus
 	latestMessageId: string | null
+	linkedinUrl: string | null
 	messageIds: string[]
 	lastEmailSentAt: Date | null
 	createdAt: Date
@@ -35,4 +36,5 @@ export interface CreateLeadInput {
 	companyWebsite: string
 	painPoints?: string
 	leadSource?: string
+	linkedinUrl?: string
 }

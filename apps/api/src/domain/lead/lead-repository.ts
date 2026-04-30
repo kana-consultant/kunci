@@ -29,6 +29,7 @@ export interface UpdateLeadData {
 	latestMessageId: string
 	messageIds: string[]
 	lastEmailSentAt: Date
+	linkedinUrl: string
 }
 
 export interface PendingFollowupsParams {

@@ -24,7 +24,7 @@ export async function analyzeBehavior(
 			{ role: "system", content: BEHAVIOR_ANALYZER_PROMPT },
 			{
 				role: "user",
-				content: `Lead Name: ${lead.fullName}\nEmail: ${lead.email}\nCompany: ${lead.companyName}\nWebsite: ${lead.companyWebsite}\nPain Points: ${lead.painPoints ?? "Not specified"}\n\nCompany Profile:\n${companyProfile}`,
+				content: `Lead Name: ${lead.fullName}\nEmail: ${lead.email}\nCompany: ${lead.companyName}\nWebsite: ${lead.companyWebsite}\nLinkedIn: ${lead.linkedinUrl ?? "Not provided"}\nPain Points: ${lead.painPoints ?? "Not specified"}\n\nCompany Profile:\n${companyProfile}`,
 			},
 		],
 		schema: {

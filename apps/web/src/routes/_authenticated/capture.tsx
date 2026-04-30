@@ -10,14 +10,14 @@ import {
 import { createFileRoute } from "@tanstack/react-router"
 import { Sparkles } from "lucide-react"
 
-import { useCaptureLogic } from "./_hooks/use-capture"
+import { captureFieldSchemas, useCaptureLogic } from "./_hooks/use-capture"
 
 export const Route = createFileRoute("/_authenticated/capture")({
 	component: CapturePage,
 })
 
 function CapturePage() {
-	const { form, isPending, error } = useCaptureLogic()
+	const { form, error } = useCaptureLogic()
 
 	return (
 		<div className="max-w-2xl mx-auto">
@@ -46,7 +46,13 @@ function CapturePage() {
 
 					<CardContent className="space-y-6">
 						<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-							<form.AppField name="fullName">
+							<form.AppField
+								name="fullName"
+								validators={{
+									onChange: captureFieldSchemas.fullName,
+									onBlur: captureFieldSchemas.fullName,
+								}}
+							>
 								{(field) => (
 									<field.TextField
 										label="Full Name"
@@ -56,7 +62,13 @@ function CapturePage() {
 								)}
 							</form.AppField>
 
-							<form.AppField name="email">
+							<form.AppField
+								name="email"
+								validators={{
+									onChange: captureFieldSchemas.email,
+									onBlur: captureFieldSchemas.email,
+								}}
+							>
 								{(field) => (
 									<field.TextField
 										label="Email Address"
@@ -69,7 +81,13 @@ function CapturePage() {
 						</div>
 
 						<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-							<form.AppField name="companyName">
+							<form.AppField
+								name="companyName"
+								validators={{
+									onChange: captureFieldSchemas.companyName,
+									onBlur: captureFieldSchemas.companyName,
+								}}
+							>
 								{(field) => (
 									<field.TextField
 										label="Company Name"
@@ -79,7 +97,13 @@ function CapturePage() {
 								)}
 							</form.AppField>
 
-							<form.AppField name="companyWebsite">
+							<form.AppField
+								name="companyWebsite"
+								validators={{
+									onChange: captureFieldSchemas.companyWebsite,
+									onBlur: captureFieldSchemas.companyWebsite,
+								}}
+							>
 								{(field) => (
 									<field.TextField
 										label="Company Website"
@@ -90,7 +114,29 @@ function CapturePage() {
 							</form.AppField>
 						</div>
 
-						<form.AppField name="painPoints">
+						<form.AppField
+							name="linkedinUrl"
+							validators={{
+								onChange: captureFieldSchemas.linkedinUrl,
+								onBlur: captureFieldSchemas.linkedinUrl,
+							}}
+						>
+							{(field) => (
+								<field.TextField
+									label="LinkedIn Profile URL (Optional)"
+									placeholder="https://linkedin.com/in/johndoe"
+									description="Allowing the AI to research the person directly provides better personalization."
+								/>
+							)}
+						</form.AppField>
+
+						<form.AppField
+							name="painPoints"
+							validators={{
+								onChange: captureFieldSchemas.painPoints,
+								onBlur: captureFieldSchemas.painPoints,
+							}}
+						>
 							{(field) => (
 								<field.TextareaField
 									label="Pain Points (Optional)"
@@ -116,20 +162,13 @@ function CapturePage() {
 						>
 							Cancel
 						</Button>
-						<form.Subscribe
-							selector={(state) => [state.canSubmit, state.isSubmitting]}
-						>
-							{([canSubmit, isSubmitting]) => (
-								<Button
-									type="submit"
-									loading={isPending || isSubmitting}
-									disabled={!canSubmit}
-									leadingIcon={<Sparkles className="w-4 h-4" />}
-								>
-									Capture & Run Pipeline
-								</Button>
-							)}
-						</form.Subscribe>
+						<form.AppForm>
+							<form.SubmitButton
+								leadingIcon={<Sparkles className="w-4 h-4" />}
+							>
+								Capture & Run Pipeline
+							</form.SubmitButton>
+						</form.AppForm>
 					</CardFooter>
 				</Card>
 			</form>

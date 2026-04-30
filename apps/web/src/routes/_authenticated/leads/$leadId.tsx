@@ -8,7 +8,7 @@ import {
 	Separator,
 	Skeleton,
 } from "@kana-consultant/ui-kit"
-import { useQuery } from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute, Link } from "@tanstack/react-router"
 import {
 	ArrowLeft,
@@ -21,6 +21,7 @@ import {
 	Globe,
 	Loader2,
 	Mail,
+	RotateCcw,
 	Send,
 	UserCheck,
 	XCircle,
@@ -253,6 +254,19 @@ function LeadDetailPage() {
 		orpc.lead.getDetail.queryOptions({ input: { id: leadId } }),
 	)
 	const lead = data
+	const queryClient = useQueryClient()
+
+	const { mutate: retry, isPending: isRetrying } = useMutation(
+		(orpc.lead.retry as any).mutationOptions({
+			onSuccess: () => {
+				alert("Pipeline restarted")
+				queryClient.invalidateQueries()
+			},
+			onError: (err: any) => {
+				alert(err.message || "Failed to restart pipeline")
+			},
+		}),
+	)
 
 	if (isPending) {
 		return (
@@ -321,6 +335,17 @@ function LeadDetailPage() {
 							{(lead.replyStatus as string).replace("_", " ")}
 						</Badge>
 						<Badge tone="neutral">Stage {lead.stage as number}</Badge>
+						{lead.replyStatus === "research_failed" && (
+							<Button
+								size="sm"
+								variant="soft"
+								leadingIcon={<RotateCcw className="w-3.5 h-3.5" />}
+								onClick={() => (retry as any)({ leadId })}
+								loading={isRetrying}
+							>
+								Retry Pipeline
+							</Button>
+						)}
 					</div>
 				</div>
 			</div>
