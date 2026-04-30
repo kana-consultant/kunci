@@ -1,19 +1,19 @@
 export type AppErrorCode =
-  | "UNAUTHORIZED"
-  | "FORBIDDEN"
-  | "NOT_FOUND"
-  | "BAD_REQUEST"
-  | "CONFLICT"
-  | "INTERNAL_ERROR"
+	| "UNAUTHORIZED"
+	| "FORBIDDEN"
+	| "NOT_FOUND"
+	| "BAD_REQUEST"
+	| "CONFLICT"
+	| "INTERNAL_ERROR"
 
 export class AppError extends Error {
-  readonly code: AppErrorCode
+	readonly code: AppErrorCode
 
-  constructor(code: AppErrorCode, message: string) {
-    super(message)
-    this.code = code
-    this.name = "AppError"
-  }
+	constructor(code: AppErrorCode, message: string) {
+		super(message)
+		this.code = code
+		this.name = "AppError"
+	}
 }
 
 export const unauthorized = (m: string) => new AppError("UNAUTHORIZED", m)

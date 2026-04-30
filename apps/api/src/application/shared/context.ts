@@ -1,8 +1,8 @@
 export interface AppContext {
-  headers: Headers
+	headers: Headers
 }
 
 export interface AuthedContext extends AppContext {
-  userId: string
-  role: "admin" | "user"
+	userId: string
+	role: "admin" | "user"
 }
