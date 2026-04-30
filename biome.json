@@ -1,54 +1,63 @@
 {
-	"$schema": "https://biomejs.dev/schemas/2.4.13/schema.json",
-	"assist": { "actions": { "source": { "organizeImports": "on" } } },
-	"formatter": {
-		"enabled": true,
-		"indentStyle": "tab",
-		"indentWidth": 2
-	},
-	"javascript": {
-		"formatter": {
-			"quoteStyle": "double",
-			"semicolons": "asNeeded"
-		}
-	},
-	"linter": {
-		"enabled": true,
-		"rules": {
-			"recommended": true,
-			"correctness": {
-				"useExhaustiveDependencies": "off"
-			},
-			"suspicious": {
-				"noArrayIndexKey": "off"
-			}
-		}
-	},
-	"files": {
-		"includes": [
-			"**",
-			"!**/node_modules",
-			"!**/dist",
-			"!**/apps/web/src/routeTree.gen.ts",
-			"!**/apps/web/src/styles.css"
-		]
-	},
-	"overrides": [
-		{
-			"includes": [
-				"**/apps/api/src/main.ts",
-				"**/apps/api/src/infrastructure/**/*.ts"
-			],
-			"linter": {
-				"rules": {
-					"style": {
-						"noNonNullAssertion": "off"
-					},
-					"suspicious": {
-						"noExplicitAny": "off"
-					}
-				}
-			}
-		}
-	]
+  "$schema": "https://biomejs.dev/schemas/2.4.13/schema.json",
+  "assist": {
+    "actions": {
+      "source": {
+        "organizeImports": "on"
+      }
+    }
+  },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 2
+  },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "double",
+      "semicolons": "asNeeded"
+    }
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": true,
+      "correctness": {
+        "useExhaustiveDependencies": "off"
+      },
+      "suspicious": {
+        "noArrayIndexKey": "off"
+      }
+    }
+  },
+  "files": {
+    "includes": [
+      "**",
+      "!**/node_modules",
+      "!**/dist",
+      "!**/apps/web/src/routeTree.gen.ts",
+      "!**/apps/web/src/styles.css"
+    ]
+  },
+  "overrides": [
+    {
+      "includes": [
+        "**/apps/api/src/main.ts",
+        "**/apps/api/src/infrastructure/**/*.ts",
+        "**/apps/api/src/application/**/*.ts",
+        "**/apps/web/src/**/*.ts",
+        "**/apps/web/src/**/*.tsx"
+      ],
+      "linter": {
+        "rules": {
+          "style": {
+            "noNonNullAssertion": "off"
+          },
+          "suspicious": {
+            "noExplicitAny": "off"
+          }
+        }
+      }
+    }
+  ]
 }

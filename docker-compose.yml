@@ -12,7 +12,7 @@ services:
       dockerfile: Dockerfile
     restart: unless-stopped
     ports:
-      - "127.0.0.1:${PORT:-3001}:${PORT:-3001}"
+      - "127.0.0.1:${PORT:-3005}:${PORT:-3005}"
     env_file:
       - .env
       # For production: update .env.production with real secrets,
@@ -48,7 +48,7 @@ services:
           memory: 256M
           cpus: "0.25"
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3001/healthz"]
+      test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3005/healthz" ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -63,7 +63,7 @@ services:
   postgres:
     image: postgres:17-alpine
     restart: unless-stopped
-    command: ["postgres", "-p", "7432"]
+    command: [ "postgres", "-p", "7432" ]
     # Security: no port exposure to host in production
     # Uncomment below ONLY if you need external DB access:
     # ports:
@@ -100,7 +100,7 @@ services:
         reservations:
           memory: 128M
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U kunci -d kunci -p 7432"]
+      test: [ "CMD-SHELL", "pg_isready -U kunci -d kunci -p 7432" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -118,17 +118,7 @@ services:
     restart: unless-stopped
     # Security: no port exposure to host
     command: >
-      redis-server
-      --port 7379
-      --maxmemory 128mb
-      --maxmemory-policy allkeys-lru
-      --save ""
-      --appendonly no
-      --protected-mode no
-      --rename-command FLUSHALL ""
-      --rename-command FLUSHDB ""
-      --rename-command DEBUG ""
-      --rename-command CONFIG ""
+      redis-server --port 7379 --maxmemory 128mb --maxmemory-policy allkeys-lru --save "" --appendonly no --protected-mode no --rename-command FLUSHALL "" --rename-command FLUSHDB "" --rename-command DEBUG "" --rename-command CONFIG ""
     volumes:
       - redisdata:/data
     read_only: true
@@ -150,7 +140,7 @@ services:
         reservations:
           memory: 64M
     healthcheck:
-      test: ["CMD", "redis-cli", "-p", "7379", "ping"]
+      test: [ "CMD", "redis-cli", "-p", "7379", "ping" ]
       interval: 10s
       timeout: 5s
       retries: 5

@@ -1,15 +1,15 @@
 {
-	"name": "@kunci/api-e2e",
-	"private": true,
-	"version": "0.1.0",
-	"type": "module",
-	"scripts": {
-		"test": "vitest run",
-		"test:watch": "vitest"
-	},
-	"devDependencies": {
-		"@kunci/api": "workspace:*",
-		"vitest": "^3.0.0",
-		"typescript": "^5.4.0"
-	}
+  "name": "@kunci/api-e2e",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "@kunci/api": "workspace:*",
+    "vitest": "^3.0.0",
+    "typescript": "^5.4.0"
+  }
 }
