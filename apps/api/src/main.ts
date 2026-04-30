@@ -8,6 +8,7 @@ import { RPCHandler } from "@orpc/server/fetch"
 import { Hono } from "hono"
 import { cors } from "hono/cors"
 import { requestId } from "hono/request-id"
+import { z } from "zod"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
@@ -111,6 +112,21 @@ async function bootstrap() {
 	// Auth
 	app.on(["POST", "GET"], "/api/auth/*", (c) => auth.handler(c.req.raw))
 
+	const ResendWebhookSchema = z
+		.object({
+			type: z.string(),
+			data: z
+				.object({
+					from: z.string().optional(),
+					subject: z.string().optional(),
+					text: z.string().optional(),
+					html: z.string().optional(),
+					message_id: z.string().optional(),
+				})
+				.passthrough(),
+		})
+		.passthrough()
+
 	// Health checks
 	app.get("/healthz", (c) => c.json({ status: "ok", version: APP_VERSION }))
 	app.get("/ready", async (c) => {
@@ -143,14 +159,15 @@ async function bootstrap() {
 			}
 
 			const body = await c.req.json()
-			logger.info({ type: body.type }, "Received Resend Webhook")
+			const event = ResendWebhookSchema.parse(body)
+			logger.info({ type: event.type }, "Received Resend Webhook")
 
-			if (body.type === "email.replied" || body.type === "email.received") {
+			if (event.type === "email.replied" || event.type === "email.received") {
 				// Format might vary depending on whether we use inbound routing or tracking
-				const fromEmail = body.data?.from
-				const subject = body.data?.subject
-				const textBody = body.data?.text || body.data?.html || "No body"
-				const messageId = body.data?.message_id || ""
+				const fromEmail = event.data.from
+				const subject = event.data.subject || "No Subject"
+				const textBody = event.data.text || event.data.html || "No body"
+				const messageId = event.data.message_id || ""
 
 				if (fromEmail) {
 					// Don't await if we want to return 200 immediately to Resend
