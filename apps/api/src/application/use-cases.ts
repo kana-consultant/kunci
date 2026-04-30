@@ -9,122 +9,122 @@ import type { PipelineTracker } from "#/domain/ports/pipeline-tracker.ts"
 import type { ScraperService } from "#/domain/ports/scraper-service.ts"
 import { makeHandleReplyUseCase } from "./email/handle-reply.ts"
 import {
-  makeSendFollowupUseCase,
-  makeSendInitialEmailUseCase,
+	makeSendFollowupUseCase,
+	makeSendInitialEmailUseCase,
 } from "./email/send-email.ts"
 import {
-  makeCaptureLeadUseCase,
-  makeGetLeadDetailUseCase,
-  makeListLeadsUseCase,
+	makeCaptureLeadUseCase,
+	makeGetLeadDetailUseCase,
+	makeListLeadsUseCase,
 } from "./lead/capture-lead.ts"
 import { makeRunOutboundPipelineUseCase } from "./pipeline/run-outbound-pipeline.ts"
 import { makeResearchCompanyUseCase } from "./research/research-company.ts"
 import { makeProcessPendingFollowupsUseCase } from "./scheduler/process-followups.ts"
 
 export interface AppDependencies {
-  repos: {
-    lead: LeadRepository
-    sequence: EmailSequenceRepository
-  }
-  services: {
-    emailVerifier: EmailVerifier
-    scraper: ScraperService
-    ai: AIService
-    email: EmailService
-    cache: Cache
-  }
-  tracker: PipelineTracker
-  logger: Logger
+	repos: {
+		lead: LeadRepository
+		sequence: EmailSequenceRepository
+	}
+	services: {
+		emailVerifier: EmailVerifier
+		scraper: ScraperService
+		ai: AIService
+		email: EmailService
+		cache: Cache
+	}
+	tracker: PipelineTracker
+	logger: Logger
 }
 
 export function buildUseCases(deps: AppDependencies) {
-  const { logger, tracker } = deps
+	const { logger, tracker } = deps
 
-  // Lead use cases
-  const captureLead = makeCaptureLeadUseCase({
-    leadRepo: deps.repos.lead,
-    emailVerifier: deps.services.emailVerifier,
-    logger,
-  })
-  const listLeads = makeListLeadsUseCase({ leadRepo: deps.repos.lead })
-  const getLeadDetail = makeGetLeadDetailUseCase({ leadRepo: deps.repos.lead })
+	// Lead use cases
+	const captureLead = makeCaptureLeadUseCase({
+		leadRepo: deps.repos.lead,
+		emailVerifier: deps.services.emailVerifier,
+		logger,
+	})
+	const listLeads = makeListLeadsUseCase({ leadRepo: deps.repos.lead })
+	const getLeadDetail = makeGetLeadDetailUseCase({ leadRepo: deps.repos.lead })
 
-  // Research use cases
-  const researchCompany = makeResearchCompanyUseCase({
-    leadRepo: deps.repos.lead,
-    scraper: deps.services.scraper,
-    ai: deps.services.ai,
-    logger,
-  })
+	// Research use cases
+	const researchCompany = makeResearchCompanyUseCase({
+		leadRepo: deps.repos.lead,
+		scraper: deps.services.scraper,
+		ai: deps.services.ai,
+		logger,
+	})
 
-  // Email use cases
-  const sendInitialEmail = makeSendInitialEmailUseCase({
-    leadRepo: deps.repos.lead,
-    sequenceRepo: deps.repos.sequence,
-    ai: deps.services.ai,
-    emailService: deps.services.email,
-    logger,
-  })
+	// Email use cases
+	const sendInitialEmail = makeSendInitialEmailUseCase({
+		leadRepo: deps.repos.lead,
+		sequenceRepo: deps.repos.sequence,
+		ai: deps.services.ai,
+		emailService: deps.services.email,
+		logger,
+	})
 
-  const sendFollowup = makeSendFollowupUseCase({
-    leadRepo: deps.repos.lead,
-    sequenceRepo: deps.repos.sequence,
-    ai: deps.services.ai,
-    emailService: deps.services.email,
-    logger,
-  })
+	const sendFollowup = makeSendFollowupUseCase({
+		leadRepo: deps.repos.lead,
+		sequenceRepo: deps.repos.sequence,
+		ai: deps.services.ai,
+		emailService: deps.services.email,
+		logger,
+	})
 
-  const handleReply = makeHandleReplyUseCase({
-    leadRepo: deps.repos.lead,
-    sequenceRepo: deps.repos.sequence,
-    ai: deps.services.ai,
-    emailService: deps.services.email,
-    logger,
-  })
+	const handleReply = makeHandleReplyUseCase({
+		leadRepo: deps.repos.lead,
+		sequenceRepo: deps.repos.sequence,
+		ai: deps.services.ai,
+		emailService: deps.services.email,
+		logger,
+	})
 
-  // Pipeline orchestrator (with step tracking)
-  const runOutboundPipeline = makeRunOutboundPipelineUseCase({
-    captureLead,
-    researchCompany,
-    analyzeBehavior: deps.services.ai.analyzeBehavior,
-    sendInitialEmail,
-    updateLeadStatus: async (id, status) => {
-      await deps.repos.lead.update(id, { replyStatus: status })
-    },
-    tracker,
-    logger,
-  })
+	// Pipeline orchestrator (with step tracking)
+	const runOutboundPipeline = makeRunOutboundPipelineUseCase({
+		captureLead,
+		researchCompany,
+		analyzeBehavior: deps.services.ai.analyzeBehavior,
+		sendInitialEmail,
+		updateLeadStatus: async (id, status) => {
+			await deps.repos.lead.update(id, { replyStatus: status })
+		},
+		tracker,
+		logger,
+	})
 
-  // Scheduler
-  const processPendingFollowups = makeProcessPendingFollowupsUseCase({
-    leadRepo: deps.repos.lead,
-    sendFollowup,
-    logger,
-  })
+	// Scheduler
+	const processPendingFollowups = makeProcessPendingFollowupsUseCase({
+		leadRepo: deps.repos.lead,
+		sendFollowup,
+		logger,
+	})
 
-  return {
-    lead: {
-      capture: captureLead,
-      list: listLeads,
-      getDetail: getLeadDetail,
-      getStats: async () => deps.repos.lead.getStats(),
-    },
-    research: {
-      company: researchCompany,
-    },
-    email: {
-      sendInitial: sendInitialEmail,
-      sendFollowup: sendFollowup,
-      handleReply: handleReply,
-    },
-    pipeline: {
-      runOutbound: runOutboundPipeline,
-      getSteps: tracker.getStepsForLead,
-    },
-    scheduler: {
-      processPendingFollowups,
-    },
-  }
+	return {
+		lead: {
+			capture: captureLead,
+			list: listLeads,
+			getDetail: getLeadDetail,
+			getStats: async () => deps.repos.lead.getStats(),
+		},
+		research: {
+			company: researchCompany,
+		},
+		email: {
+			sendInitial: sendInitialEmail,
+			sendFollowup: sendFollowup,
+			handleReply: handleReply,
+		},
+		pipeline: {
+			runOutbound: runOutboundPipeline,
+			getSteps: tracker.getStepsForLead,
+		},
+		scheduler: {
+			processPendingFollowups,
+		},
+	}
 }
 
 export type UseCases = ReturnType<typeof buildUseCases>
