@@ -1,43 +1,51 @@
+import { useAppForm } from "@kana-consultant/ui-kit"
 import { useMutation } from "@tanstack/react-query"
 import { useNavigate } from "@tanstack/react-router"
-import { useRef } from "react"
+import { z } from "zod"
 import { orpc } from "~/libs/orpc/client"
 
+export const captureSchema = z.object({
+	fullName: z.string().min(1, "Name is required"),
+	email: z.string().email("Valid email is required"),
+	companyName: z.string().min(1, "Company name is required"),
+	companyWebsite: z.string().url("Valid website URL is required"),
+	painPoints: z.string().optional(),
+})
+
+export type CaptureFormValues = z.infer<typeof captureSchema>
+
 export function useCaptureLogic() {
-  const navigate = useNavigate()
-  const formRef = useRef<HTMLFormElement>(null)
+	const navigate = useNavigate()
 
-  const {
-    mutate: captureLead,
-    isPending,
-    error,
-  } = useMutation(
-    orpc.lead.capture.mutationOptions({
-      onSuccess: () => {
-        navigate({ to: "/leads" })
-      },
-    }),
-  )
+	const {
+		mutateAsync: captureLead,
+		isPending,
+		error,
+	} = useMutation((orpc.lead.capture as any).mutationOptions())
 
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault()
-    const formData = new FormData(e.currentTarget)
-    const data = {
-      fullName: formData.get("fullName") as string,
-      email: formData.get("email") as string,
-      companyName: formData.get("companyName") as string,
-      companyWebsite: formData.get("companyWebsite") as string,
-      painPoints: (formData.get("painPoints") as string) || undefined,
-      leadSource: "Manual Entry",
-    }
-    const mutate = captureLead
-    mutate(data)
-  }
+	const form = useAppForm({
+		defaultValues: {
+			fullName: "",
+			email: "",
+			companyName: "",
+			companyWebsite: "",
+			painPoints: "",
+		} as CaptureFormValues,
+		validators: {
+			onChange: captureSchema,
+		},
+		onSubmit: async ({ value }) => {
+			await captureLead({
+				...value,
+				leadSource: "Manual Entry",
+			} as any)
+			navigate({ to: "/leads" })
+		},
+	})
 
-  return {
-    formRef,
-    handleSubmit,
-    isPending,
-    error,
-  }
+	return {
+		form,
+		isPending,
+		error,
+	}
 }
