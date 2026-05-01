@@ -14,7 +14,6 @@ export interface AIService {
 	generateEmailSequence(
 		lead: Lead,
 		analysis: BehaviorAnalysis,
-		senderInfo?: { name: string; company: string },
 	): Promise<GeneratedSequence>
 
 	/** P3: Extract business intelligence from website markdown */
@@ -31,7 +30,6 @@ export interface AIService {
 		lead: Lead,
 		replyText: string,
 		emailTemplate: EmailTemplateInput,
-		senderInfo?: { name: string; company: string },
 	): Promise<PersonalizedReply>
 
 	/** P8: Select best subject line from 3 variations */

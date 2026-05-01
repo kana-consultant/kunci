@@ -32,6 +32,17 @@ export const SETTING_KEYS = {
 	EMAIL_SENDER_NAME: "email.sender_name",
 	EMAIL_SENDER_COMPANY: "email.sender_company",
 	EMAIL_SENDER_EMAIL: "email.sender_email",
+
+	// Business Profile
+	BUSINESS_NAME: "business.name",
+	BUSINESS_DESCRIPTION: "business.description",
+	BUSINESS_INDUSTRY: "business.industry",
+	BUSINESS_VALUE_PROPOSITION: "business.value_proposition",
+	BUSINESS_TARGET_MARKET: "business.target_market",
+	BUSINESS_TONE_OF_VOICE: "business.tone_of_voice",
+	BUSINESS_WEBSITE: "business.website",
+	BUSINESS_OFFERINGS: "business.offerings",
+
 	EMAIL_COLOR_PRIMARY: "email.color_primary",
 	EMAIL_COLOR_ACCENT: "email.color_accent",
 	EMAIL_COLOR_CTA: "email.color_cta",

@@ -42,6 +42,16 @@ export const DEFAULT_SETTINGS = [
 	{ key: SETTING_KEYS.EMAIL_COLOR_BACKGROUND, value: "#ffffff", category: "email", label: "Background Color", valueType: "string" },
 	{ key: SETTING_KEYS.EMAIL_FONT_FAMILY, value: "Arial, Helvetica, sans-serif", category: "email", label: "Font Family", valueType: "string" },
 
+	// ── Business Profile ──
+	{ key: SETTING_KEYS.BUSINESS_NAME, value: "", category: "business", label: "Company Name", valueType: "string", description: "Your company/brand name as it appears in outreach emails" },
+	{ key: SETTING_KEYS.BUSINESS_DESCRIPTION, value: "", category: "business", label: "Business Description", valueType: "text", description: "Brief description of what your company does (2-3 sentences)" },
+	{ key: SETTING_KEYS.BUSINESS_INDUSTRY, value: "", category: "business", label: "Industry", valueType: "string", description: "Your industry category (e.g., SaaS, Consulting, Marketing)" },
+	{ key: SETTING_KEYS.BUSINESS_VALUE_PROPOSITION, value: "", category: "business", label: "Value Proposition", valueType: "text", description: "Your unique value proposition — what makes you different" },
+	{ key: SETTING_KEYS.BUSINESS_TARGET_MARKET, value: "", category: "business", label: "Target Market", valueType: "string", description: "Who you serve (e.g., SMBs, Enterprise, Startups)" },
+	{ key: SETTING_KEYS.BUSINESS_TONE_OF_VOICE, value: "professional", category: "business", label: "Email Tone of Voice", valueType: "string", description: "Communication style: professional, casual, friendly, authoritative" },
+	{ key: SETTING_KEYS.BUSINESS_WEBSITE, value: "", category: "business", label: "Company Website", valueType: "string", description: "Your company website URL" },
+	{ key: SETTING_KEYS.BUSINESS_OFFERINGS, value: [], category: "business", label: "Products & Services", valueType: "json", description: "List of products and services you offer" },
+
 	// ── Pipeline ──
 	{ key: SETTING_KEYS.PIPELINE_EMAIL_SEQUENCE_COUNT, value: 3, category: "pipeline", label: "Email Sequence Count", valueType: "number" },
 	{ key: SETTING_KEYS.PIPELINE_BULK_IMPORT_MAX, value: 100, category: "pipeline", label: "Max Bulk Import Leads", valueType: "number" },

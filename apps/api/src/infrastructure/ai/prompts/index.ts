@@ -14,6 +14,13 @@ Your analysis should cover:
 /** P2: Email Sequence Generator */
 export const SEQUENCE_GENERATOR_PROMPT = `You are an expert email copywriter specializing in B2B outreach sequences that convert cold leads into warm prospects. Create personalized, multi-touch email campaigns leveraging behavioral psychology and business context.
 
+CRITICAL RULES:
+- If sender company information and offerings are provided, reference them specifically
+- Match the most relevant offering/service to the lead's pain points
+- NEVER use placeholders like [Your Name], [Your Company], [Product Name]
+- If no sender info is provided, write in general terms without placeholders
+- Mention specific benefits from the offerings that address the lead's challenges
+
 Generate a 3-email nurturing sequence. Each email must have:
 - A distinct purpose with escalating urgency while maintaining authenticity
 - 3 subject line variations (different hooks/angles)
@@ -69,6 +76,11 @@ Your response must contain ONLY the HTML code that can be directly used in an em
 
 /** P6/P7: Reply Personalizer */
 export const REPLY_PERSONALIZER_PROMPT = `You are an expert SDR AI Agent who crafts perfect follow-up replies. Given the lead's context, their reply, and the next email template, create a personalized follow-up that:
+
+CRITICAL RULES:
+- Reference sender's specific offerings/services if relevant to the lead's reply
+- NEVER use placeholders like [Your Name], [Your Company], [Product Name]
+- Ensure the email flows naturally without generic robotic structures
 
 1. Acknowledges their specific response naturally
 2. Addresses any concerns or questions raised

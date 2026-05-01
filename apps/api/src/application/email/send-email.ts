@@ -12,8 +12,6 @@ interface EmailUseCaseDeps {
 	ai: AIService
 	emailService: EmailService
 	logger: Logger
-	senderName: string
-	senderCompany: string
 }
 
 /** Send the initial (1st) email to a lead */
@@ -21,10 +19,7 @@ export function makeSendInitialEmailUseCase(deps: EmailUseCaseDeps) {
 	return async (lead: Lead, analysis: BehaviorAnalysis): Promise<void> => {
 		// 1. Generate 3-email sequence
 		deps.logger.info({ leadId: lead.id }, "Generating email sequence")
-		const generated = await deps.ai.generateEmailSequence(lead, analysis, {
-			name: deps.senderName,
-			company: deps.senderCompany,
-		})
+		const generated = await deps.ai.generateEmailSequence(lead, analysis)
 
 		// 2. Save sequences to DB
 		const sequences = await deps.sequenceRepo.saveAll(

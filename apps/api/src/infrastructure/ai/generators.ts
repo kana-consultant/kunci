@@ -10,16 +10,16 @@ import type { SettingsService } from "#/application/shared/settings-service.ts"
 import { PromptLoader } from "./prompt-loader.ts"
 import { SETTING_KEYS } from "#/domain/settings/setting-keys.ts"
 
+import { buildBusinessContext, formatBusinessContextForPrompt } from "#/application/shared/business-context-builder.ts"
+
 export async function generateEmailSequence(
 	apiKey: string,
 	settings: SettingsService,
 	lead: Lead,
 	analysis: BehaviorAnalysis,
-	senderInfo?: { name: string; company: string },
 ): Promise<GeneratedSequence> {
-	const senderContext = senderInfo
-		? `\nSender: ${senderInfo.name} at ${senderInfo.company}`
-		: ""
+	const businessCtx = await buildBusinessContext(settings)
+	const businessContextStr = formatBusinessContextForPrompt(businessCtx)
 
 	const promptLoader = new PromptLoader(settings)
 	const prompt = await promptLoader.getSequenceGeneratorPrompt()
@@ -32,7 +32,13 @@ export async function generateEmailSequence(
 			{ role: "system", content: prompt },
 			{
 				role: "user",
-				content: `Lead: ${lead.fullName} at ${lead.companyName}${senderContext}\nBehavioral Profile: ${analysis.behavioralProfile}\nPain Points: ${analysis.painPoints}\nJourney Stage: ${analysis.journeyStage}\nPsychological Triggers: ${analysis.psychologicalTriggers}\nOptimal Approach: ${analysis.optimalApproach}`,
+				content: `Lead: ${lead.fullName} at ${lead.companyName}
+${businessContextStr}
+Behavioral Profile: ${analysis.behavioralProfile}
+Pain Points: ${analysis.painPoints}
+Journey Stage: ${analysis.journeyStage}
+Psychological Triggers: ${analysis.psychologicalTriggers}
+Optimal Approach: ${analysis.optimalApproach}`,
 			},
 		],
 		schema: {
@@ -113,11 +119,9 @@ export async function personalizeReply(
 	lead: Lead,
 	replyText: string,
 	template: EmailTemplateInput,
-	senderInfo?: { name: string; company: string },
 ): Promise<PersonalizedReply> {
-	const senderContext = senderInfo
-		? `\nSender: ${senderInfo.name} at ${senderInfo.company}`
-		: ""
+	const businessCtx = await buildBusinessContext(settings)
+	const businessContextStr = formatBusinessContextForPrompt(businessCtx)
 
 	const promptLoader = new PromptLoader(settings)
 	const prompt = await promptLoader.getReplyPersonalizerPrompt()
@@ -130,7 +134,17 @@ export async function personalizeReply(
 			{ role: "system", content: prompt },
 			{
 				role: "user",
-				content: `Lead: ${lead.fullName} at ${lead.companyName}${senderContext}\nPain Points: ${lead.painPoints ?? "N/A"}\n\nTheir Reply:\n${replyText}\n\nEmail Template:\nContent: ${template.content}\nCTA: ${template.cta}\nTrigger: ${template.psychologicalTrigger}`,
+				content: `Lead: ${lead.fullName} at ${lead.companyName}
+${businessContextStr}
+Pain Points: ${lead.painPoints ?? "N/A"}
+
+Their Reply:
+${replyText}
+
+Email Template:
+Content: ${template.content}
+CTA: ${template.cta}
+Trigger: ${template.psychologicalTrigger}`,
 			},
 		],
 		schema: {

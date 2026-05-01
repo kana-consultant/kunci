@@ -10,8 +10,6 @@ export interface HandleReplyDependencies {
 	ai: AIService
 	emailService: EmailService
 	logger: Logger
-	senderName: string
-	senderCompany: string
 }
 
 export function makeHandleReplyUseCase(deps: HandleReplyDependencies) {
@@ -81,11 +79,7 @@ export function makeHandleReplyUseCase(deps: HandleReplyDependencies) {
 					content: sequence.content,
 					cta: sequence.cta,
 					psychologicalTrigger: sequence.psychologicalTrigger,
-				},
-				{
-					name: deps.senderName,
-					company: deps.senderCompany,
-				},
+				}
 			)
 
 			// 4. Convert AI output to HTML
