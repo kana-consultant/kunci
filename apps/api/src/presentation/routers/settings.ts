@@ -63,7 +63,11 @@ export const settingsRouter = os.$context<ORPCContext>().router({
 			}),
 		)
 		.handler(async ({ input, context }) => {
-			return context.useCases.settings.set(input.key, input.value, context.session?.userId)
+			return context.useCases.settings.set(
+				input.key,
+				input.value,
+				context.session?.userId,
+			)
 		}),
 
 	updateBulk: protectedProcedure
@@ -79,7 +83,10 @@ export const settingsRouter = os.$context<ORPCContext>().router({
 		)
 		.output(z.object({ success: z.boolean() }))
 		.handler(async ({ input, context }) => {
-			await context.useCases.settings.setBulk(input.entries as Array<{ key: string; value: any }>, context.session?.userId)
+			await context.useCases.settings.setBulk(
+				input.entries as Array<{ key: string; value: any }>,
+				context.session?.userId,
+			)
 			return { success: true }
 		}),
 

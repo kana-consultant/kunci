@@ -23,7 +23,7 @@ function sleep(ms: number): Promise<void> {
 export async function callOpenRouter<T>(
 	apiKey: string,
 	params: CallParams,
-	maxRetries: number = 3
+	maxRetries: number = 3,
 ): Promise<T> {
 	const { model, messages, schema, temperature = 0.7 } = params
 

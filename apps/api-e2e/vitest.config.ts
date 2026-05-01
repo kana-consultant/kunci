@@ -21,6 +21,6 @@ export default defineConfig({
 			SENDER_EMAIL: "noreply@test.com",
 			BETTER_AUTH_SECRET: "secret-mock",
 			REDIS_URL: "redis://127.0.0.1:6379",
-		}
+		},
 	},
 })

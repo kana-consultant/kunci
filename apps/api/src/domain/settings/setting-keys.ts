@@ -61,4 +61,4 @@ export const SETTING_KEYS = {
 	SCHEDULER_ENABLED: "scheduler.enabled",
 } as const
 
-export type SettingKey = typeof SETTING_KEYS[keyof typeof SETTING_KEYS]
+export type SettingKey = (typeof SETTING_KEYS)[keyof typeof SETTING_KEYS]

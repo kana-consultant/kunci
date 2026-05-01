@@ -45,9 +45,12 @@ export function DataTable<TData, TValue>({
 				searchColumn="fullName"
 				searchPlaceholder="Search by name..."
 			/>
-			<div className="overflow-x-auto rounded-md border border-[var(--color-border)] bg-card text-card-foreground shadow-sm">
+			<div
+				className="overflow-x-auto rounded-md border"
+				style={{ borderColor: "var(--color-border)" }}
+			>
 				<Table>
-					<TableHeader className="bg-[var(--color-surface-alt)]">
+					<TableHeader style={{ background: "var(--color-surface-alt)" }}>
 						{table.getHeaderGroups().map((headerGroup) => (
 							<TableRow key={headerGroup.id}>
 								{headerGroup.headers.map((header) => {
@@ -96,7 +99,8 @@ export function DataTable<TData, TValue>({
 							<TableRow>
 								<TableCell
 									colSpan={columns.length}
-									className="h-24 text-center text-[var(--color-muted-foreground)]"
+									className="h-24 text-center"
+									style={{ color: "var(--color-muted-foreground)" }}
 								>
 									No results.
 								</TableCell>

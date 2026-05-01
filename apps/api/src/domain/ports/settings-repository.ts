@@ -5,7 +5,10 @@ export interface SettingsRepository {
 	getByCategory(category: string): Promise<Setting[]>
 	getAll(): Promise<Setting[]>
 	set(key: string, value: any, updatedBy?: string): Promise<Setting>
-	setBulk(entries: Array<{ key: string; value: any }>, updatedBy?: string): Promise<void>
+	setBulk(
+		entries: Array<{ key: string; value: any }>,
+		updatedBy?: string,
+	): Promise<void>
 	delete(key: string): Promise<void>
 	upsert(setting: Omit<Setting, "updatedAt">): Promise<Setting>
 }

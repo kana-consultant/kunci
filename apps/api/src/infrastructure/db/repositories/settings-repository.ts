@@ -1,8 +1,8 @@
 import { eq } from "drizzle-orm"
-import type { Database } from "../client.ts"
-import { appSettings } from "../schema.ts"
 import type { SettingsRepository } from "#/domain/ports/settings-repository.ts"
 import type { Setting } from "#/domain/settings/setting.ts"
+import type { Database } from "../client.ts"
+import { appSettings } from "../schema.ts"
 
 export function createSettingsRepository(db: Database): SettingsRepository {
 	return {
@@ -72,7 +72,9 @@ export function createSettingsRepository(db: Database): SettingsRepository {
 				.returning()
 
 			if (!result.length) {
-				throw new Error(`Setting with key ${key} not found. Use upsert for new settings.`)
+				throw new Error(
+					`Setting with key ${key} not found. Use upsert for new settings.`,
+				)
 			}
 
 			return {
@@ -87,7 +89,10 @@ export function createSettingsRepository(db: Database): SettingsRepository {
 			}
 		},
 
-		async setBulk(entries: Array<{ key: string; value: any }>, updatedBy?: string): Promise<void> {
+		async setBulk(
+			entries: Array<{ key: string; value: any }>,
+			updatedBy?: string,
+		): Promise<void> {
 			await db.transaction(async (tx: any) => {
 				for (const entry of entries) {
 					await tx

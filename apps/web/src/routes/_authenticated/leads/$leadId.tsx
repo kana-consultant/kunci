@@ -91,7 +91,10 @@ function PipelineStepsTimeline({ leadId }: { leadId: string }) {
 
 	if (error) {
 		return (
-			<div className="p-6 text-center text-sm text-[var(--color-danger)]">
+			<div
+				className="p-6 text-center text-sm"
+				style={{ color: "var(--color-danger)" }}
+			>
 				Failed to load pipeline steps.
 			</div>
 		)
@@ -99,7 +102,10 @@ function PipelineStepsTimeline({ leadId }: { leadId: string }) {
 
 	if (pipelineSteps.length === 0) {
 		return (
-			<div className="text-center py-12 text-[var(--color-muted-foreground)]">
+			<div
+				className="text-center py-12"
+				style={{ color: "var(--color-muted-foreground)" }}
+			>
 				<Clock className="w-10 h-10 mx-auto mb-3 opacity-30" />
 				<p className="text-sm">No pipeline steps recorded yet.</p>
 				<p className="text-xs mt-1 opacity-60">
@@ -110,11 +116,17 @@ function PipelineStepsTimeline({ leadId }: { leadId: string }) {
 	}
 
 	const totalSteps = 7
-	const completedSteps = pipelineSteps.filter((s: any) => s.status === "completed").length
+	const completedSteps = pipelineSteps.filter(
+		(s: any) => s.status === "completed",
+	).length
 
 	return (
 		<div className="relative">
-			<Progress value={(completedSteps / totalSteps) * 100} tone="primary" className="mb-4 mx-2" />
+			<Progress
+				value={(completedSteps / totalSteps) * 100}
+				tone="primary"
+				className="mb-4 mx-2"
+			/>
 			{/* Vertical timeline line */}
 			<div
 				className="absolute left-[19px] top-4 bottom-4 w-px"
@@ -178,7 +190,10 @@ function PipelineStepsTimeline({ leadId }: { leadId: string }) {
 									</div>
 									<div className="flex items-center gap-2 shrink-0">
 										{step.durationMs != null && (
-											<span className="text-xs font-mono text-[var(--color-muted-foreground)] tabular-nums">
+											<span
+												className="text-xs font-mono tabular-nums"
+												style={{ color: "var(--color-muted-foreground)" }}
+											>
 												{formatDuration(step.durationMs)}
 											</span>
 										)}
@@ -200,16 +215,24 @@ function PipelineStepsTimeline({ leadId }: { leadId: string }) {
 											<TooltipProvider>
 												<Tooltip>
 													<TooltipTrigger asChild>
-														<p className="text-xs text-[var(--color-danger)] truncate cursor-help">
+														<p
+															className="text-xs truncate cursor-help"
+															style={{ color: "var(--color-danger)" }}
+														>
 															Error: {detail.error as string}
 														</p>
 													</TooltipTrigger>
-													<TooltipContent>{detail.error as string}</TooltipContent>
+													<TooltipContent>
+														{detail.error as string}
+													</TooltipContent>
 												</Tooltip>
 											</TooltipProvider>
 										)}
 										{detail.provider && (
-											<p className="text-xs text-[var(--color-muted-foreground)]">
+											<p
+												className="text-xs"
+												style={{ color: "var(--color-muted-foreground)" }}
+											>
 												Provider:{" "}
 												<span className="font-medium">
 													{detail.provider as string}
@@ -228,11 +251,16 @@ function PipelineStepsTimeline({ leadId }: { leadId: string }) {
 											<TooltipProvider>
 												<Tooltip>
 													<TooltipTrigger asChild>
-														<p className="text-xs text-[var(--color-muted-foreground)] font-mono truncate opacity-60 cursor-help">
+														<p
+															className="text-xs font-mono truncate opacity-60 cursor-help"
+															style={{ color: "var(--color-muted-foreground)" }}
+														>
 															→ {detail.apiUrl as string}
 														</p>
 													</TooltipTrigger>
-													<TooltipContent>{detail.apiUrl as string}</TooltipContent>
+													<TooltipContent>
+														{detail.apiUrl as string}
+													</TooltipContent>
 												</Tooltip>
 											</TooltipProvider>
 										)}
@@ -240,11 +268,16 @@ function PipelineStepsTimeline({ leadId }: { leadId: string }) {
 											<TooltipProvider>
 												<Tooltip>
 													<TooltipTrigger asChild>
-														<p className="text-xs text-[var(--color-muted-foreground)] font-mono truncate opacity-60 cursor-help">
+														<p
+															className="text-xs font-mono truncate opacity-60 cursor-help"
+															style={{ color: "var(--color-muted-foreground)" }}
+														>
 															→ {detail.url as string}
 														</p>
 													</TooltipTrigger>
-													<TooltipContent>{detail.url as string}</TooltipContent>
+													<TooltipContent>
+														{detail.url as string}
+													</TooltipContent>
 												</Tooltip>
 											</TooltipProvider>
 										)}
@@ -252,7 +285,10 @@ function PipelineStepsTimeline({ leadId }: { leadId: string }) {
 								)}
 
 								{/* Timestamp */}
-								<p className="text-[10px] text-[var(--color-muted-foreground)] mt-1 opacity-50 tabular-nums">
+								<p
+									className="text-[10px] mt-1 opacity-50 tabular-nums"
+									style={{ color: "var(--color-muted-foreground)" }}
+								>
 									{new Date(step.startedAt as string).toLocaleTimeString([], {
 										hour: "2-digit",
 										minute: "2-digit",
@@ -302,7 +338,7 @@ function LeadDetailPage() {
 		return (
 			<div className="max-w-5xl mx-auto space-y-4">
 				<Card>
-					<CardContent className="p-4 text-[var(--color-danger)]">
+					<CardContent className="p-4" style={{ color: "var(--color-danger)" }}>
 						Failed to load lead details. Make sure the API server is running.
 					</CardContent>
 				</Card>
@@ -337,14 +373,18 @@ function LeadDetailPage() {
 				<div className="flex items-start justify-between">
 					<div>
 						<h1 className="text-3xl font-bold">{lead.fullName as string}</h1>
-						<p className="text-lg text-[var(--color-muted-foreground)] mt-1 flex items-center gap-2">
+						<p
+							className="text-lg mt-1 flex items-center gap-2"
+							style={{ color: "var(--color-muted-foreground)" }}
+						>
 							{lead.companyName as string}
 							{lead.companyWebsite && (
 								<a
 									href={lead.companyWebsite as string}
 									target="_blank"
 									rel="noreferrer"
-									className="text-[var(--color-primary)] inline-flex items-center gap-1 text-sm"
+									className="inline-flex items-center gap-1 text-sm"
+									style={{ color: "var(--color-primary)" }}
 								>
 									<ExternalLink className="w-3.5 h-3.5" />
 								</a>
@@ -382,15 +422,22 @@ function LeadDetailPage() {
 						</CardHeader>
 						<CardContent className="space-y-3">
 							<div className="flex items-center gap-3 text-sm">
-								<Mail className="w-4 h-4 text-[var(--color-muted-foreground)] shrink-0" />
+								<Mail
+									className="w-4 h-4 shrink-0"
+									style={{ color: "var(--color-muted-foreground)" }}
+								/>
 								<a
 									href={`mailto:${lead.email}`}
-									className="text-[var(--color-primary)] break-all"
+									className="break-all"
+									style={{ color: "var(--color-primary)" }}
 								>
 									{lead.email as string}
 								</a>
 							</div>
-							<div className="flex items-center gap-3 text-sm text-[var(--color-muted-foreground)]">
+							<div
+								className="flex items-center gap-3 text-sm"
+								style={{ color: "var(--color-muted-foreground)" }}
+							>
 								<Calendar className="w-4 h-4 shrink-0" />
 								Captured on {new Date(lead.createdAt).toLocaleDateString()}
 							</div>
@@ -420,18 +467,20 @@ function LeadDetailPage() {
 								</CardTitle>
 							</CardHeader>
 							<CardContent>
-								<div 
+								<div
 									className="prose prose-sm max-w-none text-sm leading-relaxed"
-									style={{
-										'--tw-prose-body': 'var(--color-muted-foreground)',
-										'--tw-prose-headings': 'var(--color-foreground)',
-										'--tw-prose-links': 'var(--color-primary)',
-										'--tw-prose-bold': 'var(--color-foreground)',
-										'--tw-prose-quotes': 'var(--color-muted-foreground)',
-										'--tw-prose-code': 'var(--color-foreground)',
-										'--tw-prose-hr': 'var(--color-border)',
-										'--tw-prose-lists': 'var(--color-muted-foreground)'
-									} as React.CSSProperties}
+									style={
+										{
+											"--tw-prose-body": "var(--color-muted-foreground)",
+											"--tw-prose-headings": "var(--color-foreground)",
+											"--tw-prose-links": "var(--color-primary)",
+											"--tw-prose-bold": "var(--color-foreground)",
+											"--tw-prose-quotes": "var(--color-muted-foreground)",
+											"--tw-prose-code": "var(--color-foreground)",
+											"--tw-prose-hr": "var(--color-border)",
+											"--tw-prose-lists": "var(--color-muted-foreground)",
+										} as React.CSSProperties
+									}
 								>
 									<ReactMarkdown remarkPlugins={[remarkBreaks]}>
 										{lead.companyResearch as string}
@@ -451,7 +500,10 @@ function LeadDetailPage() {
 								<Clock className="w-4 h-4" />
 								Pipeline Execution
 							</CardTitle>
-							<span className="text-xs font-medium text-[var(--color-muted-foreground)] uppercase tracking-wider">
+							<span
+								className="text-xs font-medium uppercase tracking-wider"
+								style={{ color: "var(--color-muted-foreground)" }}
+							>
 								Step-by-Step
 							</span>
 						</CardHeader>
@@ -465,7 +517,10 @@ function LeadDetailPage() {
 					<Card className="flex flex-col">
 						<CardHeader className="flex flex-row items-center justify-between">
 							<CardTitle>Email Sequence</CardTitle>
-							<span className="text-xs font-medium text-[var(--color-muted-foreground)] uppercase tracking-wider">
+							<span
+								className="text-xs font-medium uppercase tracking-wider"
+								style={{ color: "var(--color-muted-foreground)" }}
+							>
 								Timeline
 							</span>
 						</CardHeader>
@@ -473,7 +528,10 @@ function LeadDetailPage() {
 						<Separator />
 
 						<CardContent className="flex-1">
-							<div className="text-center py-12 text-[var(--color-muted-foreground)]">
+							<div
+								className="text-center py-12"
+								style={{ color: "var(--color-muted-foreground)" }}
+							>
 								<Mail className="w-12 h-12 mx-auto mb-3 opacity-30" />
 								<p>
 									The AI is currently crafting the sequence or no emails have
