@@ -27,7 +27,19 @@ export const leadRouter = os.$context<ORPCContext>().router({
 	capture: publicProcedure
 		.input(captureLeadSchema)
 		.handler(async ({ input, context }) => {
-			return context.useCases.pipeline.runOutbound(input)
+			// Phase 1: Capture lead synchronously (fast — validate + save to DB)
+			const lead = await context.useCases.lead.capture(input)
+
+			// Phase 2: Fire-and-forget — run the rest of the pipeline in the background
+			context.useCases.pipeline
+				.runOutboundForExistingLead(lead)
+				.catch(() => {
+					context.useCases.lead
+						.updateStatus(lead.id, "research_failed")
+						.catch(() => {})
+				})
+
+			return { leadId: lead.id, status: "pipeline_started" }
 		}),
 
 	captureBulk: protectedProcedure

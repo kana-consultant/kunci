@@ -420,7 +420,7 @@ function LeadDetailPage() {
 								</CardTitle>
 							</CardHeader>
 							<CardContent>
-								<div className="prose prose-sm max-w-none text-sm leading-relaxed prose-invert">
+								<div className="prose prose-sm max-w-none text-sm leading-relaxed dark:prose-invert">
 									<ReactMarkdown remarkPlugins={[remarkBreaks]}>
 										{lead.companyResearch as string}
 									</ReactMarkdown>
