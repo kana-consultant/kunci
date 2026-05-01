@@ -8,7 +8,7 @@ import {
 	CardTitle,
 } from "@kana-consultant/ui-kit"
 import { createFileRoute } from "@tanstack/react-router"
-import { Sparkles } from "lucide-react"
+import { CheckCircle2, Sparkles } from "lucide-react"
 
 import { captureFieldSchemas, useCaptureLogic } from "./_hooks/use-capture"
 
@@ -17,7 +17,29 @@ export const Route = createFileRoute("/_authenticated/capture")({
 })
 
 export function CapturePage() {
-	const { form, error } = useCaptureLogic()
+	const { form, error, successMessage } = useCaptureLogic()
+
+	// Success state — show confirmation while redirecting
+	if (successMessage) {
+		return (
+			<div className="max-w-2xl mx-auto">
+				<Card>
+					<CardContent className="p-12 text-center space-y-4">
+						<div className="mx-auto w-16 h-16 rounded-full bg-[var(--color-success-muted)] flex items-center justify-center">
+							<CheckCircle2 className="w-8 h-8 text-[var(--color-success)]" />
+						</div>
+						<h2 className="text-xl font-semibold">Lead Captured!</h2>
+						<p className="text-[var(--color-muted-foreground)]">
+							{successMessage}
+						</p>
+						<p className="text-sm text-[var(--color-muted-foreground)]">
+							Redirecting to leads...
+						</p>
+					</CardContent>
+				</Card>
+			</div>
+		)
+	}
 
 	return (
 		<div className="max-w-2xl mx-auto">
@@ -175,3 +197,4 @@ export function CapturePage() {
 		</div>
 	)
 }
+

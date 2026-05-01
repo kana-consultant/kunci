@@ -1,6 +1,7 @@
 import { useAppForm } from "@kana-consultant/ui-kit"
 import { useMutation } from "@tanstack/react-query"
 import { useNavigate } from "@tanstack/react-router"
+import { useState } from "react"
 import { z } from "zod"
 import { orpc } from "~/libs/orpc/client"
 
@@ -28,6 +29,7 @@ export type CaptureFormValues = {
 
 export function useCaptureLogic() {
 	const navigate = useNavigate()
+	const [successMessage, setSuccessMessage] = useState<string | null>(null)
 
 	const {
 		mutateAsync: captureLead,
@@ -49,7 +51,14 @@ export function useCaptureLogic() {
 				...value,
 				leadSource: "Manual Entry",
 			} as any)
-			navigate({ to: "/leads" })
+
+			// Show success briefly, then navigate
+			setSuccessMessage(
+				`Lead "${value.fullName}" captured! Pipeline is running in the background.`,
+			)
+			setTimeout(() => {
+				navigate({ to: "/leads" })
+			}, 1500)
 		},
 	})
 
@@ -57,5 +66,6 @@ export function useCaptureLogic() {
 		form,
 		isPending,
 		error,
+		successMessage,
 	}
 }
