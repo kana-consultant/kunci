@@ -3,7 +3,6 @@ import {
 	Button,
 	Card,
 	CardContent,
-	CardDescription,
 	CardFooter,
 	CardHeader,
 	CardTitle,
@@ -257,12 +256,12 @@ function BulkCapturePage() {
 						once.
 					</p>
 				</div>
-				<Button variant="outline" asChild>
-					<Link to="/leads">
+				<Link to="/leads">
+					<Button variant="outline">
 						<ArrowLeft className="w-4 h-4 mr-2" />
 						Back to Leads
-					</Link>
-				</Button>
+					</Button>
+				</Link>
 			</div>
 
 			{/* Template Download */}
@@ -272,10 +271,13 @@ function BulkCapturePage() {
 						<FileSpreadsheet className="w-4 h-4" />
 						CSV Template
 					</CardTitle>
-					<CardDescription>
+					<p
+						className="text-sm mt-1"
+						style={{ color: "var(--color-muted-foreground)" }}
+					>
 						Download or copy the template to ensure your CSV has the correct
 						format.
-					</CardDescription>
+					</p>
 				</CardHeader>
 				<CardContent className="space-y-4">
 					<div
@@ -314,10 +316,13 @@ function BulkCapturePage() {
 						<Upload className="w-4 h-4" />
 						Import Data
 					</CardTitle>
-					<CardDescription>
+					<p
+						className="text-sm mt-1"
+						style={{ color: "var(--color-muted-foreground)" }}
+					>
 						Upload a CSV file or paste your data directly. Duplicates will be
 						automatically detected and skipped.
-					</CardDescription>
+					</p>
 				</CardHeader>
 				<CardContent className="space-y-6">
 					{/* Drop Zone */}
@@ -450,10 +455,13 @@ function BulkCapturePage() {
 									<Users className="w-4 h-4" />
 									Preview ({parsedRows.length} leads)
 								</CardTitle>
-								<CardDescription>
+								<p
+									className="text-sm mt-1"
+									style={{ color: "var(--color-muted-foreground)" }}
+								>
 									Review the parsed data before importing. Duplicates will be
 									automatically skipped.
-								</CardDescription>
+								</p>
 							</div>
 							<Button
 								variant="ghost"
