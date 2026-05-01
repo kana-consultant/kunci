@@ -420,7 +420,19 @@ function LeadDetailPage() {
 								</CardTitle>
 							</CardHeader>
 							<CardContent>
-								<div className="prose prose-sm max-w-none text-sm leading-relaxed dark:prose-invert">
+								<div 
+									className="prose prose-sm max-w-none text-sm leading-relaxed"
+									style={{
+										'--tw-prose-body': 'var(--color-muted-foreground)',
+										'--tw-prose-headings': 'var(--color-foreground)',
+										'--tw-prose-links': 'var(--color-primary)',
+										'--tw-prose-bold': 'var(--color-foreground)',
+										'--tw-prose-quotes': 'var(--color-muted-foreground)',
+										'--tw-prose-code': 'var(--color-foreground)',
+										'--tw-prose-hr': 'var(--color-border)',
+										'--tw-prose-lists': 'var(--color-muted-foreground)'
+									} as React.CSSProperties}
+								>
 									<ReactMarkdown remarkPlugins={[remarkBreaks]}>
 										{lead.companyResearch as string}
 									</ReactMarkdown>

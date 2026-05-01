@@ -24,37 +24,52 @@ export function createResendService(config: ResendConfig): EmailService {
 
 	return {
 		async send(params: SendEmailParams): Promise<EmailSendResult> {
-			const { data, error } = await resend.emails.send(
-				{
-					from,
-					to: [params.to],
-					subject: params.subject,
-					html: params.html,
-					tags: [
-						{ name: "lead_id", value: params.leadId },
-						{ name: "stage", value: String(params.stage) },
-						{ name: "type", value: "outbound" },
-					],
-				},
-				{
-					idempotencyKey: `outbound-${params.leadId}-stage-${params.stage}`,
-				},
-			)
+			let lastError: any
 
-			if (error) {
-				logger.error({ error, to: params.to }, "Resend send failed")
-				throw new Error(`Resend error: ${error.message}`)
+			for (let attempt = 1; attempt <= 3; attempt++) {
+				try {
+					const { data, error } = await resend.emails.send(
+						{
+							from,
+							to: [params.to],
+							subject: params.subject,
+							html: params.html,
+							tags: [
+								{ name: "lead_id", value: params.leadId },
+								{ name: "stage", value: String(params.stage) },
+								{ name: "type", value: "outbound" },
+							],
+						},
+						{
+							idempotencyKey: `outbound-${params.leadId}-stage-${params.stage}`,
+						},
+					)
+
+					if (error) {
+						lastError = error
+						logger.warn({ error, attempt, to: params.to }, "Resend send attempt failed")
+						if (attempt < 3) await new Promise(resolve => setTimeout(resolve, 2000 * attempt))
+						continue
+					}
+
+					logger.info(
+						{ messageId: data!.id, to: params.to, stage: params.stage, attempt },
+						"Email sent",
+					)
+
+					return {
+						messageId: data!.id,
+						sentAt: new Date(),
+					}
+				} catch (err) {
+					lastError = err
+					logger.warn({ err, attempt, to: params.to }, "Resend send threw an exception")
+					if (attempt < 3) await new Promise(resolve => setTimeout(resolve, 2000 * attempt))
+				}
 			}
 
-			logger.info(
-				{ messageId: data!.id, to: params.to, stage: params.stage },
-				"Email sent",
-			)
-
-			return {
-				messageId: data!.id,
-				sentAt: new Date(),
-			}
+			logger.error({ error: lastError, to: params.to }, "Resend send failed after 3 attempts")
+			throw new Error(`Resend error: ${lastError?.message || "Unknown error"}`)
 		},
 
 		async replyInThread(params: ReplyInThreadParams): Promise<EmailSendResult> {
@@ -62,43 +77,58 @@ export function createResendService(config: ResendConfig): EmailService {
 				? params.subject
 				: `Re: ${params.subject}`
 
-			const { data, error } = await resend.emails.send(
-				{
-					from,
-					to: [params.to],
-					subject,
-					html: params.html,
-					headers: {
-						"In-Reply-To": params.originalMessageId,
-						References: [...params.previousRefs, params.originalMessageId].join(
-							" ",
-						),
-					},
-					tags: [
-						{ name: "lead_id", value: params.leadId },
-						{ name: "stage", value: String(params.stage) },
-						{ name: "type", value: "follow_up" },
-					],
-				},
-				{
-					idempotencyKey: `reply-${params.leadId}-stage-${params.stage}`,
-				},
-			)
+			let lastError: any
 
-			if (error) {
-				logger.error({ error, to: params.to }, "Resend reply failed")
-				throw new Error(`Resend reply error: ${error.message}`)
+			for (let attempt = 1; attempt <= 3; attempt++) {
+				try {
+					const { data, error } = await resend.emails.send(
+						{
+							from,
+							to: [params.to],
+							subject,
+							html: params.html,
+							headers: {
+								"In-Reply-To": params.originalMessageId,
+								References: [...params.previousRefs, params.originalMessageId].join(
+									" ",
+								),
+							},
+							tags: [
+								{ name: "lead_id", value: params.leadId },
+								{ name: "stage", value: String(params.stage) },
+								{ name: "type", value: "follow_up" },
+							],
+						},
+						{
+							idempotencyKey: `reply-${params.leadId}-stage-${params.stage}`,
+						},
+					)
+
+					if (error) {
+						lastError = error
+						logger.warn({ error, attempt, to: params.to }, "Resend reply attempt failed")
+						if (attempt < 3) await new Promise(resolve => setTimeout(resolve, 2000 * attempt))
+						continue
+					}
+
+					logger.info(
+						{ messageId: data!.id, to: params.to, stage: params.stage, attempt },
+						"Reply sent in thread",
+					)
+
+					return {
+						messageId: data!.id,
+						sentAt: new Date(),
+					}
+				} catch (err) {
+					lastError = err
+					logger.warn({ err, attempt, to: params.to }, "Resend reply threw an exception")
+					if (attempt < 3) await new Promise(resolve => setTimeout(resolve, 2000 * attempt))
+				}
 			}
 
-			logger.info(
-				{ messageId: data!.id, to: params.to, stage: params.stage },
-				"Reply sent in thread",
-			)
-
-			return {
-				messageId: data!.id,
-				sentAt: new Date(),
-			}
+			logger.error({ error: lastError, to: params.to }, "Resend reply failed after 3 attempts")
+			throw new Error(`Resend reply error: ${lastError?.message || "Unknown error"}`)
 		},
 
 		async getReceivedEmail(emailId: string) {
