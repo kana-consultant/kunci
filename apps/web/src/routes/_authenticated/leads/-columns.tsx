@@ -8,9 +8,10 @@ export type Lead = {
 	email: string
 	companyName: string
 	companyWebsite: string
+	leadSource?: string | null
 	stage: number
 	replyStatus: string
-	createdAt: string
+	createdAt: Date | string
 }
 
 export const stageLabels: Record<
@@ -37,6 +38,23 @@ export const statusTones: Record<
 	research_failed: "warning",
 }
 
+export const statusLabels: Record<string, string> = {
+	pending: "Pending",
+	researching: "Researching",
+	ready: "Ready",
+	awaiting: "Awaiting reply",
+	replied: "Replied",
+	completed: "Completed",
+	bounced: "Bounced",
+	research_failed: "Research failed",
+}
+
+const dateFormatter = new Intl.DateTimeFormat("en", {
+	month: "short",
+	day: "numeric",
+	year: "numeric",
+})
+
 export const columns: ColumnDef<Lead>[] = [
 	{
 		accessorKey: "fullName",
@@ -49,12 +67,10 @@ export const columns: ColumnDef<Lead>[] = [
 				<Link
 					to="/leads/$leadId"
 					params={{ leadId: lead.id }}
-					className="flex flex-col"
+					className="flex min-w-48 flex-col gap-0.5 rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
 				>
 					<span className="font-medium">{lead.fullName}</span>
-					<span className="text-[var(--color-muted-foreground)]">
-						{lead.email}
-					</span>
+					<span className="text-muted-foreground">{lead.email}</span>
 				</Link>
 			)
 		},
@@ -67,18 +83,25 @@ export const columns: ColumnDef<Lead>[] = [
 		cell: ({ row }) => {
 			const lead = row.original
 			return (
-				<>
+				<div className="min-w-56">
 					<div className="font-medium">{lead.companyName}</div>
-					<a
-						href={lead.companyWebsite}
-						target="_blank"
-						rel="noreferrer"
-						className="text-[var(--color-primary)] relative z-10"
-						onClick={(e) => e.stopPropagation()}
-					>
-						{lead.companyWebsite?.replace(/^https?:\/\//, "")}
-					</a>
-				</>
+					<div className="flex flex-col gap-0.5">
+						<a
+							href={lead.companyWebsite}
+							target="_blank"
+							rel="noreferrer"
+							className="relative z-10 text-sm text-primary underline-offset-4 hover:underline"
+							onClick={(e) => e.stopPropagation()}
+						>
+							{lead.companyWebsite?.replace(/^https?:\/\//, "")}
+						</a>
+						{lead.leadSource && (
+							<span className="text-xs text-muted-foreground">
+								Source: {lead.leadSource}
+							</span>
+						)}
+					</div>
+				</div>
 			)
 		},
 	},
@@ -101,11 +124,11 @@ export const columns: ColumnDef<Lead>[] = [
 			<DataTableColumnHeader column={column} title="Status" />
 		),
 		cell: ({ row }) => {
-			const statusTone =
-				statusTones[row.getValue("replyStatus") as string] ?? "neutral"
+			const status = row.getValue("replyStatus") as string
+			const statusTone = statusTones[status] ?? "neutral"
 			return (
-				<Badge tone={statusTone} className="capitalize">
-					{row.getValue("replyStatus") as string}
+				<Badge tone={statusTone}>
+					{statusLabels[status] ?? status.replaceAll("_", " ")}
 				</Badge>
 			)
 		},
@@ -117,8 +140,8 @@ export const columns: ColumnDef<Lead>[] = [
 		),
 		cell: ({ row }) => {
 			return (
-				<span className="text-[var(--color-muted-foreground)]">
-					{new Date(row.getValue("createdAt")).toLocaleDateString()}
+				<span className="whitespace-nowrap text-muted-foreground">
+					{dateFormatter.format(new Date(row.getValue("createdAt")))}
 				</span>
 			)
 		},
