@@ -79,7 +79,7 @@ export function makeHandleReplyUseCase(deps: HandleReplyDependencies) {
 					content: sequence.content,
 					cta: sequence.cta,
 					psychologicalTrigger: sequence.psychologicalTrigger,
-				}
+				},
 			)
 
 			// 4. Convert AI output to HTML

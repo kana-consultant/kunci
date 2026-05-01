@@ -23,7 +23,7 @@ import {
 	getSortedRowModel,
 	useReactTable,
 } from "@tanstack/react-table"
-import { stageLabels, statusLabels, type Lead } from "./-columns"
+import { type Lead, stageLabels, statusLabels } from "./-columns"
 
 interface DataTableProps {
 	columns: ColumnDef<Lead>[]
@@ -150,7 +150,8 @@ export function DataTable({ columns, data }: DataTableProps) {
 						<TableRow>
 							<TableCell
 								colSpan={columns.length}
-								className="h-24 text-center text-muted-foreground"
+								className="h-24 text-center"
+								style={{ color: "var(--color-muted-foreground)" }}
 							>
 								No results.
 							</TableCell>
@@ -158,7 +159,10 @@ export function DataTable({ columns, data }: DataTableProps) {
 					)}
 				</TableBody>
 			</Table>
-			<div className="border-t border-border pt-2">
+			<div
+				className="border-t pt-2"
+				style={{ borderColor: "var(--color-border)" }}
+			>
 				<DataTablePagination table={table} />
 			</div>
 		</div>

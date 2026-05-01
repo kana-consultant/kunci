@@ -17,7 +17,9 @@ export interface LeadRepository {
 		researchFailed: number
 		awaiting: number
 	}>
-	getStageDistribution(period?: "7d" | "30d" | "all"): Promise<Array<{ stage: number; count: number }>>
+	getStageDistribution(
+		period?: "7d" | "30d" | "all",
+	): Promise<Array<{ stage: number; count: number }>>
 }
 
 export interface ListLeadsParams {

@@ -19,7 +19,6 @@ import { createFileRoute, Link } from "@tanstack/react-router"
 import {
 	AlertCircle,
 	ArrowLeft,
-	CheckCircle2,
 	Copy,
 	Download,
 	FileSpreadsheet,
@@ -96,11 +95,16 @@ function BulkCapturePage() {
 	// Results view
 	if (result) {
 		return (
-			<div className="max-w-4xl mx-auto space-y-6">
-				<div className="flex items-center justify-between">
+			<div className="space-y-6">
+				<div className="flex items-start justify-between gap-4 max-w-4xl">
 					<div>
-						<h1 className="text-2xl font-bold">Bulk Import Results</h1>
-						<p className="text-sm text-[var(--color-muted-foreground)] mt-1">
+						<h1 className="text-2xl font-bold tracking-tight">
+							Bulk Import Results
+						</h1>
+						<p
+							className="text-sm mt-1"
+							style={{ color: "var(--color-muted-foreground)" }}
+						>
 							Import completed — review the results below.
 						</p>
 					</div>
@@ -108,67 +112,68 @@ function BulkCapturePage() {
 						<Button variant="outline" onClick={reset}>
 							Import More
 						</Button>
-						<Button onClick={navigateToLeads}>
-							View All Leads
-						</Button>
+						<Button onClick={navigateToLeads}>View All Leads</Button>
 					</div>
 				</div>
 
-				{/* Summary Cards */}
-				<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-					<Card>
-						<CardContent className="p-6 flex items-center gap-4">
-							<div className="p-3 rounded-xl bg-[var(--color-success-muted)]">
-								<CheckCircle2 className="w-6 h-6 text-[var(--color-success)]" />
-							</div>
-							<div>
-								<p className="text-2xl font-bold">{result.created.length}</p>
-								<p className="text-sm text-[var(--color-muted-foreground)]">
-									Created Successfully
-								</p>
-							</div>
-						</CardContent>
-					</Card>
-					<Card>
-						<CardContent className="p-6 flex items-center gap-4">
-							<div className="p-3 rounded-xl bg-[var(--color-warning-muted)]">
-								<AlertCircle className="w-6 h-6 text-[var(--color-warning)]" />
-							</div>
-							<div>
-								<p className="text-2xl font-bold">{result.duplicates.length}</p>
-								<p className="text-sm text-[var(--color-muted-foreground)]">
-									Duplicates Skipped
-								</p>
-							</div>
-						</CardContent>
-					</Card>
-					<Card>
-						<CardContent className="p-6 flex items-center gap-4">
-							<div className="p-3 rounded-xl bg-[var(--color-danger-muted)]">
-								<XCircle className="w-6 h-6 text-[var(--color-danger)]" />
-							</div>
-							<div>
-								<p className="text-2xl font-bold">{result.invalid.length}</p>
-								<p className="text-sm text-[var(--color-muted-foreground)]">
-									Invalid Entries
-								</p>
-							</div>
-						</CardContent>
-					</Card>
+				{/* Summary Strip */}
+				<div
+					className="grid grid-cols-3 gap-px rounded-xl overflow-hidden max-w-4xl"
+					style={{ background: "var(--color-border)" }}
+				>
+					{[
+						{
+							label: "Created Successfully",
+							value: result.created.length,
+							color: "var(--color-success)",
+						},
+						{
+							label: "Duplicates Skipped",
+							value: result.duplicates.length,
+							color: "var(--color-warning)",
+						},
+						{
+							label: "Invalid Entries",
+							value: result.invalid.length,
+							color: "var(--color-danger)",
+						},
+					].map((s) => (
+						<div
+							key={s.label}
+							className="flex flex-col gap-0.5 px-5 py-4"
+							style={{ background: "var(--color-background)" }}
+						>
+							<span
+								className="text-2xl font-bold tabular-nums"
+								style={{ color: s.color }}
+							>
+								{s.value}
+							</span>
+							<span
+								className="text-xs"
+								style={{ color: "var(--color-muted-foreground)" }}
+							>
+								{s.label}
+							</span>
+						</div>
+					))}
 				</div>
 
 				{/* Duplicates Details */}
 				{result.duplicates.length > 0 && (
-					<Card>
+					<Card className="max-w-4xl">
 						<CardHeader>
 							<CardTitle className="text-base flex items-center gap-2">
-								<AlertCircle className="w-4 h-4 text-[var(--color-warning)]" />
+								<AlertCircle
+									className="w-4 h-4"
+									style={{ color: "var(--color-warning)" }}
+								/>
 								Duplicates ({result.duplicates.length})
 							</CardTitle>
 						</CardHeader>
 						<CardContent className="p-0">
 							<Table>
-								<TableHeader className="bg-[var(--color-muted-subtle)]">
+								<TableHeader style={{ background: "var(--color-surface-alt)" }}>
 									<TableRow>
 										<TableHead>Name</TableHead>
 										<TableHead>Email</TableHead>
@@ -179,7 +184,9 @@ function BulkCapturePage() {
 									{result.duplicates.map((d, i) => (
 										<TableRow key={i}>
 											<TableCell>{d.fullName}</TableCell>
-											<TableCell className="text-[var(--color-muted-foreground)]">
+											<TableCell
+												style={{ color: "var(--color-muted-foreground)" }}
+											>
 												{d.email}
 											</TableCell>
 											<TableCell>
@@ -195,16 +202,19 @@ function BulkCapturePage() {
 
 				{/* Invalid Details */}
 				{result.invalid.length > 0 && (
-					<Card>
+					<Card className="max-w-4xl">
 						<CardHeader>
 							<CardTitle className="text-base flex items-center gap-2">
-								<XCircle className="w-4 h-4 text-[var(--color-danger)]" />
+								<XCircle
+									className="w-4 h-4"
+									style={{ color: "var(--color-danger)" }}
+								/>
 								Invalid Entries ({result.invalid.length})
 							</CardTitle>
 						</CardHeader>
 						<CardContent className="p-0">
 							<Table>
-								<TableHeader className="bg-[var(--color-muted-subtle)]">
+								<TableHeader style={{ background: "var(--color-surface-alt)" }}>
 									<TableRow>
 										<TableHead>Name</TableHead>
 										<TableHead>Email</TableHead>
@@ -215,7 +225,9 @@ function BulkCapturePage() {
 									{result.invalid.map((inv, i) => (
 										<TableRow key={i}>
 											<TableCell>{inv.fullName}</TableCell>
-											<TableCell className="text-[var(--color-muted-foreground)]">
+											<TableCell
+												style={{ color: "var(--color-muted-foreground)" }}
+											>
 												{inv.email}
 											</TableCell>
 											<TableCell>
@@ -233,26 +245,28 @@ function BulkCapturePage() {
 	}
 
 	return (
-		<div className="max-w-4xl mx-auto space-y-6">
-			<div className="flex items-center justify-between">
-				<div className="flex items-center gap-4">
-					<Link to="/leads">
-						<Button variant="ghost" size="icon">
-							<ArrowLeft className="w-4 h-4" />
-						</Button>
-					</Link>
-					<div>
-						<h1 className="text-2xl font-bold">Bulk Import Leads</h1>
-						<p className="text-sm text-[var(--color-muted-foreground)] mt-1">
-							Upload a CSV file or paste CSV data to import multiple leads at
-							once.
-						</p>
-					</div>
+		<div className="space-y-6">
+			<div className="flex items-start justify-between gap-4 max-w-4xl">
+				<div>
+					<h1 className="text-2xl font-bold tracking-tight">Bulk Import</h1>
+					<p
+						className="text-sm mt-1"
+						style={{ color: "var(--color-muted-foreground)" }}
+					>
+						Upload a CSV file or paste CSV data to import multiple leads at
+						once.
+					</p>
 				</div>
+				<Button variant="outline" asChild>
+					<Link to="/leads">
+						<ArrowLeft className="w-4 h-4 mr-2" />
+						Back to Leads
+					</Link>
+				</Button>
 			</div>
 
 			{/* Template Download */}
-			<Card>
+			<Card className="max-w-4xl">
 				<CardHeader>
 					<CardTitle className="text-base flex items-center gap-2">
 						<FileSpreadsheet className="w-4 h-4" />
@@ -264,7 +278,10 @@ function BulkCapturePage() {
 					</CardDescription>
 				</CardHeader>
 				<CardContent className="space-y-4">
-					<div className="bg-[var(--color-muted-subtle)] p-4 rounded-lg overflow-x-auto">
+					<div
+						className="p-4 rounded-lg overflow-x-auto"
+						style={{ background: "var(--color-surface-alt)" }}
+					>
 						<pre className="text-xs font-mono whitespace-pre">
 							{CSV_TEMPLATE}
 						</pre>
@@ -291,7 +308,7 @@ function BulkCapturePage() {
 			</Card>
 
 			{/* Upload Area */}
-			<Card>
+			<Card className="max-w-4xl">
 				<CardHeader>
 					<CardTitle className="text-base flex items-center gap-2">
 						<Upload className="w-4 h-4" />
@@ -305,10 +322,15 @@ function BulkCapturePage() {
 				<CardContent className="space-y-6">
 					{/* Drop Zone */}
 					<div
-						className={`
-							border-2 border-dashed rounded-xl p-8 text-center transition-all cursor-pointer
-							${dragActive ? "border-[var(--color-primary)] bg-[var(--color-primary-muted)]" : "border-[var(--color-border)] hover:border-[var(--color-primary)] hover:bg-[var(--color-muted-subtle)]"}
-						`}
+						className={`border-2 border-dashed rounded-xl p-8 text-center transition-all cursor-pointer`}
+						style={{
+							borderColor: dragActive
+								? "var(--color-primary)"
+								: "var(--color-border)",
+							backgroundColor: dragActive
+								? "var(--color-primary-muted)"
+								: "transparent",
+						}}
 						onDragOver={(e) => {
 							e.preventDefault()
 							setDragActive(true)
@@ -316,12 +338,26 @@ function BulkCapturePage() {
 						onDragLeave={() => setDragActive(false)}
 						onDrop={onFileDrop}
 						onClick={() => fileInputRef.current?.click()}
+						onKeyDown={(e) => {
+							if (e.key === "Enter" || e.key === " ") {
+								e.preventDefault()
+								fileInputRef.current?.click()
+							}
+						}}
+						role="button"
+						tabIndex={0}
 					>
-						<Upload className="w-8 h-8 mx-auto mb-3 text-[var(--color-muted-foreground)]" />
+						<Upload
+							className="w-8 h-8 mx-auto mb-3"
+							style={{ color: "var(--color-muted-foreground)" }}
+						/>
 						<p className="font-medium">
 							Drop your CSV file here or click to browse
 						</p>
-						<p className="text-sm text-[var(--color-muted-foreground)] mt-1">
+						<p
+							className="text-sm mt-1"
+							style={{ color: "var(--color-muted-foreground)" }}
+						>
 							Supports .csv files up to 100 leads
 						</p>
 						<input
@@ -336,7 +372,10 @@ function BulkCapturePage() {
 					{/* Divider */}
 					<div className="flex items-center gap-4">
 						<div className="flex-1 border-t" />
-						<span className="text-sm text-[var(--color-muted-foreground)]">
+						<span
+							className="text-sm"
+							style={{ color: "var(--color-muted-foreground)" }}
+						>
 							or paste CSV data
 						</span>
 						<div className="flex-1 border-t" />
@@ -363,8 +402,17 @@ function BulkCapturePage() {
 
 					{/* Parse Errors */}
 					{parseErrors.length > 0 && (
-						<div className="p-4 rounded-lg bg-[var(--color-danger-muted)] border border-[var(--color-danger)]">
-							<p className="font-medium text-[var(--color-danger)] mb-2 flex items-center gap-2">
+						<div
+							className="p-4 rounded-xl border"
+							style={{
+								background: "var(--color-danger-muted)",
+								borderColor: "var(--color-danger)",
+							}}
+						>
+							<p
+								className="font-medium flex items-center gap-2 mb-2"
+								style={{ color: "var(--color-danger)" }}
+							>
 								<AlertCircle className="w-4 h-4" />
 								CSV Parse Errors
 							</p>
@@ -378,7 +426,14 @@ function BulkCapturePage() {
 
 					{/* API Error */}
 					{error && (
-						<div className="p-3 text-sm bg-[var(--color-danger-muted)] text-[var(--color-danger)] rounded-lg border border-[var(--color-danger)]">
+						<div
+							className="p-3 text-sm rounded-xl border"
+							style={{
+								background: "var(--color-danger-muted)",
+								color: "var(--color-danger)",
+								borderColor: "var(--color-danger)",
+							}}
+						>
 							{(error as any)?.message || "Failed to import leads"}
 						</div>
 					)}
@@ -387,7 +442,7 @@ function BulkCapturePage() {
 
 			{/* Preview Table */}
 			{parsedRows.length > 0 && (
-				<Card>
+				<Card className="max-w-4xl">
 					<CardHeader>
 						<div className="flex items-center justify-between">
 							<div>
@@ -412,7 +467,7 @@ function BulkCapturePage() {
 					</CardHeader>
 					<CardContent className="p-0 overflow-x-auto">
 						<Table>
-							<TableHeader className="bg-[var(--color-muted-subtle)]">
+							<TableHeader style={{ background: "var(--color-surface-alt)" }}>
 								<TableRow>
 									<TableHead className="w-12">#</TableHead>
 									<TableHead>Name</TableHead>
@@ -424,15 +479,21 @@ function BulkCapturePage() {
 							<TableBody>
 								{parsedRows.map((row, i) => (
 									<TableRow key={i}>
-										<TableCell className="text-[var(--color-muted-foreground)]">
+										<TableCell
+											style={{ color: "var(--color-muted-foreground)" }}
+										>
 											{i + 1}
 										</TableCell>
-										<TableCell className="font-medium">{row.fullName}</TableCell>
-										<TableCell className="text-[var(--color-muted-foreground)]">
+										<TableCell className="font-medium">
+											{row.fullName}
+										</TableCell>
+										<TableCell
+											style={{ color: "var(--color-muted-foreground)" }}
+										>
 											{row.email}
 										</TableCell>
 										<TableCell>{row.companyName}</TableCell>
-										<TableCell className="text-[var(--color-primary)]">
+										<TableCell style={{ color: "var(--color-primary)" }}>
 											{row.companyWebsite.replace(/^https?:\/\//, "")}
 										</TableCell>
 									</TableRow>
@@ -440,7 +501,10 @@ function BulkCapturePage() {
 							</TableBody>
 						</Table>
 					</CardContent>
-					<CardFooter className="flex justify-end gap-3 border-t p-6 bg-[var(--color-muted-subtle)]">
+					<CardFooter
+						className="flex justify-end gap-3 border-t p-6"
+						style={{ background: "var(--color-surface-alt)" }}
+					>
 						<Button variant="ghost" onClick={reset}>
 							Cancel
 						</Button>

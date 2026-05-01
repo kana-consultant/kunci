@@ -7,7 +7,6 @@ import type { EmailVerifier } from "#/domain/ports/email-verifier.ts"
 import type { Logger } from "#/domain/ports/logger.ts"
 import type { PipelineTracker } from "#/domain/ports/pipeline-tracker.ts"
 import type { ScraperService } from "#/domain/ports/scraper-service.ts"
-import type { SettingsService } from "./shared/settings-service.ts"
 import { makeHandleReplyUseCase } from "./email/handle-reply.ts"
 import {
 	makeSendFollowupUseCase,
@@ -21,11 +20,12 @@ import {
 } from "./lead/capture-lead.ts"
 import { makeRetryPipelineUseCase } from "./pipeline/retry-pipeline.ts"
 import {
-	makeRunOutboundPipelineUseCase,
 	makeRunOutboundForExistingLeadUseCase,
+	makeRunOutboundPipelineUseCase,
 } from "./pipeline/run-outbound-pipeline.ts"
 import { makeResearchCompanyUseCase } from "./research/research-company.ts"
 import { makeProcessPendingFollowupsUseCase } from "./scheduler/process-followups.ts"
+import type { SettingsService } from "./shared/settings-service.ts"
 
 export interface AppDependencies {
 	repos: {
@@ -141,9 +141,12 @@ export function buildUseCases(deps: AppDependencies) {
 			bulkCapture: bulkCaptureLead,
 			list: listLeads,
 			getDetail: getLeadDetail,
-			getStats: async (period?: "7d" | "30d" | "all") => deps.repos.lead.getStats(period),
-			getStageDistribution: async (period?: "7d" | "30d" | "all") => deps.repos.lead.getStageDistribution(period),
-			getRecentActivity: async (limit: number) => deps.tracker.getRecentActivity(limit),
+			getStats: async (period?: "7d" | "30d" | "all") =>
+				deps.repos.lead.getStats(period),
+			getStageDistribution: async (period?: "7d" | "30d" | "all") =>
+				deps.repos.lead.getStageDistribution(period),
+			getRecentActivity: async (limit: number) =>
+				deps.tracker.getRecentActivity(limit),
 			updateStatus: async (id: string, status: string) => {
 				await deps.repos.lead.update(id, { replyStatus: status as any })
 			},
@@ -166,6 +169,7 @@ export function buildUseCases(deps: AppDependencies) {
 			processPendingFollowups,
 		},
 		settings: deps.services.settings,
+		scraper: deps.services.scraper,
 	}
 }
 

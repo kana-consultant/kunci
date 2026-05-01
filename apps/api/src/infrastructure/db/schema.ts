@@ -160,5 +160,7 @@ export const appSettings = pgTable("app_settings", {
 	updatedAt: timestamp("updated_at", { withTimezone: true })
 		.notNull()
 		.defaultNow(),
-	updatedBy: text("updated_by").references(() => user.id, { onDelete: "set null" }),
+	updatedBy: text("updated_by").references(() => user.id, {
+		onDelete: "set null",
+	}),
 })

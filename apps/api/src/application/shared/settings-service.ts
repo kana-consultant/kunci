@@ -72,9 +72,12 @@ export class SettingsService {
 		return setting
 	}
 
-	async setBulk(entries: Array<{ key: string; value: any }>, updatedBy?: string): Promise<void> {
+	async setBulk(
+		entries: Array<{ key: string; value: any }>,
+		updatedBy?: string,
+	): Promise<void> {
 		const validEntries = []
-		
+
 		for (const entry of entries) {
 			const exists = await this.repository.get(entry.key)
 			if (exists) {
@@ -108,7 +111,9 @@ export class SettingsService {
 	async getByCategory(category: string): Promise<Setting[]> {
 		// We get DB settings and merge with defaults for UI
 		const dbSettings = await this.repository.getByCategory(category)
-		const defaultSettings = DEFAULT_SETTINGS.filter((s) => s.category === category)
+		const defaultSettings = DEFAULT_SETTINGS.filter(
+			(s) => s.category === category,
+		)
 
 		const merged = [...dbSettings]
 

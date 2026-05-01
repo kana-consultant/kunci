@@ -6,9 +6,11 @@ import { protectedProcedure } from "#/presentation/orpc/middleware"
 export const campaignRouter = os.$context<ORPCContext>().router({
 	getStats: protectedProcedure
 		.input(
-			z.object({
-				period: z.enum(["7d", "30d", "all"]).default("all"),
-			}).optional(),
+			z
+				.object({
+					period: z.enum(["7d", "30d", "all"]).default("all"),
+				})
+				.optional(),
 		)
 		.output(
 			z.object({
@@ -41,9 +43,11 @@ export const campaignRouter = os.$context<ORPCContext>().router({
 
 	getStageDistribution: protectedProcedure
 		.input(
-			z.object({
-				period: z.enum(["7d", "30d", "all"]).default("all"),
-			}).optional(),
+			z
+				.object({
+					period: z.enum(["7d", "30d", "all"]).default("all"),
+				})
+				.optional(),
 		)
 		.output(
 			z.array(

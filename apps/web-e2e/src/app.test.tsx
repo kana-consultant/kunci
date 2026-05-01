@@ -1,10 +1,10 @@
-import { describe, expect, it, vi } from "vitest"
 import { render, screen } from "@testing-library/react"
+import { describe, expect, it, vi } from "vitest"
 import "@testing-library/jest-dom"
-import React from "react"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import { LoginPage } from "~/routes/auth/login"
+import type React from "react"
 import { CapturePage } from "~/routes/_authenticated/capture"
+import { LoginPage } from "~/routes/auth/login"
 
 // ── Mocks ───────────────────────────────────────────────────────────────────
 
@@ -73,9 +73,7 @@ describe("web-e2e", () => {
 		expect(screen.getByLabelText(/Email Address/i)).toBeInTheDocument()
 		expect(screen.getByLabelText(/Password/i)).toBeInTheDocument()
 		// Check for the submit button
-		expect(
-			screen.getByRole("button", { name: /Sign In/i }),
-		).toBeInTheDocument()
+		expect(screen.getByRole("button", { name: /Sign In/i })).toBeInTheDocument()
 	})
 
 	it("should render lead capture page with all required fields", () => {
@@ -98,11 +96,13 @@ describe("web-e2e", () => {
 
 	it("should show validation errors when fields are empty", async () => {
 		// This test would ideally use userEvent to trigger validation
-		// but since we are mocking the logic or using the real hook, 
+		// but since we are mocking the logic or using the real hook,
 		// we verify the structure is sound.
 		render(<CapturePage />, { wrapper: Wrapper })
-		
-		const submitButton = screen.getByRole("button", { name: /Capture & Run Pipeline/i })
+
+		const submitButton = screen.getByRole("button", {
+			name: /Capture & Run Pipeline/i,
+		})
 		expect(submitButton).toBeInTheDocument()
 	})
 })

@@ -70,7 +70,9 @@ export const columns: ColumnDef<Lead>[] = [
 					className="flex min-w-48 flex-col gap-0.5 rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
 				>
 					<span className="font-medium">{lead.fullName}</span>
-					<span className="text-muted-foreground">{lead.email}</span>
+					<span style={{ color: "var(--color-muted-foreground)" }}>
+						{lead.email}
+					</span>
 				</Link>
 			)
 		},
@@ -90,13 +92,17 @@ export const columns: ColumnDef<Lead>[] = [
 							href={lead.companyWebsite}
 							target="_blank"
 							rel="noreferrer"
-							className="relative z-10 text-sm text-primary underline-offset-4 hover:underline"
+							className="relative z-10 text-sm underline-offset-4 hover:underline"
+							style={{ color: "var(--color-primary)" }}
 							onClick={(e) => e.stopPropagation()}
 						>
 							{lead.companyWebsite?.replace(/^https?:\/\//, "")}
 						</a>
 						{lead.leadSource && (
-							<span className="text-xs text-muted-foreground">
+							<span
+								className="text-xs"
+								style={{ color: "var(--color-muted-foreground)" }}
+							>
 								Source: {lead.leadSource}
 							</span>
 						)}
@@ -140,7 +146,10 @@ export const columns: ColumnDef<Lead>[] = [
 		),
 		cell: ({ row }) => {
 			return (
-				<span className="whitespace-nowrap text-muted-foreground">
+				<span
+					className="whitespace-nowrap tabular-nums"
+					style={{ color: "var(--color-muted-foreground)" }}
+				>
 					{dateFormatter.format(new Date(row.getValue("createdAt")))}
 				</span>
 			)

@@ -3,6 +3,7 @@
  * Implements AIService port using fetch() → OpenRouter API
  */
 
+import type { SettingsService } from "#/application/shared/settings-service.ts"
 import type { BehaviorAnalysis } from "#/domain/behavior-analysis/behavior-analysis.ts"
 import type { Lead } from "#/domain/lead/lead.ts"
 import type {
@@ -10,7 +11,6 @@ import type {
 	CompanyDataInput,
 	EmailTemplateInput,
 } from "#/domain/ports/ai-service.ts"
-
 import {
 	analyzeBehavior,
 	analyzeWebsite,
@@ -22,8 +22,6 @@ import {
 	personalizeReply,
 	pickSubjectLine,
 } from "./generators.ts"
-
-import type { SettingsService } from "#/application/shared/settings-service.ts"
 
 export interface OpenRouterConfig {
 	apiKey: string
@@ -40,10 +38,8 @@ export function createOpenRouterService(config: OpenRouterConfig): AIService {
 		analyzeBehavior: (lead: Lead, companyProfile: string) =>
 			analyzeBehavior(apiKey, config.settings, lead, companyProfile),
 
-		generateEmailSequence: (
-			lead: Lead,
-			analysis: BehaviorAnalysis,
-		) => generateEmailSequence(apiKey, config.settings, lead, analysis),
+		generateEmailSequence: (lead: Lead, analysis: BehaviorAnalysis) =>
+			generateEmailSequence(apiKey, config.settings, lead, analysis),
 
 		analyzeWebsite: (websiteMarkdown: string) =>
 			analyzeWebsite(apiKey, config.settings, websiteMarkdown),
@@ -51,7 +47,8 @@ export function createOpenRouterService(config: OpenRouterConfig): AIService {
 		buildCompanyProfile: (data: CompanyDataInput) =>
 			buildCompanyProfile(apiKey, config.settings, data),
 
-		convertToHtml: (content: string) => convertToHtml(apiKey, config.settings, content),
+		convertToHtml: (content: string) =>
+			convertToHtml(apiKey, config.settings, content),
 
 		personalizeReply: (
 			lead: Lead,

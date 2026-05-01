@@ -2,7 +2,6 @@ import {
 	Button,
 	Card,
 	CardContent,
-	CardDescription,
 	CardFooter,
 	CardHeader,
 	CardTitle,
@@ -22,17 +21,26 @@ export function CapturePage() {
 	// Success state — show confirmation while redirecting
 	if (successMessage) {
 		return (
-			<div className="max-w-2xl mx-auto">
-				<Card>
+			<div className="space-y-6">
+				<Card className="max-w-2xl">
 					<CardContent className="p-12 text-center space-y-4">
-						<div className="mx-auto w-16 h-16 rounded-full bg-[var(--color-success-muted)] flex items-center justify-center">
-							<CheckCircle2 className="w-8 h-8 text-[var(--color-success)]" />
+						<div
+							className="mx-auto w-16 h-16 rounded-full flex items-center justify-center"
+							style={{ background: "var(--color-success-muted)" }}
+						>
+							<CheckCircle2
+								className="w-8 h-8"
+								style={{ color: "var(--color-success)" }}
+							/>
 						</div>
 						<h2 className="text-xl font-semibold">Lead Captured!</h2>
-						<p className="text-[var(--color-muted-foreground)]">
+						<p style={{ color: "var(--color-muted-foreground)" }}>
 							{successMessage}
 						</p>
-						<p className="text-sm text-[var(--color-muted-foreground)]">
+						<p
+							className="text-sm"
+							style={{ color: "var(--color-muted-foreground)" }}
+						>
 							Redirecting to leads...
 						</p>
 					</CardContent>
@@ -42,10 +50,13 @@ export function CapturePage() {
 	}
 
 	return (
-		<div className="max-w-2xl mx-auto">
-			<div className="mb-6">
-				<h1 className="text-2xl font-bold">Add New Lead</h1>
-				<p className="text-sm text-[var(--color-muted-foreground)] mt-1">
+		<div className="space-y-6">
+			<div>
+				<h1 className="text-2xl font-bold tracking-tight">Add New Lead</h1>
+				<p
+					className="text-sm mt-1"
+					style={{ color: "var(--color-muted-foreground)" }}
+				>
 					The AI pipeline will automatically research, analyze, and generate a
 					personalized email sequence.
 				</p>
@@ -58,12 +69,15 @@ export function CapturePage() {
 					form.handleSubmit()
 				}}
 			>
-				<Card>
+				<Card className="max-w-2xl">
 					<CardHeader>
 						<CardTitle>Lead Information</CardTitle>
-						<CardDescription>
+						<p
+							className="text-sm"
+							style={{ color: "var(--color-muted-foreground)" }}
+						>
 							Fill in the lead's details. Required fields are marked.
-						</CardDescription>
+						</p>
 					</CardHeader>
 
 					<CardContent className="space-y-6">
@@ -170,13 +184,23 @@ export function CapturePage() {
 						</form.AppField>
 
 						{error && (
-							<div className="p-3 text-sm bg-[var(--color-danger-muted)] text-[var(--color-danger)] rounded-lg border border-[var(--color-danger)]">
+							<div
+								className="p-3 text-sm rounded-xl border"
+								style={{
+									background: "var(--color-danger-muted)",
+									color: "var(--color-danger)",
+									borderColor: "var(--color-danger)",
+								}}
+							>
 								{(error as any)?.message || "Failed to capture lead"}
 							</div>
 						)}
 					</CardContent>
 
-					<CardFooter className="flex justify-end gap-3 border-t p-6 bg-[var(--color-muted-subtle)]">
+					<CardFooter
+						className="flex justify-end gap-3 border-t p-6"
+						style={{ background: "var(--color-surface-alt)" }}
+					>
 						<Button
 							type="button"
 							variant="ghost"
@@ -185,9 +209,7 @@ export function CapturePage() {
 							Cancel
 						</Button>
 						<form.AppForm>
-							<form.SubmitButton
-								leadingIcon={<Sparkles className="w-4 h-4" />}
-							>
+							<form.SubmitButton leadingIcon={<Sparkles className="w-4 h-4" />}>
 								Capture & Run Pipeline
 							</form.SubmitButton>
 						</form.AppForm>
@@ -197,4 +219,3 @@ export function CapturePage() {
 		</div>
 	)
 }
-

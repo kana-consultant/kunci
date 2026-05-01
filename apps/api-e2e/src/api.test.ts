@@ -1,6 +1,6 @@
-import { describe, expect, it, beforeAll, afterAll, afterEach } from "vitest"
+import { HttpResponse, http } from "msw"
 import { setupServer } from "msw/node"
-import { http, HttpResponse } from "msw"
+import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest"
 import { createServerApp } from "../../api/src/app.ts"
 
 // ── Mock Setup ──────────────────────────────────────────────────────────────
@@ -44,28 +44,30 @@ describe("api-e2e", () => {
 		expect(data.status).toBe("ok")
 
 		const resReady = await app.request("/ready")
-		// Should return 200 even if redis is down if we don't throw, but 
+		// Should return 200 even if redis is down if we don't throw, but
 		// we check if it responds
 		expect(resReady.status).toBeDefined()
 	})
 
 	it("should handle lead capture workflow through oRPC", async () => {
 		const { app } = await createServerApp()
-		
+
 		// Simulate oRPC call to /rpc/lead/capture using a real Request object
-		const res = await app.request(new Request(`${API_URL}/rpc/lead/capture`, {
-			method: "POST",
-			headers: {
-				"Content-Type": "application/json",
-			},
-			body: JSON.stringify({
-				fullName: "Test Lead",
-				email: "lead@test.com",
-				companyName: "Test Co",
-				companyWebsite: "https://test.com",
-				painPoints: "Need more automation",
+		const res = await app.request(
+			new Request(`${API_URL}/rpc/lead/capture`, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({
+					fullName: "Test Lead",
+					email: "lead@test.com",
+					companyName: "Test Co",
+					companyWebsite: "https://test.com",
+					painPoints: "Need more automation",
+				}),
 			}),
-		}))
+		)
 
 		// Should be 200 if lead is captured and pipeline starts
 		if (res.status !== 200) {
@@ -78,7 +80,7 @@ describe("api-e2e", () => {
 
 	it("should handle resend webhook for reply handling", async () => {
 		const { app } = await createServerApp()
-		
+
 		// Simulate Resend Webhook payload
 		const res = await app.request("/webhooks/resend", {
 			method: "POST",

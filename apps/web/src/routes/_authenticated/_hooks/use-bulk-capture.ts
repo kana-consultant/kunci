@@ -88,7 +88,12 @@ export function parseCSV(csvText: string): {
 		}
 
 		// Validate required fields
-		if (!row.fullName || !row.email || !row.companyName || !row.companyWebsite) {
+		if (
+			!row.fullName ||
+			!row.email ||
+			!row.companyName ||
+			!row.companyWebsite
+		) {
 			errors.push(`Row ${i + 1}: Missing required fields`)
 			continue
 		}

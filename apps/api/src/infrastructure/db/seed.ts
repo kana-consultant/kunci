@@ -2,7 +2,7 @@ import { eq } from "drizzle-orm"
 import { auth } from "../auth/better-auth.ts"
 import { env } from "../config/env.ts"
 import { db, pgClient } from "./client.ts"
-import { user, appSettings } from "./schema.ts"
+import { appSettings, user } from "./schema.ts"
 import { DEFAULT_SETTINGS } from "./seed-settings.ts"
 
 async function seed() {

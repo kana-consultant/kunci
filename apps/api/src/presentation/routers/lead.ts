@@ -31,13 +31,11 @@ export const leadRouter = os.$context<ORPCContext>().router({
 			const lead = await context.useCases.lead.capture(input)
 
 			// Phase 2: Fire-and-forget — run the rest of the pipeline in the background
-			context.useCases.pipeline
-				.runOutboundForExistingLead(lead)
-				.catch(() => {
-					context.useCases.lead
-						.updateStatus(lead.id, "research_failed")
-						.catch(() => {})
-				})
+			context.useCases.pipeline.runOutboundForExistingLead(lead).catch(() => {
+				context.useCases.lead
+					.updateStatus(lead.id, "research_failed")
+					.catch(() => {})
+			})
 
 			return { leadId: lead.id, status: "pipeline_started" }
 		}),

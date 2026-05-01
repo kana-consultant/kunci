@@ -1,8 +1,8 @@
 import { dirname, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
-import { defineConfig } from "vitest/config"
 import react from "@vitejs/plugin-react"
 import tsconfigPaths from "vite-tsconfig-paths"
+import { defineConfig } from "vitest/config"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
@@ -20,6 +20,6 @@ export default defineConfig({
 			SENDER_EMAIL: "noreply@test.com",
 			BETTER_AUTH_SECRET: "secret-mock",
 			REDIS_URL: "redis://127.0.0.1:6379",
-		}
+		},
 	},
 })

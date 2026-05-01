@@ -1,14 +1,14 @@
 import { readFileSync } from "node:fs"
 import { dirname, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
+import { serveStatic } from "@hono/node-server/serve-static"
 import { onError } from "@orpc/server"
 import { RPCHandler } from "@orpc/server/fetch"
 import { Hono } from "hono"
 import { cors } from "hono/cors"
 import { requestId } from "hono/request-id"
-import { serveStatic } from "@hono/node-server/serve-static"
 import { z } from "zod"
-
+import { SettingsService } from "./application/shared/settings-service.ts"
 import { buildUseCases } from "./application/use-cases.ts"
 import { createOpenRouterService } from "./infrastructure/ai/openrouter-service.ts"
 import { auth } from "./infrastructure/auth/better-auth.ts"
@@ -24,7 +24,6 @@ import { createMxVerifier } from "./infrastructure/email-verification/mx-verifie
 import { logger } from "./infrastructure/observability/logger.ts"
 import { createDeepcrawlService } from "./infrastructure/scraper/deepcrawl-service.ts"
 import { appRouter } from "./presentation/routers/index.ts"
-import { SettingsService } from "./application/shared/settings-service.ts"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
@@ -62,7 +61,10 @@ export async function createServerApp() {
 	const services = {
 		emailVerifier: createMxVerifier(),
 		scraper: createDeepcrawlService({ apiKey: env.DEEPCRAWL_API_KEY }),
-		ai: createOpenRouterService({ apiKey: env.OPENROUTER_API_KEY, settings: settingsService }),
+		ai: createOpenRouterService({
+			apiKey: env.OPENROUTER_API_KEY,
+			settings: settingsService,
+		}),
 		email: createResendService({
 			apiKey: env.RESEND_API_KEY,
 			senderEmail: env.SENDER_EMAIL,
@@ -239,10 +241,7 @@ export async function createServerApp() {
 
 	// Serve frontend SPA (must be last — after all API routes)
 	if (env.WEB_DIST_PATH) {
-		app.use(
-			"*",
-			serveStatic({ root: env.WEB_DIST_PATH }),
-		)
+		app.use("*", serveStatic({ root: env.WEB_DIST_PATH }))
 		// SPA fallback: any unmatched route → index.html (for client-side routing)
 		app.get("*", serveStatic({ root: env.WEB_DIST_PATH, path: "index.html" }))
 	}

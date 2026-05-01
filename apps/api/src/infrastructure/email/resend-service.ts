@@ -47,13 +47,24 @@ export function createResendService(config: ResendConfig): EmailService {
 
 					if (error) {
 						lastError = error
-						logger.warn({ error, attempt, to: params.to }, "Resend send attempt failed")
-						if (attempt < 3) await new Promise(resolve => setTimeout(resolve, 2000 * attempt))
+						logger.warn(
+							{ error, attempt, to: params.to },
+							"Resend send attempt failed",
+						)
+						if (attempt < 3)
+							await new Promise((resolve) =>
+								setTimeout(resolve, 2000 * attempt),
+							)
 						continue
 					}
 
 					logger.info(
-						{ messageId: data!.id, to: params.to, stage: params.stage, attempt },
+						{
+							messageId: data!.id,
+							to: params.to,
+							stage: params.stage,
+							attempt,
+						},
 						"Email sent",
 					)
 
@@ -63,12 +74,19 @@ export function createResendService(config: ResendConfig): EmailService {
 					}
 				} catch (err) {
 					lastError = err
-					logger.warn({ err, attempt, to: params.to }, "Resend send threw an exception")
-					if (attempt < 3) await new Promise(resolve => setTimeout(resolve, 2000 * attempt))
+					logger.warn(
+						{ err, attempt, to: params.to },
+						"Resend send threw an exception",
+					)
+					if (attempt < 3)
+						await new Promise((resolve) => setTimeout(resolve, 2000 * attempt))
 				}
 			}
 
-			logger.error({ error: lastError, to: params.to }, "Resend send failed after 3 attempts")
+			logger.error(
+				{ error: lastError, to: params.to },
+				"Resend send failed after 3 attempts",
+			)
 			throw new Error(`Resend error: ${lastError?.message || "Unknown error"}`)
 		},
 
@@ -89,9 +107,10 @@ export function createResendService(config: ResendConfig): EmailService {
 							html: params.html,
 							headers: {
 								"In-Reply-To": params.originalMessageId,
-								References: [...params.previousRefs, params.originalMessageId].join(
-									" ",
-								),
+								References: [
+									...params.previousRefs,
+									params.originalMessageId,
+								].join(" "),
 							},
 							tags: [
 								{ name: "lead_id", value: params.leadId },
@@ -106,13 +125,24 @@ export function createResendService(config: ResendConfig): EmailService {
 
 					if (error) {
 						lastError = error
-						logger.warn({ error, attempt, to: params.to }, "Resend reply attempt failed")
-						if (attempt < 3) await new Promise(resolve => setTimeout(resolve, 2000 * attempt))
+						logger.warn(
+							{ error, attempt, to: params.to },
+							"Resend reply attempt failed",
+						)
+						if (attempt < 3)
+							await new Promise((resolve) =>
+								setTimeout(resolve, 2000 * attempt),
+							)
 						continue
 					}
 
 					logger.info(
-						{ messageId: data!.id, to: params.to, stage: params.stage, attempt },
+						{
+							messageId: data!.id,
+							to: params.to,
+							stage: params.stage,
+							attempt,
+						},
 						"Reply sent in thread",
 					)
 
@@ -122,13 +152,22 @@ export function createResendService(config: ResendConfig): EmailService {
 					}
 				} catch (err) {
 					lastError = err
-					logger.warn({ err, attempt, to: params.to }, "Resend reply threw an exception")
-					if (attempt < 3) await new Promise(resolve => setTimeout(resolve, 2000 * attempt))
+					logger.warn(
+						{ err, attempt, to: params.to },
+						"Resend reply threw an exception",
+					)
+					if (attempt < 3)
+						await new Promise((resolve) => setTimeout(resolve, 2000 * attempt))
 				}
 			}
 
-			logger.error({ error: lastError, to: params.to }, "Resend reply failed after 3 attempts")
-			throw new Error(`Resend reply error: ${lastError?.message || "Unknown error"}`)
+			logger.error(
+				{ error: lastError, to: params.to },
+				"Resend reply failed after 3 attempts",
+			)
+			throw new Error(
+				`Resend reply error: ${lastError?.message || "Unknown error"}`,
+			)
 		},
 
 		async getReceivedEmail(emailId: string) {
