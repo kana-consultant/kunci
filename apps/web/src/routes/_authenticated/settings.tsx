@@ -21,6 +21,7 @@ import { createFileRoute } from "@tanstack/react-router"
 import { Loader2, Save, Settings as SettingsIcon } from "lucide-react"
 import { useEffect, useState } from "react"
 import { orpc, orpcClient } from "~/libs/orpc/client"
+import { OfferingsEditor } from "~/components/offerings-editor"
 
 export const Route = createFileRoute("/_authenticated/settings")({
 	component: SettingsPage,
@@ -167,6 +168,16 @@ function SettingsPage() {
 										setFormState((prev) => ({
 											...prev,
 											[setting.key]: parseFloat(e.target.value),
+										}))
+									}
+								/>
+							) : setting.valueType === "json" ? (
+								<OfferingsEditor
+									value={formState[setting.key] ?? []}
+									onChange={(newValue) =>
+										setFormState((prev) => ({
+											...prev,
+											[setting.key]: newValue,
 										}))
 									}
 								/>

@@ -80,10 +80,6 @@ export async function createServerApp() {
 		services,
 		tracker,
 		logger,
-		config: {
-			senderName: env.SENDER_NAME,
-			senderCompany: env.SENDER_COMPANY,
-		},
 	})
 
 	// 3. Setup oRPC
