@@ -6,7 +6,7 @@ import type {
 	WebsiteAnalysis,
 } from "#/domain/ports/ai-service.ts"
 import { SETTING_KEYS } from "#/domain/settings/setting-keys.ts"
-import { callOpenRouter } from "./client.ts"
+import { callOpenRouterQueued } from "./queue.ts"
 import { PromptLoader } from "./prompt-loader.ts"
 
 export async function analyzeBehavior(
@@ -26,7 +26,7 @@ export async function analyzeBehavior(
 		3,
 	)
 
-	const result = await callOpenRouter<
+	const result = await callOpenRouterQueued<
 		Omit<BehaviorAnalysis, "id" | "leadId" | "createdAt">
 	>(
 		apiKey,
@@ -94,7 +94,7 @@ export async function analyzeWebsite(
 		15000,
 	)
 
-	return callOpenRouter<WebsiteAnalysis>(
+	return callOpenRouterQueued<WebsiteAnalysis>(
 		apiKey,
 		{
 			model,
@@ -156,7 +156,7 @@ export async function buildCompanyProfile(
 		10000,
 	)
 
-	return callOpenRouter<string>(
+	return callOpenRouterQueued<string>(
 		apiKey,
 		{
 			model,
