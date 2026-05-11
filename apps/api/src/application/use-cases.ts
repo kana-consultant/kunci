@@ -1,10 +1,12 @@
 import type { EmailSequenceRepository } from "#/domain/email-sequence/email-sequence-repository.ts"
+import { isReplyStatus, type ReplyStatus } from "#/domain/lead/lead.ts"
 import type { LeadRepository } from "#/domain/lead/lead-repository.ts"
 import type { AIService } from "#/domain/ports/ai-service.ts"
 import type { Cache } from "#/domain/ports/cache.ts"
 import type { EmailService } from "#/domain/ports/email-service.ts"
 import type { EmailVerifier } from "#/domain/ports/email-verifier.ts"
 import type { Logger } from "#/domain/ports/logger.ts"
+import type { NotificationService } from "#/domain/ports/notification-service.ts"
 import type { PipelineTracker } from "#/domain/ports/pipeline-tracker.ts"
 import type { ScraperService } from "#/domain/ports/scraper-service.ts"
 import { makeHandleReplyUseCase } from "./email/handle-reply.ts"
@@ -39,6 +41,7 @@ export interface AppDependencies {
 		email: EmailService
 		cache: Cache
 		settings: SettingsService
+		notifier: NotificationService
 	}
 	tracker: PipelineTracker
 	logger: Logger
@@ -52,6 +55,7 @@ export function buildUseCases(deps: AppDependencies) {
 		leadRepo: deps.repos.lead,
 		emailVerifier: deps.services.emailVerifier,
 		logger,
+		notifier: deps.services.notifier,
 	})
 	const bulkCaptureLead = makeBulkCaptureLeadUseCase({
 		leadRepo: deps.repos.lead,
@@ -147,8 +151,11 @@ export function buildUseCases(deps: AppDependencies) {
 				deps.repos.lead.getStageDistribution(period),
 			getRecentActivity: async (limit: number) =>
 				deps.tracker.getRecentActivity(limit),
-			updateStatus: async (id: string, status: string) => {
-				await deps.repos.lead.update(id, { replyStatus: status as any })
+			updateStatus: async (id: string, status: ReplyStatus) => {
+				if (!isReplyStatus(status)) {
+					throw new Error(`Invalid replyStatus: ${status}`)
+				}
+				await deps.repos.lead.update(id, { replyStatus: status })
 			},
 		},
 		research: {

@@ -44,6 +44,7 @@ export async function generateEmailSequence(
 					role: "user",
 					content: `Lead: ${lead.fullName} at ${lead.companyName}
 ${businessContextStr}
+LinkedIn: ${lead.linkedinUrl ?? "Not provided"}
 Behavioral Profile: ${analysis.behavioralProfile}
 Pain Points: ${analysis.painPoints}
 Journey Stage: ${analysis.journeyStage}

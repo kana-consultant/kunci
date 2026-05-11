@@ -89,4 +89,40 @@ describe("handleReply", () => {
 			expect.objectContaining({ stage: 2, replyStatus: "awaiting" }),
 		)
 	})
+
+	it("throws AppError when lead has null latestMessageId", async () => {
+		const lead = {
+			id: "lead-2",
+			email: "test@test.com",
+			stage: 1,
+			replyStatus: "pending",
+			latestMessageId: null,
+			messageIds: [],
+		}
+		const sequence = {
+			id: "seq-2",
+			content: "Follow up content",
+			cta: "Book a call",
+			psychologicalTrigger: "Scarcity",
+		}
+
+		mockDeps.leadRepo.findByEmail.mockResolvedValue(lead)
+		mockDeps.sequenceRepo.getByStage.mockResolvedValue(sequence)
+		mockDeps.ai.personalizeReply.mockResolvedValue({
+			subject: "Re: Hello",
+			content: "Personalized content",
+		})
+		mockDeps.ai.convertToHtml.mockResolvedValue("<p>Content</p>")
+
+		const handleReply = makeHandleReplyUseCase(mockDeps as any)
+
+		await expect(
+			handleReply({
+				fromEmail: "test@test.com",
+				subject: "Re: Hello",
+				textBody: "Interested",
+				messageId: "msg-new",
+			}),
+		).rejects.toMatchObject({ code: "INTERNAL_ERROR" })
+	})
 })

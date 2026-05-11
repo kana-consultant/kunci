@@ -21,6 +21,8 @@ import { createPipelineStepRepository } from "./infrastructure/db/repositories/p
 import { createSettingsRepository } from "./infrastructure/db/repositories/settings-repository.ts"
 import { createResendService } from "./infrastructure/email/resend-service.ts"
 import { createMxVerifier } from "./infrastructure/email-verification/mx-verifier.ts"
+import { createNoopNotificationService } from "./infrastructure/notification/noop-service.ts"
+import { createSlackNotificationService } from "./infrastructure/notification/slack-service.ts"
 import { logger } from "./infrastructure/observability/logger.ts"
 import { createDeepcrawlService } from "./infrastructure/scraper/deepcrawl-service.ts"
 import { appRouter } from "./presentation/routers/index.ts"
@@ -72,6 +74,9 @@ export async function createServerApp() {
 		}),
 		cache,
 		settings: settingsService,
+		notifier: env.SLACK_WEBHOOK_URL
+			? createSlackNotificationService(env.SLACK_WEBHOOK_URL)
+			: createNoopNotificationService(),
 	}
 
 	const tracker = createPipelineStepRepository(db)
@@ -138,6 +143,10 @@ export async function createServerApp() {
 		try {
 			const payload = await c.req.text()
 			const webhookSecret = env.RESEND_WEBHOOK_SECRET
+
+			if (!webhookSecret && env.NODE_ENV === "production") {
+				return c.json({ error: "webhook_not_configured" }, 503)
+			}
 
 			let event: any
 
@@ -220,7 +229,7 @@ export async function createServerApp() {
 			}
 
 			return c.json({ received: true })
-		} catch (error) {
+		} catch (_error) {
 			return c.json({ error: "Invalid webhook payload" }, 400)
 		}
 	})
@@ -233,6 +242,7 @@ export async function createServerApp() {
 				headers: c.req.raw.headers,
 				session: null,
 				useCases,
+				requestId: c.get("requestId") ?? "",
 			},
 		})
 		if (matched) return c.newResponse(response.body, response)

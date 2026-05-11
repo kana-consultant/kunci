@@ -1,27 +1,39 @@
 import { z } from "zod"
 
-const envSchema = z.object({
-	DATABASE_URL: z.string().min(1, "DATABASE_URL is required"),
-	REDIS_URL: z.string().default("redis://127.0.0.1:6379"),
-	OPENROUTER_API_KEY: z.string().min(1, "OPENROUTER_API_KEY is required"),
-	RESEND_API_KEY: z.string().min(1, "RESEND_API_KEY is required"),
-	RESEND_WEBHOOK_SECRET: z.string().optional(),
-	DEEPCRAWL_API_KEY: z.string().min(1, "DEEPCRAWL_API_KEY is required"),
-	SENDER_EMAIL: z.string().email("SENDER_EMAIL must be a valid email"),
-	SENDER_NAME: z.string().default("KUNCI AI SDR"),
-	SENDER_COMPANY: z.string().default("KUNCI.AI"),
-	PORT: z.coerce.number().int().positive().default(3001),
-	WEB_ORIGIN: z.string().url().default("http://localhost:3000"),
-	WEB_DIST_PATH: z.string().optional(),
-	NODE_ENV: z
-		.enum(["development", "production", "test"])
-		.default("development"),
-	API_KEY: z.string().optional(),
-	ADMIN_USER: z.string().default("admin"),
-	ADMIN_PASS: z.string().optional(),
-	BETTER_AUTH_SECRET: z.string().min(1, "BETTER_AUTH_SECRET is required"),
-	BETTER_AUTH_URL: z.string().url().optional(),
-})
+const envSchema = z
+	.object({
+		DATABASE_URL: z.string().min(1, "DATABASE_URL is required"),
+		REDIS_URL: z.string().default("redis://127.0.0.1:6379"),
+		OPENROUTER_API_KEY: z.string().min(1, "OPENROUTER_API_KEY is required"),
+		OPENROUTER_MAX_CONCURRENCY: z.coerce.number().int().positive().default(3),
+		RESEND_API_KEY: z.string().min(1, "RESEND_API_KEY is required"),
+		RESEND_WEBHOOK_SECRET: z.string().optional(),
+		DEEPCRAWL_API_KEY: z.string().min(1, "DEEPCRAWL_API_KEY is required"),
+		SENDER_EMAIL: z.string().email("SENDER_EMAIL must be a valid email"),
+		SENDER_NAME: z.string().default("KUNCI AI SDR"),
+		SENDER_COMPANY: z.string().default("KUNCI.AI"),
+		PORT: z.coerce.number().int().positive().default(3001),
+		WEB_ORIGIN: z.string().url().default("http://localhost:3000"),
+		WEB_DIST_PATH: z.string().optional(),
+		NODE_ENV: z
+			.enum(["development", "production", "test"])
+			.default("development"),
+		API_KEY: z.string().optional(),
+		ADMIN_USER: z.string().default("admin"),
+		ADMIN_PASS: z.string().optional(),
+		BETTER_AUTH_SECRET: z.string().min(1, "BETTER_AUTH_SECRET is required"),
+		BETTER_AUTH_URL: z.string().url().optional(),
+		SLACK_WEBHOOK_URL: z.string().url().optional(),
+	})
+	.superRefine((data, ctx) => {
+		if (data.NODE_ENV === "production" && !data.RESEND_WEBHOOK_SECRET) {
+			ctx.addIssue({
+				code: z.ZodIssueCode.custom,
+				message: "RESEND_WEBHOOK_SECRET is required in production",
+				path: ["RESEND_WEBHOOK_SECRET"],
+			})
+		}
+	})
 
 export type Env = z.infer<typeof envSchema>
 

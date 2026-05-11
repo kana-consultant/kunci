@@ -3,11 +3,13 @@ import type { CreateLeadInput, Lead } from "#/domain/lead/lead.ts"
 import type { LeadRepository } from "#/domain/lead/lead-repository.ts"
 import type { EmailVerifier } from "#/domain/ports/email-verifier.ts"
 import type { Logger } from "#/domain/ports/logger.ts"
+import type { NotificationService } from "#/domain/ports/notification-service.ts"
 
 interface CaptureLeadDeps {
 	leadRepo: LeadRepository
 	emailVerifier: EmailVerifier
 	logger: Logger
+	notifier?: NotificationService
 }
 
 export function makeCaptureLeadUseCase(deps: CaptureLeadDeps) {
@@ -21,6 +23,13 @@ export function makeCaptureLeadUseCase(deps: CaptureLeadDeps) {
 		// 2. Verify email via DNS MX
 		const verification = await deps.emailVerifier.verify(input.email)
 		if (!verification.valid) {
+			deps.notifier
+				?.send({
+					type: "lead.email_invalid",
+					email: input.email,
+					reason: verification.reason ?? "invalid",
+				})
+				.catch(() => {})
 			throw badRequest(`Invalid email: ${verification.reason}`)
 		}
 

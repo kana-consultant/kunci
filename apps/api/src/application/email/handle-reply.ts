@@ -1,3 +1,4 @@
+import { AppError } from "#/application/shared/errors.ts"
 import type { EmailSequenceRepository } from "#/domain/email-sequence/email-sequence-repository.ts"
 import type { LeadRepository } from "#/domain/lead/lead-repository.ts"
 import type { AIService } from "#/domain/ports/ai-service.ts"
@@ -86,11 +87,17 @@ export function makeHandleReplyUseCase(deps: HandleReplyDependencies) {
 			const htmlContent = await deps.ai.convertToHtml(personalized.content)
 
 			// 5. Send reply via Resend (in the existing email thread)
+			if (!lead.latestMessageId) {
+				throw new AppError(
+					"INTERNAL_ERROR",
+					`Lead ${lead.id} has no latestMessageId; cannot thread reply`,
+				)
+			}
 			const result = await deps.emailService.replyInThread({
 				to: lead.email,
 				subject: personalized.subject,
 				html: htmlContent,
-				originalMessageId: lead.latestMessageId!,
+				originalMessageId: lead.latestMessageId,
 				previousRefs: lead.messageIds,
 				leadId: lead.id,
 				stage: (lead.stage + 1) as 1 | 2 | 3,
