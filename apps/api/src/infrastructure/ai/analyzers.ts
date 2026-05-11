@@ -5,9 +5,10 @@ import type {
 	CompanyDataInput,
 	WebsiteAnalysis,
 } from "#/domain/ports/ai-service.ts"
+import type { LinkedInProfileContext } from "#/domain/ports/linkedin-service.ts"
 import { SETTING_KEYS } from "#/domain/settings/setting-keys.ts"
-import { callOpenRouterQueued } from "./queue.ts"
 import { PromptLoader } from "./prompt-loader.ts"
+import { callOpenRouterQueued } from "./queue.ts"
 
 export async function analyzeBehavior(
 	apiKey: string,
@@ -164,11 +165,34 @@ export async function buildCompanyProfile(
 				{ role: "system", content: prompt },
 				{
 					role: "user",
-					content: `Website Title: ${data.metadata.title ?? "Unknown"}\nDescription: ${data.metadata.description ?? "N/A"}\n\nBrand: ${data.analysis.brandName}\nIndustry: ${data.analysis.industryCategory}\nOfferings: ${data.analysis.keyOfferings}\nValue Prop: ${data.analysis.valueProposition}\nAudience: ${data.analysis.targetAudience}\n\nWebsite Content:\n${data.websiteMarkdown.slice(0, maxLength)}`,
+					content: `Website Title: ${data.metadata.title ?? "Unknown"}\nDescription: ${data.metadata.description ?? "N/A"}\n\nBrand: ${data.analysis.brandName}\nIndustry: ${data.analysis.industryCategory}\nOfferings: ${data.analysis.keyOfferings}\nValue Prop: ${data.analysis.valueProposition}\nAudience: ${data.analysis.targetAudience}\n\n${formatLinkedInContext(data.linkedinProfile, maxLength)}\n\nWebsite Content:\n${data.websiteMarkdown.slice(0, maxLength)}`,
 				},
 			],
 			temperature,
 		},
 		maxRetries,
 	)
+}
+
+function formatLinkedInContext(
+	linkedinProfile: LinkedInProfileContext | null | undefined,
+	maxLength: number,
+): string {
+	if (!linkedinProfile) {
+		return "LinkedIn Context: Not provided"
+	}
+
+	const metadata = linkedinProfile.metadata
+	const markdown = linkedinProfile.markdown
+		? `\nLinkedIn Content:\n${linkedinProfile.markdown.slice(0, maxLength)}`
+		: ""
+
+	return `LinkedIn Context:
+- Status: ${linkedinProfile.status}
+- URL: ${linkedinProfile.normalizedUrl}
+- Type: ${linkedinProfile.profileType}
+- Public identifier: ${linkedinProfile.publicIdentifier ?? "N/A"}
+- Title: ${metadata?.title ?? "N/A"}
+- Description: ${metadata?.description ?? "N/A"}
+- Note: ${linkedinProfile.reason ?? "N/A"}${markdown}`
 }

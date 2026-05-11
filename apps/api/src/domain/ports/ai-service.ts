@@ -1,6 +1,7 @@
 import type { BehaviorAnalysis } from "#/domain/behavior-analysis/behavior-analysis.ts"
 import type { ReplyIntent } from "#/domain/email-message/email-message.ts"
 import type { Lead } from "#/domain/lead/lead.ts"
+import type { LinkedInProfileContext } from "./linkedin-service.ts"
 
 /**
  * Port for AI/LLM operations.
@@ -93,6 +94,7 @@ export interface CompanyDataInput {
 	websiteMarkdown: string
 	metadata: { title?: string; description?: string }
 	analysis: WebsiteAnalysis
+	linkedinProfile?: LinkedInProfileContext | null
 }
 
 export interface EmailTemplateInput {

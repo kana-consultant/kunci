@@ -49,6 +49,7 @@ vi.mock("#/infrastructure/config/env.ts", () => ({
 		RESEND_API_KEY: "key",
 		RESEND_WEBHOOK_SECRET: undefined,
 		DEEPCRAWL_API_KEY: "key",
+		LINKEDIN_CRAWLING_PERMISSION_CONFIRMED: false,
 		SENDER_EMAIL: "test@test.com",
 		SENDER_NAME: "Test",
 		SENDER_COMPANY: "Test",
@@ -118,6 +119,10 @@ vi.mock("#/infrastructure/email-verification/mx-verifier.ts", () => ({
 
 vi.mock("#/infrastructure/scraper/deepcrawl-service.ts", () => ({
 	createDeepcrawlService: vi.fn(() => ({})),
+}))
+
+vi.mock("#/infrastructure/linkedin/linkedin-service.ts", () => ({
+	createLinkedInService: vi.fn(() => ({})),
 }))
 
 vi.mock("#/infrastructure/notification/noop-service.ts", () => ({

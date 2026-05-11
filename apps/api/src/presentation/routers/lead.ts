@@ -6,6 +6,24 @@ import {
 	publicProcedure,
 } from "#/presentation/orpc/middleware"
 
+function isLinkedInUrl(value: string): boolean {
+	try {
+		const hostname = new URL(value).hostname.toLowerCase()
+		return hostname === "linkedin.com" || hostname.endsWith(".linkedin.com")
+	} catch {
+		return false
+	}
+}
+
+const linkedinUrlSchema = z.preprocess(
+	(value) => (value === "" ? undefined : value),
+	z
+		.string()
+		.url("Valid LinkedIn URL is required")
+		.refine(isLinkedInUrl, "URL must use linkedin.com")
+		.optional(),
+)
+
 const captureLeadSchema = z.object({
 	fullName: z.string().min(1, "Name is required"),
 	email: z.string().email("Valid email is required"),
@@ -13,7 +31,7 @@ const captureLeadSchema = z.object({
 	companyWebsite: z.string().url("Valid website URL is required"),
 	painPoints: z.string().optional(),
 	leadSource: z.string().optional(),
-	linkedinUrl: z.string().url("Valid LinkedIn URL is required").optional(),
+	linkedinUrl: linkedinUrlSchema,
 })
 
 const bulkCaptureLeadSchema = z.object({

@@ -95,6 +95,7 @@ export function makeRunOutboundPipelineUseCase(deps: PipelineDeps) {
 				await deps.tracker.completeStep(scrapeStepId, {
 					url: lead.companyWebsite,
 					hasMarkdown: !!research.rawMarkdown,
+					linkedinStatus: research.linkedinProfile?.status ?? "not_provided",
 				})
 			} catch (error) {
 				const msg = errorMessage(error)
@@ -230,6 +231,7 @@ export function makeRunOutboundForExistingLeadUseCase(
 				await deps.tracker.completeStep(scrapeStepId, {
 					url: lead.companyWebsite,
 					hasMarkdown: !!research.rawMarkdown,
+					linkedinStatus: research.linkedinProfile?.status ?? "not_provided",
 				})
 			} catch (error) {
 				const msg = errorMessage(error)

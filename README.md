@@ -206,6 +206,7 @@ Edit `.env` with your API keys:
 | `SENDER_EMAIL` | Verified sender email address | Yes |
 | `SENDER_NAME` | Sender display name | Yes |
 | `DEEPCRAWL_API_KEY` | [Deepcrawl](https://deepcrawl.com) API key for web scraping | Yes |
+| `LINKEDIN_CRAWLING_PERMISSION_CONFIRMED` | Enables permission-gated LinkedIn crawl attempts. Keep `false` unless LinkedIn has explicitly approved your crawl scope. | Optional |
 | `PORT` | API server port (default: `3001`) | Optional |
 | `WEB_ORIGIN` | Frontend URL for CORS (default: `http://localhost:3000`) | Optional |
 

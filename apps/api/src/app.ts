@@ -22,6 +22,7 @@ import { createPipelineStepRepository } from "./infrastructure/db/repositories/p
 import { createSettingsRepository } from "./infrastructure/db/repositories/settings-repository.ts"
 import { createResendService } from "./infrastructure/email/resend-service.ts"
 import { createMxVerifier } from "./infrastructure/email-verification/mx-verifier.ts"
+import { createLinkedInService } from "./infrastructure/linkedin/linkedin-service.ts"
 import { createNoopNotificationService } from "./infrastructure/notification/noop-service.ts"
 import { createSlackNotificationService } from "./infrastructure/notification/slack-service.ts"
 import {
@@ -64,10 +65,16 @@ export async function createServerApp() {
 	}
 
 	const settingsService = new SettingsService(repos.settings, cache)
+	const scraper = createDeepcrawlService({ apiKey: env.DEEPCRAWL_API_KEY })
 
 	const services = {
 		emailVerifier: createMxVerifier(),
-		scraper: createDeepcrawlService({ apiKey: env.DEEPCRAWL_API_KEY }),
+		scraper,
+		linkedin: createLinkedInService({
+			allowCrawling: env.LINKEDIN_CRAWLING_PERMISSION_CONFIRMED,
+			scraper,
+			logger,
+		}),
 		ai: createOpenRouterService({
 			apiKey: env.OPENROUTER_API_KEY,
 			settings: settingsService,

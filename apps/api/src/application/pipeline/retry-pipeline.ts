@@ -51,6 +51,7 @@ export function makeRetryPipelineUseCase(deps: RetryPipelineDeps) {
 				await deps.tracker.completeStep(scrapeStepId, {
 					url: lead.companyWebsite,
 					hasMarkdown: !!research.rawMarkdown,
+					linkedinStatus: research.linkedinProfile?.status ?? "not_provided",
 				})
 			} catch (error) {
 				const msg = error instanceof Error ? error.message : String(error)

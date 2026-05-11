@@ -6,6 +6,7 @@ import type { AIService } from "#/domain/ports/ai-service.ts"
 import type { Cache } from "#/domain/ports/cache.ts"
 import type { EmailService } from "#/domain/ports/email-service.ts"
 import type { EmailVerifier } from "#/domain/ports/email-verifier.ts"
+import type { LinkedInService } from "#/domain/ports/linkedin-service.ts"
 import type { Logger } from "#/domain/ports/logger.ts"
 import type { NotificationService } from "#/domain/ports/notification-service.ts"
 import type { PipelineTracker } from "#/domain/ports/pipeline-tracker.ts"
@@ -39,6 +40,7 @@ export interface AppDependencies {
 	services: {
 		emailVerifier: EmailVerifier
 		scraper: ScraperService
+		linkedin: LinkedInService
 		ai: AIService
 		email: EmailService
 		cache: Cache
@@ -71,6 +73,7 @@ export function buildUseCases(deps: AppDependencies) {
 	const researchCompany = makeResearchCompanyUseCase({
 		leadRepo: deps.repos.lead,
 		scraper: deps.services.scraper,
+		linkedin: deps.services.linkedin,
 		ai: deps.services.ai,
 		logger,
 	})

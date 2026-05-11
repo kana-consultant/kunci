@@ -9,6 +9,10 @@ const envSchema = z
 		RESEND_API_KEY: z.string().min(1, "RESEND_API_KEY is required"),
 		RESEND_WEBHOOK_SECRET: z.string().optional(),
 		DEEPCRAWL_API_KEY: z.string().min(1, "DEEPCRAWL_API_KEY is required"),
+		LINKEDIN_CRAWLING_PERMISSION_CONFIRMED: z
+			.enum(["true", "false"])
+			.default("false")
+			.transform((value) => value === "true"),
 		SENDER_EMAIL: z.string().email("SENDER_EMAIL must be a valid email"),
 		SENDER_NAME: z.string().default("KUNCI AI SDR"),
 		SENDER_COMPANY: z.string().default("KUNCI.AI"),

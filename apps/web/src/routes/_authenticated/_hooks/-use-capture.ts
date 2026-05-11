@@ -5,6 +5,15 @@ import { useState } from "react"
 import { z } from "zod"
 import { orpc } from "~/libs/orpc/client"
 
+function isLinkedInUrl(value: string): boolean {
+	try {
+		const hostname = new URL(value).hostname.toLowerCase()
+		return hostname === "linkedin.com" || hostname.endsWith(".linkedin.com")
+	} catch {
+		return false
+	}
+}
+
 export const captureFieldSchemas = {
 	fullName: z.string().min(1, "Name is required"),
 	email: z.string().email("Valid email is required"),
@@ -14,6 +23,7 @@ export const captureFieldSchemas = {
 	linkedinUrl: z
 		.string()
 		.url("Valid LinkedIn URL is required")
+		.refine(isLinkedInUrl, "URL must use linkedin.com")
 		.optional()
 		.or(z.literal("")),
 }
@@ -49,6 +59,7 @@ export function useCaptureLogic() {
 		onSubmit: async ({ value }) => {
 			await captureLead({
 				...value,
+				linkedinUrl: value.linkedinUrl?.trim() || undefined,
 				leadSource: "Manual Entry",
 			} as any)
 
