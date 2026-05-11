@@ -33,7 +33,7 @@ afterAll(() => server.close())
 
 // ── Tests ───────────────────────────────────────────────────────────────────
 
-const API_URL = process.env.API_URL || "http://localhost:3001"
+const API_URL = process.env.API_URL || "http://localhost:7773"
 
 describe("api-e2e", () => {
 	it("should expose health endpoints", async () => {

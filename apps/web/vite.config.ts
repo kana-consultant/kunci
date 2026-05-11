@@ -11,7 +11,7 @@ const rootPkg = JSON.parse(
 
 export default defineConfig(({ mode }) => {
 	const env = loadEnv(mode, process.cwd(), "")
-	const apiTarget = env.VITE_API_URL || "http://localhost:3001"
+	const apiTarget = env.VITE_API_URL || "http://localhost:7773"
 
 	return {
 		plugins: [
@@ -32,7 +32,7 @@ export default defineConfig(({ mode }) => {
 			},
 		},
 		server: {
-			port: 3000,
+			port: 5418,
 			proxy: {
 				"/rpc": apiTarget,
 				"/api/auth": apiTarget,

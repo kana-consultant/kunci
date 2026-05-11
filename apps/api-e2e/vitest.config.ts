@@ -14,13 +14,13 @@ export default defineConfig({
 		environment: "node",
 		include: ["src/**/*.test.ts"],
 		env: {
-			DATABASE_URL: "postgres://kunci:kunci_dev@localhost:5432/kunci_dev",
+			DATABASE_URL: "postgres://kunci:kunci_dev@localhost:12501/kunci_dev",
 			OPENROUTER_API_KEY: "sk-mock",
 			RESEND_API_KEY: "re-mock",
 			DEEPCRAWL_API_KEY: "dc-mock",
 			SENDER_EMAIL: "noreply@test.com",
 			BETTER_AUTH_SECRET: "secret-mock",
-			REDIS_URL: "redis://127.0.0.1:6379",
+			REDIS_URL: "redis://127.0.0.1:27096",
 		},
 	},
 })

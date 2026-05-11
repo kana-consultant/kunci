@@ -2,7 +2,7 @@ services:
   postgres:
     image: postgres:17-alpine
     ports:
-      - "5432:5432"
+      - "12501:5432"
     environment:
       POSTGRES_USER: kunci
       POSTGRES_PASSWORD: kunci_dev
@@ -18,7 +18,7 @@ services:
   redis:
     image: redis:7-alpine
     ports:
-      - "6399:6379"
+      - "27096:6379"
     volumes:
       - redisdata:/data
     healthcheck:
