@@ -9,6 +9,10 @@ function buildText(event: NotificationEvent): string {
 			return `*Email Invalid* — \`${event.email}\`\nReason: ${event.reason}`
 		case "pipeline.failed":
 			return `*Pipeline Failed* — lead \`${event.leadId}\`\nError: ${event.error}`
+		case "lead.completed": {
+			const notes = event.notes ? `\nNotes: ${event.notes}` : ""
+			return `*Lead Conversation Closed* — \`${event.leadId}\`\nReason: ${event.reason}\nIntent: ${event.intent} (${event.confidence.toFixed(2)})${notes}`
+		}
 	}
 }
 

@@ -13,8 +13,23 @@ export interface Lead {
 	linkedinUrl: string | null
 	messageIds: string[]
 	lastEmailSentAt: Date | null
+	autoReplyTurns: number
+	completedReason: CompletedReason | null
 	createdAt: Date
 	updatedAt: Date
+}
+
+export const COMPLETED_REASONS = [
+	"won",
+	"opted_out",
+	"not_interested",
+	"cap_reached",
+] as const
+
+export type CompletedReason = (typeof COMPLETED_REASONS)[number]
+
+export function isCompletedReason(s: unknown): s is CompletedReason {
+	return COMPLETED_REASONS.includes(s as CompletedReason)
 }
 
 export type LeadStage = 0 | 1 | 2 | 3

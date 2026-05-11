@@ -1,3 +1,4 @@
+import type { EmailMessageRepository } from "#/domain/email-message/email-message-repository.ts"
 import type { EmailSequenceRepository } from "#/domain/email-sequence/email-sequence-repository.ts"
 import { isReplyStatus, type ReplyStatus } from "#/domain/lead/lead.ts"
 import type { LeadRepository } from "#/domain/lead/lead-repository.ts"
@@ -33,6 +34,7 @@ export interface AppDependencies {
 	repos: {
 		lead: LeadRepository
 		sequence: EmailSequenceRepository
+		message: EmailMessageRepository
 	}
 	services: {
 		emailVerifier: EmailVerifier
@@ -92,9 +94,11 @@ export function buildUseCases(deps: AppDependencies) {
 
 	const handleReply = makeHandleReplyUseCase({
 		leadRepo: deps.repos.lead,
-		sequenceRepo: deps.repos.sequence,
+		messageRepo: deps.repos.message,
 		ai: deps.services.ai,
 		emailService: deps.services.email,
+		settings: deps.services.settings,
+		notifier: deps.services.notifier,
 		logger,
 	})
 

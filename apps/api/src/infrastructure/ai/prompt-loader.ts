@@ -61,4 +61,18 @@ export class PromptLoader {
 			StaticPrompts.SUBJECT_LINE_PICKER_PROMPT,
 		)
 	}
+
+	async getIntentClassifierPrompt(): Promise<string> {
+		return this.getPrompt(
+			SETTING_KEYS.AI_PROMPT_INTENT_CLASSIFIER,
+			StaticPrompts.INTENT_CLASSIFIER_PROMPT,
+		)
+	}
+
+	async getChatReplyPrompt(): Promise<string> {
+		return this.getPrompt(
+			SETTING_KEYS.AI_PROMPT_CHAT_REPLY,
+			StaticPrompts.CHAT_REPLY_PROMPT,
+		)
+	}
 }

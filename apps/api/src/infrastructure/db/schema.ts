@@ -24,10 +24,29 @@ export const leads = pgTable("leads", {
 	linkedinUrl: text("linkedin_url"),
 	messageIds: text("message_ids").array().notNull().default([]),
 	lastEmailSentAt: timestamp("last_email_sent_at", { withTimezone: true }),
+	autoReplyTurns: integer("auto_reply_turns").notNull().default(0),
+	completedReason: text("completed_reason"),
 	createdAt: timestamp("created_at", { withTimezone: true })
 		.notNull()
 		.defaultNow(),
 	updatedAt: timestamp("updated_at", { withTimezone: true })
+		.notNull()
+		.defaultNow(),
+})
+
+export const emailMessages = pgTable("email_messages", {
+	id: uuid("id").primaryKey().defaultRandom(),
+	leadId: uuid("lead_id")
+		.notNull()
+		.references(() => leads.id, { onDelete: "cascade" }),
+	direction: text("direction").notNull(),
+	subject: text("subject").notNull(),
+	textBody: text("text_body").notNull(),
+	htmlBody: text("html_body"),
+	messageId: text("message_id"),
+	inReplyTo: text("in_reply_to"),
+	intent: text("intent"),
+	createdAt: timestamp("created_at", { withTimezone: true })
 		.notNull()
 		.defaultNow(),
 })

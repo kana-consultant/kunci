@@ -4,15 +4,22 @@ import {
 } from "#/application/shared/business-context-builder.ts"
 import type { SettingsService } from "#/application/shared/settings-service.ts"
 import type { BehaviorAnalysis } from "#/domain/behavior-analysis/behavior-analysis.ts"
+import {
+	isReplyIntent,
+	type ReplyIntent,
+} from "#/domain/email-message/email-message.ts"
 import type { Lead } from "#/domain/lead/lead.ts"
 import type {
+	ChatReplyResult,
+	ChatTurn,
 	EmailTemplateInput,
 	GeneratedSequence,
+	IntentClassification,
 	PersonalizedReply,
 } from "#/domain/ports/ai-service.ts"
 import { SETTING_KEYS } from "#/domain/settings/setting-keys.ts"
-import { callOpenRouterQueued } from "./queue.ts"
 import { PromptLoader } from "./prompt-loader.ts"
+import { callOpenRouterQueued } from "./queue.ts"
 
 export async function generateEmailSequence(
 	apiKey: string,
@@ -258,4 +265,157 @@ export async function pickSubjectLine(
 		maxRetries,
 	)
 	return result.subject_line
+}
+
+function formatHistoryForPrompt(history: ChatTurn[]): string {
+	if (history.length === 0) return "(no prior messages)"
+	return history
+		.map((turn, i) => {
+			const speaker = turn.role === "lead" ? "LEAD" : "AGENT"
+			return `[${i + 1}] ${speaker}:\n${turn.text}`
+		})
+		.join("\n\n")
+}
+
+export async function classifyIntent(
+	apiKey: string,
+	settings: SettingsService,
+	lead: Lead,
+	history: ChatTurn[],
+	replyText: string,
+): Promise<IntentClassification> {
+	const promptLoader = new PromptLoader(settings)
+	const prompt = await promptLoader.getIntentClassifierPrompt()
+	const model = await settings.get<string>(
+		SETTING_KEYS.AI_MODEL_INTENT_CLASSIFIER,
+		"openai/gpt-4o-mini",
+	)
+	const maxRetries = await settings.get<number>(
+		SETTING_KEYS.AI_RETRY_MAX_RETRIES,
+		3,
+	)
+
+	const result = await callOpenRouterQueued<{
+		intent: string
+		confidence: number
+		reasoning: string
+	}>(
+		apiKey,
+		{
+			model,
+			messages: [
+				{ role: "system", content: prompt },
+				{
+					role: "user",
+					content: `Lead: ${lead.fullName} at ${lead.companyName}
+
+Prior thread:
+${formatHistoryForPrompt(history)}
+
+Latest reply from lead:
+${replyText}`,
+				},
+			],
+			schema: {
+				name: "intent_classification",
+				schema: {
+					type: "object",
+					properties: {
+						intent: {
+							type: "string",
+							enum: [
+								"interested",
+								"not_interested",
+								"unsubscribe",
+								"objection",
+								"question",
+								"neutral",
+							],
+						},
+						confidence: { type: "number" },
+						reasoning: { type: "string" },
+					},
+					required: ["intent", "confidence", "reasoning"],
+					additionalProperties: false,
+				},
+			},
+			temperature: 0,
+		},
+		maxRetries,
+	)
+
+	const intent: ReplyIntent = isReplyIntent(result.intent)
+		? result.intent
+		: "neutral"
+
+	return {
+		intent,
+		confidence: result.confidence,
+		reasoning: result.reasoning,
+	}
+}
+
+export async function generateChatReply(
+	apiKey: string,
+	settings: SettingsService,
+	lead: Lead,
+	history: ChatTurn[],
+	latestInbound: string,
+): Promise<ChatReplyResult> {
+	const businessCtx = await buildBusinessContext(settings)
+	const businessContextStr = formatBusinessContextForPrompt(businessCtx)
+
+	const promptLoader = new PromptLoader(settings)
+	const prompt = await promptLoader.getChatReplyPrompt()
+	const model = await settings.get<string>(
+		SETTING_KEYS.AI_MODEL_CHAT_REPLY,
+		"openai/gpt-4o",
+	)
+	const temperature = await settings.get<number>(
+		SETTING_KEYS.AI_TEMPERATURE_DEFAULT,
+		0.7,
+	)
+	const maxRetries = await settings.get<number>(
+		SETTING_KEYS.AI_RETRY_MAX_RETRIES,
+		3,
+	)
+
+	return callOpenRouterQueued<ChatReplyResult>(
+		apiKey,
+		{
+			model,
+			messages: [
+				{ role: "system", content: prompt },
+				{
+					role: "user",
+					content: `Lead profile:
+- Name: ${lead.fullName}
+- Company: ${lead.companyName}
+- Pain points: ${lead.painPoints ?? "N/A"}
+
+${businessContextStr}
+
+Full thread so far:
+${formatHistoryForPrompt(history)}
+
+The lead's latest message (respond to this):
+${latestInbound}`,
+				},
+			],
+			schema: {
+				name: "chat_reply",
+				schema: {
+					type: "object",
+					properties: {
+						subject: { type: "string" },
+						content: { type: "string" },
+					},
+					required: ["subject", "content"],
+					additionalProperties: false,
+				},
+			},
+			temperature,
+		},
+		maxRetries,
+	)
 }

@@ -1,4 +1,10 @@
-import type { CreateLeadInput, Lead, LeadStage, ReplyStatus } from "./lead.ts"
+import type {
+	CompletedReason,
+	CreateLeadInput,
+	Lead,
+	LeadStage,
+	ReplyStatus,
+} from "./lead.ts"
 
 export interface LeadRepository {
 	create(input: CreateLeadInput): Promise<Lead>
@@ -37,6 +43,8 @@ export interface UpdateLeadData {
 	messageIds: string[]
 	lastEmailSentAt: Date
 	linkedinUrl: string
+	autoReplyTurns: number
+	completedReason: CompletedReason | null
 }
 
 export interface PendingFollowupsParams {

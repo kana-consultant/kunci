@@ -7,6 +7,8 @@ export const SETTING_KEYS = {
 	AI_MODEL_HTML_CONVERTER: "ai.model.html_converter",
 	AI_MODEL_REPLY_PERSONALIZER: "ai.model.reply_personalizer",
 	AI_MODEL_SUBJECT_LINE_PICKER: "ai.model.subject_line_picker",
+	AI_MODEL_INTENT_CLASSIFIER: "ai.model.intent_classifier",
+	AI_MODEL_CHAT_REPLY: "ai.model.chat_reply",
 
 	// AI: Temperature
 	AI_TEMPERATURE_DEFAULT: "ai.temperature.default",
@@ -21,6 +23,8 @@ export const SETTING_KEYS = {
 	AI_PROMPT_HTML_CONVERTER: "ai.prompt.html_converter",
 	AI_PROMPT_REPLY_PERSONALIZER: "ai.prompt.reply_personalizer",
 	AI_PROMPT_SUBJECT_LINE_PICKER: "ai.prompt.subject_line_picker",
+	AI_PROMPT_INTENT_CLASSIFIER: "ai.prompt.intent_classifier",
+	AI_PROMPT_CHAT_REPLY: "ai.prompt.chat_reply",
 
 	// AI: Limits & Retries
 	AI_LIMIT_WEBSITE_MARKDOWN_CHARS: "ai.limit.website_markdown_chars",
@@ -59,6 +63,11 @@ export const SETTING_KEYS = {
 	SCHEDULER_CRON_TIMEZONE: "scheduler.cron_timezone",
 	SCHEDULER_FOLLOWUP_DELAY_DAYS: "scheduler.followup_delay_days",
 	SCHEDULER_ENABLED: "scheduler.enabled",
+
+	// Auto-reply chat
+	AUTO_REPLY_MAX_TURNS: "auto_reply.max_turns",
+	AUTO_REPLY_DELAY_MIN_MS: "auto_reply.delay_min_ms",
+	AUTO_REPLY_DELAY_MAX_MS: "auto_reply.delay_max_ms",
 } as const
 
 export type SettingKey = (typeof SETTING_KEYS)[keyof typeof SETTING_KEYS]

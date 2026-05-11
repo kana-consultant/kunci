@@ -98,6 +98,12 @@ export function createLeadRepository(db: Database): LeadRepository {
 						? { lastEmailSentAt: data.lastEmailSentAt }
 						: {}),
 					...(data.linkedinUrl ? { linkedinUrl: data.linkedinUrl } : {}),
+					...(data.autoReplyTurns !== undefined
+						? { autoReplyTurns: data.autoReplyTurns }
+						: {}),
+					...(data.completedReason !== undefined
+						? { completedReason: data.completedReason }
+						: {}),
 					updatedAt: new Date(),
 				})
 				.where(eq(leads.id, id))
@@ -235,6 +241,8 @@ function mapRowToLead(row: any): Lead {
 		linkedinUrl: row.linkedinUrl,
 		messageIds: row.messageIds ?? [],
 		lastEmailSentAt: row.lastEmailSentAt,
+		autoReplyTurns: row.autoReplyTurns ?? 0,
+		completedReason: (row.completedReason ?? null) as Lead["completedReason"],
 		createdAt: row.createdAt,
 		updatedAt: row.updatedAt,
 	}

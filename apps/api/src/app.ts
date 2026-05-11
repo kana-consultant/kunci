@@ -15,6 +15,7 @@ import { auth } from "./infrastructure/auth/better-auth.ts"
 import { createRedisCache } from "./infrastructure/cache/redis.ts"
 import { env } from "./infrastructure/config/env.ts"
 import { createDb } from "./infrastructure/db/client.ts"
+import { createEmailMessageRepository } from "./infrastructure/db/repositories/email-message-repository.ts"
 import { createEmailSequenceRepository } from "./infrastructure/db/repositories/email-sequence-repository.ts"
 import { createLeadRepository } from "./infrastructure/db/repositories/lead-repository.ts"
 import { createPipelineStepRepository } from "./infrastructure/db/repositories/pipeline-step-repository.ts"
@@ -58,6 +59,7 @@ export async function createServerApp() {
 	const repos = {
 		lead: createLeadRepository(db),
 		sequence: createEmailSequenceRepository(db),
+		message: createEmailMessageRepository(db),
 		settings: createSettingsRepository(db),
 	}
 

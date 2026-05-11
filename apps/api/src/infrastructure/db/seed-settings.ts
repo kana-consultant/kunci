@@ -1,8 +1,10 @@
 import { SETTING_KEYS } from "../../domain/settings/setting-keys.ts"
 import {
 	BEHAVIOR_ANALYZER_PROMPT,
+	CHAT_REPLY_PROMPT,
 	COMPANY_PROFILER_PROMPT,
 	EMAIL_HTML_CONVERTER_PROMPT,
+	INTENT_CLASSIFIER_PROMPT,
 	REPLY_PERSONALIZER_PROMPT,
 	SEQUENCE_GENERATOR_PROMPT,
 	SUBJECT_LINE_PICKER_PROMPT,
@@ -58,6 +60,20 @@ export const DEFAULT_SETTINGS = [
 		value: "openai/gpt-4o-mini",
 		category: "ai",
 		label: "Subject Line Picker Model",
+		valueType: "string",
+	},
+	{
+		key: SETTING_KEYS.AI_MODEL_INTENT_CLASSIFIER,
+		value: "openai/gpt-4o-mini",
+		category: "ai",
+		label: "Intent Classifier Model",
+		valueType: "string",
+	},
+	{
+		key: SETTING_KEYS.AI_MODEL_CHAT_REPLY,
+		value: "openai/gpt-4o",
+		category: "ai",
+		label: "Chat Reply Model",
 		valueType: "string",
 	},
 
@@ -132,6 +148,20 @@ export const DEFAULT_SETTINGS = [
 		value: SUBJECT_LINE_PICKER_PROMPT,
 		category: "ai",
 		label: "Subject Line Picker Prompt",
+		valueType: "text",
+	},
+	{
+		key: SETTING_KEYS.AI_PROMPT_INTENT_CLASSIFIER,
+		value: INTENT_CLASSIFIER_PROMPT,
+		category: "ai",
+		label: "Intent Classifier Prompt",
+		valueType: "text",
+	},
+	{
+		key: SETTING_KEYS.AI_PROMPT_CHAT_REPLY,
+		value: CHAT_REPLY_PROMPT,
+		category: "ai",
+		label: "Chat Reply Prompt",
 		valueType: "text",
 	},
 
@@ -342,5 +372,34 @@ export const DEFAULT_SETTINGS = [
 		category: "scheduler",
 		label: "Scheduler Enabled",
 		valueType: "boolean",
+	},
+
+	// ── Auto-reply chat ──
+	{
+		key: SETTING_KEYS.AUTO_REPLY_MAX_TURNS,
+		value: 6,
+		category: "auto_reply",
+		label: "Max AI Auto-Reply Turns",
+		valueType: "number",
+		description:
+			"Maximum number of AI-generated outbound replies per lead after initial sequence. Hard cap to prevent runaway loops.",
+	},
+	{
+		key: SETTING_KEYS.AUTO_REPLY_DELAY_MIN_MS,
+		value: 180_000,
+		category: "auto_reply",
+		label: "Auto-Reply Min Delay (ms)",
+		valueType: "number",
+		description:
+			"Lower bound for randomized delay before sending an AI reply. Makes the agent feel human.",
+	},
+	{
+		key: SETTING_KEYS.AUTO_REPLY_DELAY_MAX_MS,
+		value: 900_000,
+		category: "auto_reply",
+		label: "Auto-Reply Max Delay (ms)",
+		valueType: "number",
+		description:
+			"Upper bound for randomized delay before sending an AI reply.",
 	},
 ]

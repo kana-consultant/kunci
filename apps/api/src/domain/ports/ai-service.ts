@@ -1,4 +1,5 @@
 import type { BehaviorAnalysis } from "#/domain/behavior-analysis/behavior-analysis.ts"
+import type { ReplyIntent } from "#/domain/email-message/email-message.ts"
 import type { Lead } from "#/domain/lead/lead.ts"
 
 /**
@@ -34,6 +35,36 @@ export interface AIService {
 
 	/** P8: Select best subject line from 3 variations */
 	pickSubjectLine(lead: Lead, variations: string[]): Promise<string>
+
+	/** P9: Classify intent of an inbound reply */
+	classifyIntent(
+		lead: Lead,
+		history: ChatTurn[],
+		replyText: string,
+	): Promise<IntentClassification>
+
+	/** P10: Generate next AI chat reply from full thread history */
+	generateChatReply(
+		lead: Lead,
+		history: ChatTurn[],
+		latestInbound: string,
+	): Promise<ChatReplyResult>
+}
+
+export interface ChatTurn {
+	role: "lead" | "agent"
+	text: string
+}
+
+export interface IntentClassification {
+	intent: ReplyIntent
+	confidence: number
+	reasoning: string
+}
+
+export interface ChatReplyResult {
+	subject: string
+	content: string
 }
 
 export interface GeneratedSequence {

@@ -1,128 +1,225 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { makeHandleReplyUseCase } from "./handle-reply.ts"
 
-describe("handleReply", () => {
-	const mockDeps = {
+function makeMocks() {
+	return {
 		leadRepo: {
 			findByEmail: vi.fn(),
+			findById: vi.fn(),
 			update: vi.fn(),
 		},
-		sequenceRepo: {
-			getByStage: vi.fn(),
-			markSent: vi.fn(),
+		messageRepo: {
+			append: vi.fn().mockResolvedValue({}),
+			listByLeadId: vi.fn().mockResolvedValue([]),
+			countOutbound: vi.fn().mockResolvedValue(0),
 		},
 		ai: {
-			personalizeReply: vi.fn(),
+			classifyIntent: vi.fn(),
+			generateChatReply: vi.fn(),
 			convertToHtml: vi.fn(),
 		},
 		emailService: {
 			replyInThread: vi.fn(),
 		},
+		settings: {
+			get: vi.fn(async (_key: string, fallback: unknown) => fallback),
+		},
+		notifier: {
+			send: vi.fn().mockResolvedValue(undefined),
+		},
 		logger: { info: vi.fn(), error: vi.fn(), warn: vi.fn(), debug: vi.fn() },
+		scheduleDelayedSend: vi.fn((fn: () => Promise<void>, _ms: number) => {
+			// fire synchronously in tests
+			void fn()
+		}),
 	}
+}
+
+describe("handleReply (chat mode)", () => {
+	let mocks: ReturnType<typeof makeMocks>
 
 	beforeEach(() => {
-		vi.clearAllMocks()
+		mocks = makeMocks()
 	})
 
-	it("should process unknown lead with ignored status", async () => {
-		mockDeps.leadRepo.findByEmail.mockResolvedValue(null)
-		const handleReply = makeHandleReplyUseCase(mockDeps as any)
+	it("ignores unknown lead", async () => {
+		mocks.leadRepo.findByEmail.mockResolvedValue(null)
+		const handleReply = makeHandleReplyUseCase(mocks as any)
 
 		const result = await handleReply({
 			fromEmail: "unknown@test.com",
-			subject: "Re: Hello",
-			textBody: "Interested",
-			messageId: "msg-123",
+			subject: "Re: Hi",
+			textBody: "Hi",
+			messageId: "m1",
 		})
 
 		expect(result.status).toBe("ignored")
 		expect(result.reason).toBe("unknown_lead")
 	})
 
-	it("should process reply and send personalized follow-up", async () => {
-		const lead = {
-			id: "lead-1",
-			email: "test@test.com",
-			stage: 1,
-			replyStatus: "pending",
-			latestMessageId: "orig-msg-1",
-			messageIds: ["orig-msg-1"],
-		}
-		const sequence = {
-			id: "seq-2",
-			content: "Follow up content",
-			cta: "Book a call",
-			psychologicalTrigger: "Scarcity",
-		}
-
-		mockDeps.leadRepo.findByEmail.mockResolvedValue(lead)
-		mockDeps.sequenceRepo.getByStage.mockResolvedValue(sequence)
-		mockDeps.ai.personalizeReply.mockResolvedValue({
-			subject: "Re: Hello",
-			content: "Personalized content",
+	it("ignores completed lead", async () => {
+		mocks.leadRepo.findByEmail.mockResolvedValue({
+			id: "l1",
+			email: "x@y.z",
+			stage: 2,
+			replyStatus: "completed",
+			completedReason: "won",
 		})
-		mockDeps.ai.convertToHtml.mockResolvedValue("<p>Personalized content</p>")
-		mockDeps.emailService.replyInThread.mockResolvedValue({
-			messageId: "reply-msg-1",
+		const handleReply = makeHandleReplyUseCase(mocks as any)
+
+		const result = await handleReply({
+			fromEmail: "x@y.z",
+			subject: "Re",
+			textBody: "thanks",
+			messageId: "m",
+		})
+
+		expect(result.status).toBe("ignored")
+		expect(result.reason).toBe("lead_completed")
+	})
+
+	it("marks lead completed when intent is unsubscribe", async () => {
+		mocks.leadRepo.findByEmail.mockResolvedValue({
+			id: "l1",
+			email: "x@y.z",
+			stage: 1,
+			replyStatus: "awaiting",
+			latestMessageId: "orig",
+			messageIds: ["orig"],
+			autoReplyTurns: 0,
+		})
+		mocks.ai.classifyIntent.mockResolvedValue({
+			intent: "unsubscribe",
+			confidence: 0.95,
+			reasoning: "Lead said stop emailing me",
+		})
+
+		const handleReply = makeHandleReplyUseCase(mocks as any)
+		const result = await handleReply({
+			fromEmail: "x@y.z",
+			subject: "Re: Hello",
+			textBody: "Please stop emailing me, unsubscribe",
+			messageId: "msg-2",
+		})
+
+		expect(result.action).toBe("completed")
+		expect(result.reason).toBe("opted_out")
+		expect(mocks.leadRepo.update).toHaveBeenCalledWith("l1", {
+			replyStatus: "completed",
+			completedReason: "opted_out",
+		})
+		expect(mocks.ai.generateChatReply).not.toHaveBeenCalled()
+		expect(mocks.notifier.send).toHaveBeenCalled()
+	})
+
+	it("marks lead completed (won) on interested intent", async () => {
+		mocks.leadRepo.findByEmail.mockResolvedValue({
+			id: "l1",
+			email: "x@y.z",
+			stage: 1,
+			replyStatus: "awaiting",
+			latestMessageId: "orig",
+			messageIds: ["orig"],
+			autoReplyTurns: 0,
+		})
+		mocks.ai.classifyIntent.mockResolvedValue({
+			intent: "interested",
+			confidence: 0.9,
+			reasoning: "Asked to book a call",
+		})
+
+		const handleReply = makeHandleReplyUseCase(mocks as any)
+		const result = await handleReply({
+			fromEmail: "x@y.z",
+			subject: "Re",
+			textBody: "let's book a call",
+			messageId: "m",
+		})
+
+		expect(result.reason).toBe("won")
+		expect(mocks.ai.generateChatReply).not.toHaveBeenCalled()
+	})
+
+	it("stops at hard turn cap", async () => {
+		mocks.leadRepo.findByEmail.mockResolvedValue({
+			id: "l1",
+			email: "x@y.z",
+			stage: 1,
+			replyStatus: "awaiting",
+			latestMessageId: "orig",
+			messageIds: ["orig"],
+			autoReplyTurns: 6,
+		})
+		mocks.ai.classifyIntent.mockResolvedValue({
+			intent: "neutral",
+			confidence: 0.4,
+			reasoning: "ack",
+		})
+		mocks.settings.get.mockImplementation(
+			async (key: string, fallback: unknown) =>
+				key === "auto_reply.max_turns" ? 6 : fallback,
+		)
+
+		const handleReply = makeHandleReplyUseCase(mocks as any)
+		const result = await handleReply({
+			fromEmail: "x@y.z",
+			subject: "Re",
+			textBody: "ok",
+			messageId: "m",
+		})
+
+		expect(result.action).toBe("cap_reached")
+		expect(mocks.ai.generateChatReply).not.toHaveBeenCalled()
+	})
+
+	it("queues a chat reply for continuing intents", async () => {
+		const lead = {
+			id: "l1",
+			email: "x@y.z",
+			fullName: "Lead One",
+			companyName: "Acme",
+			stage: 1,
+			replyStatus: "awaiting",
+			latestMessageId: "orig",
+			messageIds: ["orig"],
+			autoReplyTurns: 1,
+			painPoints: null,
+		}
+		mocks.leadRepo.findByEmail.mockResolvedValue(lead)
+		mocks.leadRepo.findById.mockResolvedValue(lead)
+		mocks.ai.classifyIntent.mockResolvedValue({
+			intent: "question",
+			confidence: 0.8,
+			reasoning: "asked about pricing",
+		})
+		mocks.ai.generateChatReply.mockResolvedValue({
+			subject: "Re: Hello",
+			content: "Pricing details...",
+		})
+		mocks.ai.convertToHtml.mockResolvedValue("<p>Pricing</p>")
+		mocks.emailService.replyInThread.mockResolvedValue({
+			messageId: "out-1",
 			sentAt: new Date(),
 		})
 
-		const handleReply = makeHandleReplyUseCase(mockDeps as any)
-
+		const handleReply = makeHandleReplyUseCase(mocks as any)
 		const result = await handleReply({
-			fromEmail: "test@test.com",
+			fromEmail: "x@y.z",
 			subject: "Re: Hello",
-			textBody: "Tell me more",
-			messageId: "msg-123",
+			textBody: "how much does it cost?",
+			messageId: "in-1",
 		})
 
-		expect(result.status).toBe("success")
-		expect(result.action).toBe("auto_replied")
-		expect(mockDeps.ai.personalizeReply).toHaveBeenCalled()
-		expect(mockDeps.emailService.replyInThread).toHaveBeenCalled()
-		expect(mockDeps.leadRepo.update).toHaveBeenCalledWith("lead-1", {
-			replyStatus: "replied",
-		})
-		expect(mockDeps.leadRepo.update).toHaveBeenCalledWith(
-			"lead-1",
-			expect.objectContaining({ stage: 2, replyStatus: "awaiting" }),
+		expect(result.action).toBe("queued")
+		expect(mocks.scheduleDelayedSend).toHaveBeenCalled()
+
+		// Wait microtask for synchronous-fire stub to finish
+		await new Promise((r) => setImmediate(r))
+
+		expect(mocks.ai.generateChatReply).toHaveBeenCalled()
+		expect(mocks.emailService.replyInThread).toHaveBeenCalled()
+		expect(mocks.messageRepo.append).toHaveBeenCalledWith(
+			expect.objectContaining({ direction: "outbound" }),
 		)
-	})
-
-	it("throws AppError when lead has null latestMessageId", async () => {
-		const lead = {
-			id: "lead-2",
-			email: "test@test.com",
-			stage: 1,
-			replyStatus: "pending",
-			latestMessageId: null,
-			messageIds: [],
-		}
-		const sequence = {
-			id: "seq-2",
-			content: "Follow up content",
-			cta: "Book a call",
-			psychologicalTrigger: "Scarcity",
-		}
-
-		mockDeps.leadRepo.findByEmail.mockResolvedValue(lead)
-		mockDeps.sequenceRepo.getByStage.mockResolvedValue(sequence)
-		mockDeps.ai.personalizeReply.mockResolvedValue({
-			subject: "Re: Hello",
-			content: "Personalized content",
-		})
-		mockDeps.ai.convertToHtml.mockResolvedValue("<p>Content</p>")
-
-		const handleReply = makeHandleReplyUseCase(mockDeps as any)
-
-		await expect(
-			handleReply({
-				fromEmail: "test@test.com",
-				subject: "Re: Hello",
-				textBody: "Interested",
-				messageId: "msg-new",
-			}),
-		).rejects.toMatchObject({ code: "INTERNAL_ERROR" })
 	})
 })

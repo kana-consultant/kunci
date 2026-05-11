@@ -8,6 +8,7 @@ import type { BehaviorAnalysis } from "#/domain/behavior-analysis/behavior-analy
 import type { Lead } from "#/domain/lead/lead.ts"
 import type {
 	AIService,
+	ChatTurn,
 	CompanyDataInput,
 	EmailTemplateInput,
 } from "#/domain/ports/ai-service.ts"
@@ -17,7 +18,9 @@ import {
 	buildCompanyProfile,
 } from "./analyzers.ts"
 import {
+	classifyIntent,
 	convertToHtml,
+	generateChatReply,
 	generateEmailSequence,
 	personalizeReply,
 	pickSubjectLine,
@@ -58,5 +61,11 @@ export function createOpenRouterService(config: OpenRouterConfig): AIService {
 
 		pickSubjectLine: (lead: Lead, variations: string[]) =>
 			pickSubjectLine(apiKey, config.settings, lead, variations),
+
+		classifyIntent: (lead: Lead, history: ChatTurn[], replyText: string) =>
+			classifyIntent(apiKey, config.settings, lead, history, replyText),
+
+		generateChatReply: (lead: Lead, history: ChatTurn[], latest: string) =>
+			generateChatReply(apiKey, config.settings, lead, history, latest),
 	}
 }
