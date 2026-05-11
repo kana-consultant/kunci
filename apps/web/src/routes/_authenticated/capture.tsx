@@ -9,13 +9,13 @@ import {
 import { createFileRoute } from "@tanstack/react-router"
 import { CheckCircle2, Sparkles } from "lucide-react"
 
-import { captureFieldSchemas, useCaptureLogic } from "./_hooks/use-capture"
+import { captureFieldSchemas, useCaptureLogic } from "./_hooks/-use-capture"
 
 export const Route = createFileRoute("/_authenticated/capture")({
 	component: CapturePage,
 })
 
-export function CapturePage() {
+function CapturePage() {
 	const { form, error, successMessage } = useCaptureLogic()
 
 	// Success state — show confirmation while redirecting

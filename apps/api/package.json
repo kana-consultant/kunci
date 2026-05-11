@@ -9,10 +9,10 @@
 		"dev": "tsx watch --env-file=../../.env src/main.ts",
 		"build": "tsup src/main.ts src/index.ts --format esm --dts",
 		"typecheck": "tsc --noEmit",
-		"db:generate": "bash -c 'set -a && . ../../.env && set +a && drizzle-kit generate'",
+		"db:generate": "drizzle-kit generate",
 		"db:migrate": "tsx --env-file=../../.env src/migrate.ts",
-		"db:push": "bash -c 'set -a && . ../../.env && set +a && drizzle-kit push'",
-		"db:studio": "bash -c 'set -a && . ../../.env && set +a && drizzle-kit studio'",
+		"db:push": "drizzle-kit push",
+		"db:studio": "drizzle-kit studio",
 		"db:seed": "tsx --env-file=../../.env src/infrastructure/db/seed.ts"
 	},
 	"dependencies": {

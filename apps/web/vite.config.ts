@@ -11,7 +11,7 @@ const rootPkg = JSON.parse(
 
 export default defineConfig(({ mode }) => {
 	const env = loadEnv(mode, process.cwd(), "")
-	const apiTarget = env.VITE_API_URL || "http://localhost:7773"
+	const apiTarget = env.VITE_API_URL || "http://localhost:3005"
 
 	return {
 		plugins: [

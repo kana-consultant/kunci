@@ -29,7 +29,7 @@ import {
 } from "lucide-react"
 import { useCallback, useRef, useState } from "react"
 
-import { useBulkCaptureLogic } from "./_hooks/use-bulk-capture"
+import { useBulkCaptureLogic } from "./_hooks/-use-bulk-capture"
 
 export const Route = createFileRoute("/_authenticated/bulk-capture")({
 	component: BulkCapturePage,

@@ -4,9 +4,7 @@ import { RPCLink } from "@orpc/client/fetch"
 import { createORPCReactQueryUtils } from "@orpc/react-query"
 import type { RouterClient } from "@orpc/server"
 
-const API_BASE =
-	import.meta.env.VITE_API_URL ||
-	(import.meta.env.DEV ? "http://localhost:7773" : window.location.origin)
+const API_BASE = import.meta.env.VITE_API_URL || window.location.origin
 
 const link = new RPCLink({
 	url: `${API_BASE}/rpc`,
