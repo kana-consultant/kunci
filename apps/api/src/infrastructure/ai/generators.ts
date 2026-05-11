@@ -11,7 +11,7 @@ import type {
 	PersonalizedReply,
 } from "#/domain/ports/ai-service.ts"
 import { SETTING_KEYS } from "#/domain/settings/setting-keys.ts"
-import { callOpenRouter } from "./client.ts"
+import { callOpenRouterQueued } from "./queue.ts"
 import { PromptLoader } from "./prompt-loader.ts"
 
 export async function generateEmailSequence(
@@ -34,7 +34,7 @@ export async function generateEmailSequence(
 		3,
 	)
 
-	return callOpenRouter<GeneratedSequence>(
+	return callOpenRouterQueued<GeneratedSequence>(
 		apiKey,
 		{
 			model,
@@ -143,7 +143,7 @@ export async function convertToHtml(
 		`Color Scheme:\n- Primary: ${primaryColor}\n- Accent: ${accentColor}\n- CTA Buttons: ${ctaColor}\n- Text: ${textColor}\n- Background: ${bgColor}\n\nFonts:\n- ${fontFamily}\n\n`,
 	)
 
-	return callOpenRouter<string>(
+	return callOpenRouterQueued<string>(
 		apiKey,
 		{
 			model,
@@ -178,7 +178,7 @@ export async function personalizeReply(
 		3,
 	)
 
-	return callOpenRouter<PersonalizedReply>(
+	return callOpenRouterQueued<PersonalizedReply>(
 		apiKey,
 		{
 			model,
@@ -234,7 +234,7 @@ export async function pickSubjectLine(
 		3,
 	)
 
-	const result = await callOpenRouter<{ subject_line: string }>(
+	const result = await callOpenRouterQueued<{ subject_line: string }>(
 		apiKey,
 		{
 			model,
