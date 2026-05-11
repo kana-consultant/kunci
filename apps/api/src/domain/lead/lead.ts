@@ -19,15 +19,22 @@ export interface Lead {
 
 export type LeadStage = 0 | 1 | 2 | 3
 
-export type ReplyStatus =
-	| "pending"
-	| "researching"
-	| "research_failed"
-	| "ready"
-	| "awaiting"
-	| "replied"
-	| "bounced"
-	| "completed"
+export const REPLY_STATUSES = [
+	"pending",
+	"researching",
+	"research_failed",
+	"ready",
+	"awaiting",
+	"replied",
+	"bounced",
+	"completed",
+] as const
+
+export type ReplyStatus = (typeof REPLY_STATUSES)[number]
+
+export function isReplyStatus(s: unknown): s is ReplyStatus {
+	return REPLY_STATUSES.includes(s as ReplyStatus)
+}
 
 export interface CreateLeadInput {
 	fullName: string

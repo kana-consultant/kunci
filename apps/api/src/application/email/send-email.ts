@@ -1,3 +1,4 @@
+import { AppError } from "#/application/shared/errors.ts"
 import type { BehaviorAnalysis } from "#/domain/behavior-analysis/behavior-analysis.ts"
 import type { EmailSequenceRepository } from "#/domain/email-sequence/email-sequence-repository.ts"
 import type { Lead } from "#/domain/lead/lead.ts"
@@ -106,11 +107,17 @@ export function makeSendFollowupUseCase(deps: EmailUseCaseDeps) {
 		const subject = await deps.ai.pickSubjectLine(lead, template.subjectLines)
 
 		// 4. Send as reply in thread
+		if (!lead.latestMessageId) {
+			throw new AppError(
+				"INTERNAL_ERROR",
+				`Lead ${lead.id} has no latestMessageId; cannot thread follow-up`,
+			)
+		}
 		const result = await deps.emailService.replyInThread({
 			to: lead.email,
 			subject,
 			html,
-			originalMessageId: lead.latestMessageId!,
+			originalMessageId: lead.latestMessageId,
 			previousRefs: lead.messageIds,
 			leadId: lead.id,
 			stage: nextStage,

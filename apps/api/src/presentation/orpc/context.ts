@@ -5,4 +5,5 @@ export type ORPCContext = {
 	headers: Headers
 	session: AuthedContext | null
 	useCases: UseCases
+	requestId: string
 }

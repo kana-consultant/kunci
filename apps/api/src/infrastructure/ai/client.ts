@@ -20,6 +20,10 @@ function sleep(ms: number): Promise<void> {
 	return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
+export function isReasoningModel(model: string): boolean {
+	return /^openai\/o[0-9]/.test(model)
+}
+
 export async function callOpenRouter<T>(
 	apiKey: string,
 	params: CallParams,
@@ -27,7 +31,10 @@ export async function callOpenRouter<T>(
 ): Promise<T> {
 	const { model, messages, schema, temperature = 0.7 } = params
 
-	const body: Record<string, unknown> = { model, messages, temperature }
+	const body: Record<string, unknown> = { model, messages }
+	if (!isReasoningModel(model)) {
+		body.temperature = temperature
+	}
 
 	if (schema) {
 		body.response_format = {
