@@ -9,11 +9,11 @@
 		"dev": "tsx watch --env-file=../../.env src/main.ts",
 		"build": "tsup src/main.ts src/index.ts --format esm --dts",
 		"typecheck": "tsc --noEmit",
-		"db:generate": "drizzle-kit generate",
-		"db:migrate": "tsx src/migrate.ts",
-		"db:push": "drizzle-kit push",
-		"db:studio": "drizzle-kit studio",
-		"db:seed": "tsx src/infrastructure/db/seed.ts"
+		"db:generate": "NODE_OPTIONS='--env-file=../../.env' drizzle-kit generate",
+		"db:migrate": "tsx --env-file=../../.env src/migrate.ts",
+		"db:push": "NODE_OPTIONS='--env-file=../../.env' drizzle-kit push",
+		"db:studio": "NODE_OPTIONS='--env-file=../../.env' drizzle-kit studio",
+		"db:seed": "tsx --env-file=../../.env src/infrastructure/db/seed.ts"
 	},
 	"dependencies": {
 		"@better-auth/drizzle-adapter": "^1.6.9",
