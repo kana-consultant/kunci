@@ -326,8 +326,9 @@ function BulkCapturePage() {
 				</CardHeader>
 				<CardContent className="space-y-6">
 					{/* Drop Zone */}
-					<div
-						className={`border-2 border-dashed rounded-xl p-8 text-center transition-all cursor-pointer`}
+					<button
+						type="button"
+						className="border-2 border-dashed rounded-xl p-8 text-center transition-all cursor-pointer w-full"
 						style={{
 							borderColor: dragActive
 								? "var(--color-primary)"
@@ -349,8 +350,6 @@ function BulkCapturePage() {
 								fileInputRef.current?.click()
 							}
 						}}
-						role="button"
-						tabIndex={0}
 					>
 						<Upload
 							className="w-8 h-8 mx-auto mb-3"
@@ -365,14 +364,14 @@ function BulkCapturePage() {
 						>
 							Supports .csv files up to 100 leads
 						</p>
-						<input
-							ref={fileInputRef}
-							type="file"
-							accept=".csv,text/csv"
-							className="hidden"
-							onChange={onFileSelect}
-						/>
-					</div>
+					</button>
+					<input
+						ref={fileInputRef}
+						type="file"
+						accept=".csv,text/csv"
+						className="hidden"
+						onChange={onFileSelect}
+					/>
 
 					{/* Divider */}
 					<div className="flex items-center gap-4">

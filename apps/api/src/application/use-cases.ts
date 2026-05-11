@@ -109,6 +109,7 @@ export function buildUseCases(deps: AppDependencies) {
 		},
 		tracker,
 		logger,
+		notifier: deps.services.notifier,
 	})
 	const runOutboundForExistingLead = makeRunOutboundForExistingLeadUseCase({
 		researchCompany,
@@ -119,6 +120,7 @@ export function buildUseCases(deps: AppDependencies) {
 		},
 		tracker,
 		logger,
+		notifier: deps.services.notifier,
 	})
 	const retryPipeline = makeRetryPipelineUseCase({
 		getLeadById: deps.repos.lead.findById,

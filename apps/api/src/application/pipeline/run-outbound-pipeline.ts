@@ -2,6 +2,7 @@ import type { CompanyResearchResult } from "#/application/research/research-comp
 import type { BehaviorAnalysis } from "#/domain/behavior-analysis/behavior-analysis.ts"
 import type { CreateLeadInput, Lead, ReplyStatus } from "#/domain/lead/lead.ts"
 import type { Logger } from "#/domain/ports/logger.ts"
+import type { NotificationService } from "#/domain/ports/notification-service.ts"
 import type { PipelineTracker } from "#/domain/ports/pipeline-tracker.ts"
 
 interface PipelineDeps {
@@ -15,6 +16,30 @@ interface PipelineDeps {
 	updateLeadStatus: (leadId: string, status: ReplyStatus) => Promise<void>
 	tracker: PipelineTracker
 	logger: Logger
+	notifier?: NotificationService
+}
+
+function errorMessage(error: unknown): string {
+	return error instanceof Error ? error.message : String(error)
+}
+
+function notifyPipelineFailed(
+	deps: Pick<PipelineDeps, "logger" | "notifier">,
+	leadId: string,
+	error: unknown,
+) {
+	const sendNotification = deps.notifier?.send({
+		type: "pipeline.failed",
+		leadId,
+		error: errorMessage(error),
+	})
+
+	void sendNotification?.catch((notifyError) =>
+		deps.logger.warn(
+			{ leadId, notifyError },
+			"Failed to send pipeline failure notification",
+		),
+	)
 }
 
 /**
@@ -49,7 +74,7 @@ export function makeRunOutboundPipelineUseCase(deps: PipelineDeps) {
 				email: lead.email,
 			})
 		} catch (error) {
-			const msg = error instanceof Error ? error.message : String(error)
+			const msg = errorMessage(error)
 			await deps.tracker.failStep(captureStepId, msg)
 			throw error
 		}
@@ -72,7 +97,7 @@ export function makeRunOutboundPipelineUseCase(deps: PipelineDeps) {
 					hasMarkdown: !!research.rawMarkdown,
 				})
 			} catch (error) {
-				const msg = error instanceof Error ? error.message : String(error)
+				const msg = errorMessage(error)
 				await deps.tracker.failStep(scrapeStepId, msg, {
 					url: lead.companyWebsite,
 				})
@@ -130,7 +155,7 @@ export function makeRunOutboundPipelineUseCase(deps: PipelineDeps) {
 					journeyStage: analysis.journeyStage,
 				})
 			} catch (error) {
-				const msg = error instanceof Error ? error.message : String(error)
+				const msg = errorMessage(error)
 				await deps.tracker.failStep(behaviorStepId, msg)
 				throw error
 			}
@@ -147,7 +172,7 @@ export function makeRunOutboundPipelineUseCase(deps: PipelineDeps) {
 				await deps.sendInitialEmail(lead, analysis)
 				await deps.tracker.completeStep(sendStepId)
 			} catch (error) {
-				const msg = error instanceof Error ? error.message : String(error)
+				const msg = errorMessage(error)
 				await deps.tracker.failStep(sendStepId, msg)
 				throw error
 			}
@@ -159,6 +184,7 @@ export function makeRunOutboundPipelineUseCase(deps: PipelineDeps) {
 				{ leadId: lead.id, error },
 				"Pipeline failed after capture",
 			)
+			notifyPipelineFailed(deps, lead.id, error)
 
 			// Ensure lead status reflects the failure — don't leave it stuck in "researching"
 			try {
@@ -206,7 +232,7 @@ export function makeRunOutboundForExistingLeadUseCase(
 					hasMarkdown: !!research.rawMarkdown,
 				})
 			} catch (error) {
-				const msg = error instanceof Error ? error.message : String(error)
+				const msg = errorMessage(error)
 				await deps.tracker.failStep(scrapeStepId, msg, {
 					url: lead.companyWebsite,
 				})
@@ -264,7 +290,7 @@ export function makeRunOutboundForExistingLeadUseCase(
 					journeyStage: analysis.journeyStage,
 				})
 			} catch (error) {
-				const msg = error instanceof Error ? error.message : String(error)
+				const msg = errorMessage(error)
 				await deps.tracker.failStep(behaviorStepId, msg)
 				throw error
 			}
@@ -281,7 +307,7 @@ export function makeRunOutboundForExistingLeadUseCase(
 				await deps.sendInitialEmail(lead, analysis)
 				await deps.tracker.completeStep(sendStepId)
 			} catch (error) {
-				const msg = error instanceof Error ? error.message : String(error)
+				const msg = errorMessage(error)
 				await deps.tracker.failStep(sendStepId, msg)
 				throw error
 			}
@@ -296,6 +322,7 @@ export function makeRunOutboundForExistingLeadUseCase(
 				{ leadId: lead.id, error },
 				"Background pipeline failed",
 			)
+			notifyPipelineFailed(deps, lead.id, error)
 
 			try {
 				await deps.updateLeadStatus(lead.id, "research_failed")

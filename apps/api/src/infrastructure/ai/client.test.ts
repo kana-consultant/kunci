@@ -1,5 +1,12 @@
-import { describe, expect, it } from "vitest"
+import { describe, expect, it, vi } from "vitest"
 import { isReasoningModel } from "./client.ts"
+
+vi.mock("#/infrastructure/observability/logger.ts", () => ({
+	logger: {
+		warn: vi.fn(),
+		debug: vi.fn(),
+	},
+}))
 
 describe("isReasoningModel", () => {
 	it("detects o3-mini", () => {

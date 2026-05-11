@@ -17,10 +17,12 @@ describe("runOutboundPipeline", () => {
 		updateLeadStatus: vi.fn(),
 		tracker: mockTracker as any,
 		logger: { info: vi.fn(), error: vi.fn(), warn: vi.fn(), debug: vi.fn() },
+		notifier: { send: vi.fn() },
 	}
 
 	beforeEach(() => {
 		vi.clearAllMocks()
+		mockDeps.notifier.send.mockResolvedValue(undefined)
 	})
 
 	it("should complete the pipeline successfully", async () => {
@@ -81,5 +83,29 @@ describe("runOutboundPipeline", () => {
 			"Scraping failed",
 			expect.any(Object),
 		)
+	})
+
+	it("should notify when the pipeline fails after lead capture", async () => {
+		mockDeps.captureLead.mockResolvedValue({
+			id: "lead-1",
+			email: "test@test.com",
+			companyWebsite: "acme.com",
+		})
+		mockDeps.researchCompany.mockRejectedValue(new Error("Scraping failed"))
+
+		const runPipeline = makeRunOutboundPipelineUseCase(mockDeps)
+
+		await runPipeline({
+			fullName: "John",
+			email: "test@test.com",
+			companyName: "Acme",
+			companyWebsite: "acme.com",
+		})
+
+		expect(mockDeps.notifier.send).toHaveBeenCalledWith({
+			type: "pipeline.failed",
+			leadId: "lead-1",
+			error: "Scraping failed",
+		})
 	})
 })

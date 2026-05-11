@@ -23,7 +23,10 @@ import { createResendService } from "./infrastructure/email/resend-service.ts"
 import { createMxVerifier } from "./infrastructure/email-verification/mx-verifier.ts"
 import { createNoopNotificationService } from "./infrastructure/notification/noop-service.ts"
 import { createSlackNotificationService } from "./infrastructure/notification/slack-service.ts"
-import { logger } from "./infrastructure/observability/logger.ts"
+import {
+	createRequestLogger,
+	logger,
+} from "./infrastructure/observability/logger.ts"
 import { createDeepcrawlService } from "./infrastructure/scraper/deepcrawl-service.ts"
 import { appRouter } from "./presentation/routers/index.ts"
 
@@ -140,6 +143,8 @@ export async function createServerApp() {
 
 	// Webhooks
 	app.post("/webhooks/resend", async (c) => {
+		const requestLogger = createRequestLogger(c.get("requestId") ?? "")
+
 		try {
 			const payload = await c.req.text()
 			const webhookSecret = env.RESEND_WEBHOOK_SECRET
@@ -148,7 +153,7 @@ export async function createServerApp() {
 				return c.json({ error: "webhook_not_configured" }, 503)
 			}
 
-			let event: any
+			let event: unknown
 
 			if (webhookSecret) {
 				const svixId = c.req.header("svix-id")
@@ -196,7 +201,10 @@ export async function createServerApp() {
 								messageId: receivedEmail.messageId,
 							})
 						} catch (err) {
-							logger.error({ err, emailId }, "Background reply handling failed")
+							requestLogger.error(
+								{ err, emailId },
+								"Background reply handling failed",
+							)
 						}
 					})()
 				} else if (parsedEvent.data.from) {
@@ -209,7 +217,7 @@ export async function createServerApp() {
 							messageId: parsedEvent.data.message_id || "",
 						})
 						.catch((err) =>
-							logger.error({ err }, "Background reply handling failed"),
+							requestLogger.error({ err }, "Background reply handling failed"),
 						)
 				}
 			}
@@ -220,7 +228,7 @@ export async function createServerApp() {
 					useCases.lead
 						.updateStatus(leadId, "bounced")
 						.catch((err) =>
-							logger.error(
+							requestLogger.error(
 								{ err, leadId },
 								"Failed to update lead status to bounced",
 							),
@@ -236,6 +244,7 @@ export async function createServerApp() {
 
 	// Mount oRPC
 	app.all("/rpc/*", async (c, next) => {
+		const requestLogger = createRequestLogger(c.get("requestId") ?? "")
 		const { matched, response } = await rpcHandler.handle(c.req.raw, {
 			prefix: "/rpc",
 			context: {
@@ -243,6 +252,7 @@ export async function createServerApp() {
 				session: null,
 				useCases,
 				requestId: c.get("requestId") ?? "",
+				logger: requestLogger,
 			},
 		})
 		if (matched) return c.newResponse(response.body, response)

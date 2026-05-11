@@ -8,3 +8,7 @@ export const logger = pino({
 			? { target: "pino-pretty", options: { colorize: true } }
 			: undefined,
 })
+
+export function createRequestLogger(requestId: string) {
+	return logger.child({ requestId })
+}

@@ -1,4 +1,43 @@
-import { describe, expect, it, vi } from "vitest"
+import { beforeEach, describe, expect, it, vi } from "vitest"
+
+const appMocks = vi.hoisted(() => {
+	const requestLogger = {
+		info: vi.fn(),
+		error: vi.fn(),
+		warn: vi.fn(),
+		debug: vi.fn(),
+	}
+
+	const logger = {
+		info: vi.fn(),
+		error: vi.fn(),
+		warn: vi.fn(),
+		debug: vi.fn(),
+		child: vi.fn((_bindings: Record<string, string>) => requestLogger),
+	}
+
+	const useCases = {
+		lead: {
+			updateStatus: vi.fn().mockResolvedValue(undefined),
+		},
+		email: {
+			handleReply: vi.fn().mockResolvedValue(undefined),
+		},
+	}
+
+	return {
+		logger,
+		requestLogger,
+		useCases,
+		cache: { ping: vi.fn().mockResolvedValue(true) },
+		emailService: {
+			send: vi.fn(),
+			replyInThread: vi.fn(),
+			getReceivedEmail: vi.fn(),
+			verifyWebhook: vi.fn(),
+		},
+	}
+})
 
 vi.mock("#/infrastructure/config/env.ts", () => ({
 	env: {
@@ -20,6 +59,75 @@ vi.mock("#/infrastructure/config/env.ts", () => ({
 	},
 }))
 
+vi.mock("#/infrastructure/observability/logger.ts", () => ({
+	logger: appMocks.logger,
+	createRequestLogger: (requestId: string) =>
+		appMocks.logger.child({ requestId }),
+}))
+
+vi.mock("#/application/use-cases.ts", () => ({
+	buildUseCases: vi.fn(() => appMocks.useCases),
+}))
+
+vi.mock("#/infrastructure/auth/better-auth.ts", () => ({
+	auth: {
+		handler: vi.fn(() => new Response(null, { status: 404 })),
+		api: { getSession: vi.fn().mockResolvedValue(null) },
+	},
+}))
+
+vi.mock("#/infrastructure/db/client.ts", () => ({
+	createDb: vi.fn(() => ({})),
+	db: {},
+}))
+
+vi.mock("#/infrastructure/cache/redis.ts", () => ({
+	createRedisCache: vi.fn(() => appMocks.cache),
+}))
+
+vi.mock(
+	"#/infrastructure/db/repositories/email-sequence-repository.ts",
+	() => ({
+		createEmailSequenceRepository: vi.fn(() => ({})),
+	}),
+)
+
+vi.mock("#/infrastructure/db/repositories/lead-repository.ts", () => ({
+	createLeadRepository: vi.fn(() => ({})),
+}))
+
+vi.mock("#/infrastructure/db/repositories/pipeline-step-repository.ts", () => ({
+	createPipelineStepRepository: vi.fn(() => ({})),
+}))
+
+vi.mock("#/infrastructure/db/repositories/settings-repository.ts", () => ({
+	createSettingsRepository: vi.fn(() => ({})),
+}))
+
+vi.mock("#/infrastructure/ai/openrouter-service.ts", () => ({
+	createOpenRouterService: vi.fn(() => ({ analyzeBehavior: vi.fn() })),
+}))
+
+vi.mock("#/infrastructure/email/resend-service.ts", () => ({
+	createResendService: vi.fn(() => appMocks.emailService),
+}))
+
+vi.mock("#/infrastructure/email-verification/mx-verifier.ts", () => ({
+	createMxVerifier: vi.fn(() => ({})),
+}))
+
+vi.mock("#/infrastructure/scraper/deepcrawl-service.ts", () => ({
+	createDeepcrawlService: vi.fn(() => ({})),
+}))
+
+vi.mock("#/infrastructure/notification/noop-service.ts", () => ({
+	createNoopNotificationService: vi.fn(() => ({ send: vi.fn() })),
+}))
+
+vi.mock("#/infrastructure/notification/slack-service.ts", () => ({
+	createSlackNotificationService: vi.fn(() => ({ send: vi.fn() })),
+}))
+
 function makeWebhookRequest(
 	body: unknown,
 	headers: Record<string, string> = {},
@@ -32,6 +140,12 @@ function makeWebhookRequest(
 }
 
 describe("webhook /webhooks/resend", () => {
+	beforeEach(() => {
+		vi.clearAllMocks()
+		appMocks.useCases.lead.updateStatus.mockResolvedValue(undefined)
+		appMocks.useCases.email.handleReply.mockResolvedValue(undefined)
+	})
+
 	it("returns 503 in production with no webhook secret", async () => {
 		const { Hono } = await import("hono")
 
@@ -136,5 +250,46 @@ describe("webhook /webhooks/resend", () => {
 			),
 		)
 		expect(res.status).toBe(200)
+	})
+
+	it("updates the lead status when an email bounces", async () => {
+		const { createServerApp } = await import("./app.ts")
+		const { app } = await createServerApp()
+
+		const res = await app.request(
+			makeWebhookRequest({
+				type: "email.bounced",
+				data: { tags: { lead_id: "lead-1" } },
+			}),
+		)
+
+		expect(res.status).toBe(200)
+		expect(appMocks.useCases.lead.updateStatus).toHaveBeenCalledWith(
+			"lead-1",
+			"bounced",
+		)
+	})
+
+	it("binds the webhook logger to the request id", async () => {
+		const { createServerApp } = await import("./app.ts")
+		const { app } = await createServerApp()
+
+		const res = await app.request(
+			makeWebhookRequest(
+				{
+					type: "email.replied",
+					data: {
+						from: "lead@test.com",
+						subject: "Re: Hello",
+						text: "Interested",
+						message_id: "message-1",
+					},
+				},
+				{ "X-Request-Id": "req-123" },
+			),
+		)
+
+		expect(res.status).toBe(200)
+		expect(appMocks.logger.child).toHaveBeenCalledWith({ requestId: "req-123" })
 	})
 })
