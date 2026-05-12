@@ -1,12 +1,15 @@
 import type { CreateLeadInput, Lead } from "#/domain/lead/lead.ts"
 import type { LeadRepository } from "#/domain/lead/lead-repository.ts"
+import type { OptOutRepository } from "#/domain/opt-out/opt-out-repository.ts"
 import type { EmailVerifier } from "#/domain/ports/email-verifier.ts"
 import type { Logger } from "#/domain/ports/logger.ts"
+import { inferLocaleFromEmail } from "./locale-inference.ts"
 
 export interface BulkCaptureResult {
 	created: Lead[]
 	duplicates: DuplicateEntry[]
 	invalid: InvalidEntry[]
+	suppressed: SuppressedEntry[]
 }
 
 export interface DuplicateEntry {
@@ -21,9 +24,16 @@ export interface InvalidEntry {
 	reason: string
 }
 
+export interface SuppressedEntry {
+	email: string
+	fullName: string
+	reason: string
+}
+
 interface BulkCaptureLeadDeps {
 	leadRepo: LeadRepository
 	emailVerifier: EmailVerifier
+	optOutRepo: OptOutRepository
 	logger: Logger
 }
 
@@ -37,6 +47,7 @@ export function makeBulkCaptureLeadUseCase(deps: BulkCaptureLeadDeps) {
 		const created: Lead[] = []
 		const duplicates: DuplicateEntry[] = []
 		const invalid: InvalidEntry[] = []
+		const suppressed: SuppressedEntry[] = []
 
 		// Deduplicate within the batch itself (first occurrence wins)
 		const seenEmails = new Set<string>()
@@ -55,7 +66,17 @@ export function makeBulkCaptureLeadUseCase(deps: BulkCaptureLeadDeps) {
 			}
 			seenEmails.add(normalizedEmail)
 
-			// 2. Database duplicate check
+			// 2. Opt-out / suppression list check (legal)
+			if (await deps.optOutRepo.has(normalizedEmail)) {
+				suppressed.push({
+					email: input.email,
+					fullName: input.fullName,
+					reason: "Email is on the opt-out list",
+				})
+				continue
+			}
+
+			// 3. Database duplicate check
 			const existing = await deps.leadRepo.findByEmail(normalizedEmail)
 			if (existing) {
 				duplicates.push({
@@ -66,7 +87,7 @@ export function makeBulkCaptureLeadUseCase(deps: BulkCaptureLeadDeps) {
 				continue
 			}
 
-			// 3. Email verification via DNS MX
+			// 4. Email verification via DNS MX
 			const verification = await deps.emailVerifier.verify(normalizedEmail)
 			if (!verification.valid) {
 				invalid.push({
@@ -77,19 +98,26 @@ export function makeBulkCaptureLeadUseCase(deps: BulkCaptureLeadDeps) {
 				continue
 			}
 
-			// 4. Create lead
+			// 5. Auto-infer locale from email TLD when caller did not supply one
+			const inferred = inferLocaleFromEmail(normalizedEmail)
+			const enriched: CreateLeadInput = {
+				...input,
+				email: normalizedEmail,
+				country: input.country ?? inferred.country ?? undefined,
+				locale: input.locale ?? inferred.locale ?? undefined,
+				language: input.language ?? inferred.language ?? undefined,
+				timezone: input.timezone ?? inferred.timezone ?? undefined,
+			}
+
+			// 6. Create lead
 			try {
-				const lead = await deps.leadRepo.create({
-					...input,
-					email: normalizedEmail,
-				})
+				const lead = await deps.leadRepo.create(enriched)
 				created.push(lead)
 				deps.logger.info(
-					{ leadId: lead.id, email: lead.email },
+					{ leadId: lead.id, email: lead.email, country: lead.country },
 					"Lead captured (bulk)",
 				)
 			} catch (error) {
-				// Handle race condition — another request might have created the lead
 				const msg = error instanceof Error ? error.message : String(error)
 				if (msg.includes("unique") || msg.includes("duplicate")) {
 					duplicates.push({
@@ -112,10 +140,11 @@ export function makeBulkCaptureLeadUseCase(deps: BulkCaptureLeadDeps) {
 				created: created.length,
 				duplicates: duplicates.length,
 				invalid: invalid.length,
+				suppressed: suppressed.length,
 			},
 			"Bulk capture completed",
 		)
 
-		return { created, duplicates, invalid }
+		return { created, duplicates, invalid, suppressed }
 	}
 }

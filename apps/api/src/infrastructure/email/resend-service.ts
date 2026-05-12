@@ -40,6 +40,7 @@ export function createResendService(config: ResendConfig): EmailService {
 							to: [params.to],
 							subject: params.subject,
 							html: params.html,
+							headers: buildUnsubscribeHeaders(params.unsubscribeUrl),
 							tags: [
 								{ name: "lead_id", value: params.leadId },
 								{ name: "stage", value: String(params.stage) },
@@ -118,6 +119,7 @@ export function createResendService(config: ResendConfig): EmailService {
 									...params.previousRefs,
 									params.originalMessageId,
 								].join(" "),
+								...buildUnsubscribeHeaders(params.unsubscribeUrl),
 							},
 							tags: [
 								{ name: "lead_id", value: params.leadId },
@@ -201,6 +203,16 @@ export function createResendService(config: ResendConfig): EmailService {
 				webhookSecret: secret,
 			})
 		},
+	}
+}
+
+function buildUnsubscribeHeaders(
+	unsubscribeUrl: string | undefined,
+): Record<string, string> | undefined {
+	if (!unsubscribeUrl) return undefined
+	return {
+		"List-Unsubscribe": `<${unsubscribeUrl}>`,
+		"List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
 	}
 }
 

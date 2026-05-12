@@ -13,6 +13,13 @@ export class PromptLoader {
 		}
 	}
 
+	async getLeadEnrichmentPrompt(): Promise<string> {
+		return this.getPrompt(
+			SETTING_KEYS.AI_PROMPT_LEAD_ENRICHMENT,
+			StaticPrompts.LEAD_ENRICHMENT_PROMPT,
+		)
+	}
+
 	async getBehaviorAnalyzerPrompt(): Promise<string> {
 		return this.getPrompt(
 			SETTING_KEYS.AI_PROMPT_BEHAVIOR_ANALYZER,

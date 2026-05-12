@@ -1,5 +1,6 @@
 export const SETTING_KEYS = {
 	// AI: Models
+	AI_MODEL_LEAD_ENRICHMENT: "ai.model.lead_enrichment",
 	AI_MODEL_BEHAVIOR_ANALYZER: "ai.model.behavior_analyzer",
 	AI_MODEL_WEBSITE_ANALYZER: "ai.model.website_analyzer",
 	AI_MODEL_COMPANY_PROFILER: "ai.model.company_profiler",
@@ -16,6 +17,7 @@ export const SETTING_KEYS = {
 	AI_TEMPERATURE_HTML_CONVERTER: "ai.temperature.html_converter",
 
 	// AI: Prompts
+	AI_PROMPT_LEAD_ENRICHMENT: "ai.prompt.lead_enrichment",
 	AI_PROMPT_BEHAVIOR_ANALYZER: "ai.prompt.behavior_analyzer",
 	AI_PROMPT_SEQUENCE_GENERATOR: "ai.prompt.sequence_generator",
 	AI_PROMPT_WEBSITE_ANALYZER: "ai.prompt.website_analyzer",
@@ -63,6 +65,12 @@ export const SETTING_KEYS = {
 	SCHEDULER_CRON_TIMEZONE: "scheduler.cron_timezone",
 	SCHEDULER_FOLLOWUP_DELAY_DAYS: "scheduler.followup_delay_days",
 	SCHEDULER_ENABLED: "scheduler.enabled",
+	SCHEDULER_SEND_WINDOW_ENABLED: "scheduler.send_window_enabled",
+	SCHEDULER_SEND_WINDOW_START_HOUR: "scheduler.send_window_start_hour",
+	SCHEDULER_SEND_WINDOW_END_HOUR: "scheduler.send_window_end_hour",
+	SCHEDULER_SEND_WINDOW_SKIP_WEEKENDS: "scheduler.send_window_skip_weekends",
+	SCHEDULER_SEND_WINDOW_DEFAULT_TIMEZONE:
+		"scheduler.send_window_default_timezone",
 
 	// Auto-reply chat
 	AUTO_REPLY_MAX_TURNS: "auto_reply.max_turns",

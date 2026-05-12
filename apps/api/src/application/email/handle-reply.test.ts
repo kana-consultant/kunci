@@ -27,6 +27,7 @@ function makeMocks() {
 		notifier: {
 			send: vi.fn().mockResolvedValue(undefined),
 		},
+		registerOptOut: vi.fn().mockResolvedValue(undefined),
 		logger: { info: vi.fn(), error: vi.fn(), warn: vi.fn(), debug: vi.fn() },
 		scheduleDelayedSend: vi.fn((fn: () => Promise<void>, _ms: number) => {
 			// fire synchronously in tests
@@ -105,8 +106,13 @@ describe("handleReply (chat mode)", () => {
 		expect(result.action).toBe("completed")
 		expect(result.reason).toBe("opted_out")
 		expect(mocks.leadRepo.update).toHaveBeenCalledWith("l1", {
-			replyStatus: "completed",
+			replyStatus: "opted_out",
 			completedReason: "opted_out",
+		})
+		expect(mocks.registerOptOut).toHaveBeenCalledWith({
+			email: "x@y.z",
+			reason: "Lead said stop emailing me",
+			source: "reply_classification",
 		})
 		expect(mocks.ai.generateChatReply).not.toHaveBeenCalled()
 		expect(mocks.notifier.send).toHaveBeenCalled()

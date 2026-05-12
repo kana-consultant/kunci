@@ -45,6 +45,13 @@ export interface UpdateLeadData {
 	linkedinUrl: string
 	autoReplyTurns: number
 	completedReason: CompletedReason | null
+	country: string | null
+	locale: string | null
+	language: string | null
+	timezone: string | null
+	companyIndustry: string | null
+	companySize: string | null
+	enrichedAt: Date
 }
 
 export interface PendingFollowupsParams {

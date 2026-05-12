@@ -1,8 +1,9 @@
 import type { SettingsService } from "#/application/shared/settings-service.ts"
 import type { EmailMessage } from "#/domain/email-message/email-message.ts"
 import type { EmailMessageRepository } from "#/domain/email-message/email-message-repository.ts"
-import type { CompletedReason } from "#/domain/lead/lead.ts"
+import type { CompletedReason, Lead } from "#/domain/lead/lead.ts"
 import type { LeadRepository } from "#/domain/lead/lead-repository.ts"
+import type { OptOutSource } from "#/domain/opt-out/opt-out.ts"
 import type {
 	AIService,
 	ChatTurn,
@@ -21,6 +22,11 @@ export interface HandleReplyDependencies {
 	settings: SettingsService
 	notifier: NotificationService
 	logger: Logger
+	registerOptOut: (params: {
+		email: string
+		reason?: string | null
+		source: OptOutSource
+	}) => Promise<void>
 	scheduleDelayedSend?: (fn: () => Promise<void>, delayMs: number) => void
 }
 
@@ -114,7 +120,7 @@ export function makeHandleReplyUseCase(deps: HandleReplyDependencies) {
 		// Terminal intents → stop loop
 		const terminalReason = pickTerminalReason(intent.intent)
 		if (terminalReason) {
-			await completeLead(deps, lead.id, terminalReason, intent)
+			await completeLead(deps, lead, terminalReason, intent)
 			return { status: "success", action: "completed", reason: terminalReason }
 		}
 
@@ -124,7 +130,7 @@ export function makeHandleReplyUseCase(deps: HandleReplyDependencies) {
 			6,
 		)
 		if (lead.autoReplyTurns >= maxTurns) {
-			await completeLead(deps, lead.id, "cap_reached", intent)
+			await completeLead(deps, lead, "cap_reached", intent)
 			deps.logger.info(
 				{ leadId: lead.id, turns: lead.autoReplyTurns, maxTurns },
 				"Auto-reply turn cap reached; marking completed",
@@ -141,7 +147,10 @@ export function makeHandleReplyUseCase(deps: HandleReplyDependencies) {
 				payload.textBody,
 			)
 		} catch (err) {
-			deps.logger.error({ err, leadId: lead.id }, "Chat reply generation failed")
+			deps.logger.error(
+				{ err, leadId: lead.id },
+				"Chat reply generation failed",
+			)
 			await deps.leadRepo.update(lead.id, { replyStatus: "pending" })
 			throw err
 		}
@@ -253,18 +262,31 @@ function pickTerminalReason(
 
 async function completeLead(
 	deps: HandleReplyDependencies,
-	leadId: string,
+	lead: Lead,
 	reason: CompletedReason,
 	intent: IntentClassification,
 ) {
-	await deps.leadRepo.update(leadId, {
-		replyStatus: "completed",
+	await deps.leadRepo.update(lead.id, {
+		replyStatus: reason === "opted_out" ? "opted_out" : "completed",
 		completedReason: reason,
 	})
+
+	if (reason === "opted_out") {
+		try {
+			await deps.registerOptOut({
+				email: lead.email,
+				reason: intent.reasoning,
+				source: "reply_classification",
+			})
+		} catch (err) {
+			deps.logger.warn({ err, leadId: lead.id }, "Failed to register opt-out")
+		}
+	}
+
 	try {
 		await deps.notifier.send({
 			type: "lead.completed",
-			leadId,
+			leadId: lead.id,
 			reason,
 			intent: intent.intent,
 			confidence: intent.confidence,

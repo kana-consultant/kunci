@@ -11,6 +11,7 @@ describe("runOutboundPipeline", () => {
 
 	const mockDeps = {
 		captureLead: vi.fn(),
+		enrichLead: vi.fn(),
 		researchCompany: vi.fn(),
 		analyzeBehavior: vi.fn(),
 		sendInitialEmail: vi.fn(),
@@ -23,6 +24,14 @@ describe("runOutboundPipeline", () => {
 	beforeEach(() => {
 		vi.clearAllMocks()
 		mockDeps.notifier.send.mockResolvedValue(undefined)
+		mockDeps.enrichLead.mockImplementation(async (lead: any) => ({
+			updatedLead: lead,
+			signals: {
+				recentSignals: null,
+				painPointHypothesis: null,
+				targetMarket: null,
+			},
+		}))
 	})
 
 	it("should complete the pipeline successfully", async () => {

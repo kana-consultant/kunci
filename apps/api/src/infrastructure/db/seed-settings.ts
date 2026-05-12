@@ -373,6 +373,47 @@ export const DEFAULT_SETTINGS = [
 		label: "Scheduler Enabled",
 		valueType: "boolean",
 	},
+	{
+		key: SETTING_KEYS.SCHEDULER_SEND_WINDOW_ENABLED,
+		value: true,
+		category: "scheduler",
+		label: "Respect Send Window",
+		valueType: "boolean",
+		description:
+			"When enabled, outbound emails are only enqueued for delivery during the lead's local business hours.",
+	},
+	{
+		key: SETTING_KEYS.SCHEDULER_SEND_WINDOW_START_HOUR,
+		value: 9,
+		category: "scheduler",
+		label: "Send Window Start Hour (local)",
+		valueType: "number",
+		description: "Inclusive. 0-23 in the recipient's local timezone.",
+	},
+	{
+		key: SETTING_KEYS.SCHEDULER_SEND_WINDOW_END_HOUR,
+		value: 17,
+		category: "scheduler",
+		label: "Send Window End Hour (local)",
+		valueType: "number",
+		description: "Exclusive. 0-23 in the recipient's local timezone.",
+	},
+	{
+		key: SETTING_KEYS.SCHEDULER_SEND_WINDOW_SKIP_WEEKENDS,
+		value: true,
+		category: "scheduler",
+		label: "Skip Weekends",
+		valueType: "boolean",
+	},
+	{
+		key: SETTING_KEYS.SCHEDULER_SEND_WINDOW_DEFAULT_TIMEZONE,
+		value: "Asia/Jakarta",
+		category: "scheduler",
+		label: "Default Recipient Timezone",
+		valueType: "string",
+		description:
+			"Used when a lead has no timezone (e.g. enrichment failed). Asia/Jakarta = WIB, the most common ASEAN default.",
+	},
 
 	// ── Auto-reply chat ──
 	{
@@ -399,7 +440,6 @@ export const DEFAULT_SETTINGS = [
 		category: "auto_reply",
 		label: "Auto-Reply Max Delay (ms)",
 		valueType: "number",
-		description:
-			"Upper bound for randomized delay before sending an AI reply.",
+		description: "Upper bound for randomized delay before sending an AI reply.",
 	},
 ]

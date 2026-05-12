@@ -4,6 +4,7 @@ import type { LeadRepository } from "#/domain/lead/lead-repository.ts"
 import type { EmailVerifier } from "#/domain/ports/email-verifier.ts"
 import type { Logger } from "#/domain/ports/logger.ts"
 import type { NotificationService } from "#/domain/ports/notification-service.ts"
+import { inferLocaleFromEmail } from "./locale-inference.ts"
 
 interface CaptureLeadDeps {
 	leadRepo: LeadRepository
@@ -33,9 +34,19 @@ export function makeCaptureLeadUseCase(deps: CaptureLeadDeps) {
 			throw badRequest(`Invalid email: ${verification.reason}`)
 		}
 
-		// 3. Create lead
-		const lead = await deps.leadRepo.create(input)
-		deps.logger.info({ leadId: lead.id, email: lead.email }, "Lead captured")
+		// 3. Create lead with auto-inferred locale (if caller didn't pass one)
+		const inferred = inferLocaleFromEmail(input.email)
+		const lead = await deps.leadRepo.create({
+			...input,
+			country: input.country ?? inferred.country ?? undefined,
+			locale: input.locale ?? inferred.locale ?? undefined,
+			language: input.language ?? inferred.language ?? undefined,
+			timezone: input.timezone ?? inferred.timezone ?? undefined,
+		})
+		deps.logger.info(
+			{ leadId: lead.id, email: lead.email, country: lead.country },
+			"Lead captured",
+		)
 
 		return lead
 	}

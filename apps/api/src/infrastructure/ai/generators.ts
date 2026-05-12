@@ -18,6 +18,7 @@ import type {
 	PersonalizedReply,
 } from "#/domain/ports/ai-service.ts"
 import { SETTING_KEYS } from "#/domain/settings/setting-keys.ts"
+import { formatLocaleContext } from "./locale-context.ts"
 import { PromptLoader } from "./prompt-loader.ts"
 import { callOpenRouterQueued } from "./queue.ts"
 
@@ -50,13 +51,16 @@ export async function generateEmailSequence(
 				{
 					role: "user",
 					content: `Lead: ${lead.fullName} at ${lead.companyName}
+${formatLocaleContext(lead)}
 ${businessContextStr}
 LinkedIn: ${lead.linkedinUrl ?? "Not provided"}
 Behavioral Profile: ${analysis.behavioralProfile}
 Pain Points: ${analysis.painPoints}
 Journey Stage: ${analysis.journeyStage}
 Psychological Triggers: ${analysis.psychologicalTriggers}
-Optimal Approach: ${analysis.optimalApproach}`,
+Optimal Approach: ${analysis.optimalApproach}
+
+CRITICAL: Follow the MARKET CONTEXT rules above strictly when choosing language, tone, greeting, and CTA framing. The lead is more likely to respond if the body matches their cultural and business context.`,
 				},
 			],
 			schema: {
@@ -194,6 +198,7 @@ export async function personalizeReply(
 				{
 					role: "user",
 					content: `Lead: ${lead.fullName} at ${lead.companyName}
+${formatLocaleContext(lead)}
 ${businessContextStr}
 Pain Points: ${lead.painPoints ?? "N/A"}
 
@@ -203,7 +208,9 @@ ${replyText}
 Email Template:
 Content: ${template.content}
 CTA: ${template.cta}
-Trigger: ${template.psychologicalTrigger}`,
+Trigger: ${template.psychologicalTrigger}
+
+CRITICAL: Match the MARKET CONTEXT rules above for language and tone.`,
 				},
 			],
 			schema: {
@@ -249,7 +256,15 @@ export async function pickSubjectLine(
 				{ role: "system", content: prompt },
 				{
 					role: "user",
-					content: `Lead: ${lead.fullName} at ${lead.companyName}\n\nSubject Line Variations:\n1. ${variations[0]}\n2. ${variations[1]}\n3. ${variations[2]}`,
+					content: `Lead: ${lead.fullName} at ${lead.companyName}
+${formatLocaleContext(lead)}
+
+Subject Line Variations:
+1. ${variations[0]}
+2. ${variations[1]}
+3. ${variations[2]}
+
+When the market context implies a non-English body language, prefer the subject line that matches that language or that is short, neutral, and unlikely to read as a US-marketing template.`,
 				},
 			],
 			schema: {
@@ -308,12 +323,15 @@ export async function classifyIntent(
 				{
 					role: "user",
 					content: `Lead: ${lead.fullName} at ${lead.companyName}
+${formatLocaleContext(lead)}
 
 Prior thread:
 ${formatHistoryForPrompt(history)}
 
 Latest reply from lead:
-${replyText}`,
+${replyText}
+
+NOTE: The lead may reply in their local language (Bahasa Indonesia, Thai, Vietnamese, etc.). Common opt-out phrases in those languages also count as "unsubscribe" (e.g. ID: "berhenti", "jangan kirim lagi"; TH: "ยกเลิก", "หยุดส่ง"; VN: "huỷ", "ngừng gửi").`,
 				},
 			],
 			schema: {
@@ -393,13 +411,17 @@ export async function generateChatReply(
 - Company: ${lead.companyName}
 - Pain points: ${lead.painPoints ?? "N/A"}
 
+${formatLocaleContext(lead)}
+
 ${businessContextStr}
 
 Full thread so far:
 ${formatHistoryForPrompt(history)}
 
 The lead's latest message (respond to this):
-${latestInbound}`,
+${latestInbound}
+
+CRITICAL: Stay in the language and tone defined by MARKET CONTEXT. If the lead's last message was in a different language than the body language defined above, switch to the lead's language for this reply.`,
 				},
 			],
 			schema: {
