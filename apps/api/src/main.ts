@@ -7,7 +7,7 @@ import { startScheduler } from "./infrastructure/scheduler/cron.ts"
 async function bootstrap() {
 	const { app, useCases } = await createServerApp()
 
-	startScheduler(useCases)
+	await startScheduler(useCases)
 
 	serve(
 		{

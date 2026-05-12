@@ -145,6 +145,7 @@ export function buildUseCases(deps: AppDependencies) {
 	const processPendingFollowups = makeProcessPendingFollowupsUseCase({
 		leadRepo: deps.repos.lead,
 		sendFollowup,
+		settings: deps.services.settings,
 		logger,
 	})
 

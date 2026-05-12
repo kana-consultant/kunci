@@ -1,10 +1,15 @@
 import { os } from "@orpc/server"
 import { z } from "zod"
+import { badRequest } from "#/application/shared/errors.ts"
+import { SETTING_KEYS } from "#/domain/settings/setting-keys.ts"
 import type { ORPCContext } from "#/presentation/orpc/context"
 import {
 	protectedProcedure,
 	publicProcedure,
 } from "#/presentation/orpc/middleware"
+
+const DEFAULT_BULK_CAPTURE_LIMIT = 100
+const ABSOLUTE_BULK_CAPTURE_LIMIT = 1000
 
 function isLinkedInUrl(value: string): boolean {
 	try {
@@ -38,7 +43,10 @@ const bulkCaptureLeadSchema = z.object({
 	leads: z
 		.array(captureLeadSchema)
 		.min(1, "At least one lead is required")
-		.max(100, "Maximum 100 leads per batch"),
+		.max(
+			ABSOLUTE_BULK_CAPTURE_LIMIT,
+			`Maximum ${ABSOLUTE_BULK_CAPTURE_LIMIT} leads per request`,
+		),
 })
 
 export const leadRouter = os.$context<ORPCContext>().router({
@@ -80,6 +88,11 @@ export const leadRouter = os.$context<ORPCContext>().router({
 			}),
 		)
 		.handler(async ({ input, context }) => {
+			const maxLeads = await getBulkCaptureLimit(context)
+			if (input.leads.length > maxLeads) {
+				throw badRequest(`Maximum ${maxLeads} leads per batch`)
+			}
+
 			return context.useCases.lead.bulkCapture(input.leads)
 		}),
 
@@ -122,3 +135,17 @@ export const leadRouter = os.$context<ORPCContext>().router({
 			return context.useCases.pipeline.retry(input.leadId)
 		}),
 })
+
+async function getBulkCaptureLimit(context: ORPCContext): Promise<number> {
+	const configuredLimit = await context.useCases.settings.get<number | string>(
+		SETTING_KEYS.PIPELINE_BULK_IMPORT_MAX,
+		DEFAULT_BULK_CAPTURE_LIMIT,
+	)
+	const limit = Number(configuredLimit)
+
+	if (!Number.isFinite(limit) || limit < 1) {
+		return DEFAULT_BULK_CAPTURE_LIMIT
+	}
+
+	return Math.min(Math.floor(limit), ABSOLUTE_BULK_CAPTURE_LIMIT)
+}

@@ -207,8 +207,8 @@ Edit `.env` with your API keys:
 | `SENDER_NAME` | Sender display name | Yes |
 | `DEEPCRAWL_API_KEY` | [Deepcrawl](https://deepcrawl.com) API key for web scraping | Yes |
 | `LINKEDIN_CRAWLING_PERMISSION_CONFIRMED` | Enables permission-gated LinkedIn crawl attempts. Keep `false` unless LinkedIn has explicitly approved your crawl scope. | Optional |
-| `PORT` | API server port (default: `3001`) | Optional |
-| `WEB_ORIGIN` | Frontend URL for CORS (default: `http://localhost:3000`) | Optional |
+| `PORT` | API server port (default: `3005`) | Optional |
+| `WEB_ORIGIN` | Frontend URL for CORS and auth origin checks (default: `http://localhost:5418`) | Optional |
 
 ### 5. Initialize the database
 
@@ -223,8 +223,8 @@ pnpm db:push
 pnpm dev
 
 # Or start individually
-pnpm dev:api   # API on http://localhost:3001
-pnpm dev:web   # Web on http://localhost:3000
+pnpm dev:api   # API on http://localhost:3005
+pnpm dev:web   # Web on http://localhost:5418
 ```
 
 ---
@@ -233,7 +233,7 @@ pnpm dev:web   # Web on http://localhost:3000
 
 ### Adding a Lead
 
-1. Navigate to `http://localhost:3000/capture`
+1. Navigate to `http://localhost:5418/capture`
 2. Fill in the lead's details (name, email, company, website)
 3. Click **"Capture Lead"**
 4. The AI pipeline runs automatically in the background
@@ -257,7 +257,7 @@ Subscribe to `email.replied` and `email.received` events.
 #### UAT Scenario: "Inbound Email triggers AI Auto-Reply"
 
 **Prerequisites:**
-1. Backend running in an internet-accessible environment (or use `ngrok` for local: `ngrok http 3001`).
+1. Backend running in an internet-accessible environment (or use `ngrok` for local: `ngrok http 3005`).
 2. Add `https://<ngrok-url>/webhooks/resend` in Resend Dashboard -> Webhooks.
 3. Check events: `email.received` and `email.replied`.
 4. Copy *Webhook Secret* to `.env`: `RESEND_WEBHOOK_SECRET=whsec_...`

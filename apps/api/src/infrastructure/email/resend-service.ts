@@ -10,21 +10,27 @@ import type {
 	ReplyInThreadParams,
 	SendEmailParams,
 } from "#/domain/ports/email-service.ts"
+import { SETTING_KEYS } from "#/domain/settings/setting-keys.ts"
 import { logger } from "#/infrastructure/observability/logger.ts"
+
+interface SettingsReader {
+	get<T>(key: string, defaultValue?: T): Promise<T>
+}
 
 interface ResendConfig {
 	apiKey: string
 	senderEmail: string
 	senderName: string
+	settings?: SettingsReader
 }
 
 export function createResendService(config: ResendConfig): EmailService {
 	const resend = new Resend(config.apiKey)
-	const from = `${config.senderName} <${config.senderEmail}>`
 
 	return {
 		async send(params: SendEmailParams): Promise<EmailSendResult> {
 			let lastError: any
+			const from = await getSender(config)
 
 			for (let attempt = 1; attempt <= 3; attempt++) {
 				try {
@@ -96,6 +102,7 @@ export function createResendService(config: ResendConfig): EmailService {
 				: `Re: ${params.subject}`
 
 			let lastError: any
+			const from = await getSender(config)
 
 			for (let attempt = 1; attempt <= 3; attempt++) {
 				try {
@@ -195,4 +202,20 @@ export function createResendService(config: ResendConfig): EmailService {
 			})
 		},
 	}
+}
+
+async function getSender(config: ResendConfig): Promise<string> {
+	const configuredName = await config.settings?.get<string>(
+		SETTING_KEYS.EMAIL_SENDER_NAME,
+		config.senderName,
+	)
+	const configuredEmail = await config.settings?.get<string>(
+		SETTING_KEYS.EMAIL_SENDER_EMAIL,
+		config.senderEmail,
+	)
+
+	const senderName = configuredName?.trim() || config.senderName
+	const senderEmail = configuredEmail?.trim() || config.senderEmail
+
+	return `${senderName} <${senderEmail}>`
 }

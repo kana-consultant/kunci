@@ -26,11 +26,14 @@ describe("processFollowups", () => {
 	const mockDeps = {
 		leadRepo: { findPendingFollowups: vi.fn() },
 		sendFollowup: vi.fn(),
+		settings: { get: vi.fn() },
 		logger: { info: vi.fn(), error: vi.fn(), warn: vi.fn(), debug: vi.fn() },
 	}
 
 	beforeEach(() => {
 		vi.clearAllMocks()
+		vi.useRealTimers()
+		mockDeps.settings.get.mockResolvedValue(4)
 	})
 
 	it("processes qualifying leads and returns counters", async () => {
@@ -48,6 +51,22 @@ describe("processFollowups", () => {
 			maxStage: 2,
 			lastEmailBefore: expect.any(Date),
 		})
+	})
+
+	it("uses configured follow-up delay from settings", async () => {
+		vi.useFakeTimers()
+		vi.setSystemTime(new Date("2026-01-10T00:00:00.000Z"))
+		mockDeps.settings.get.mockResolvedValue(7)
+		mockDeps.leadRepo.findPendingFollowups.mockResolvedValue([])
+
+		const process = makeProcessPendingFollowupsUseCase(mockDeps as any)
+		await process()
+
+		expect(mockDeps.leadRepo.findPendingFollowups).toHaveBeenCalledWith(
+			expect.objectContaining({
+				lastEmailBefore: new Date("2026-01-03T00:00:00.000Z"),
+			}),
+		)
 	})
 
 	it("increments errors counter when one sendFollowup fails", async () => {

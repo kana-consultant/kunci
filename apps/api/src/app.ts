@@ -83,6 +83,7 @@ export async function createServerApp() {
 			apiKey: env.RESEND_API_KEY,
 			senderEmail: env.SENDER_EMAIL,
 			senderName: env.SENDER_NAME,
+			settings: settingsService,
 		}),
 		cache,
 		settings: settingsService,
