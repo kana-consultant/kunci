@@ -29,5 +29,10 @@
 	},
 	"dependencies": {
 		"@orpc/server": "^1.14.0"
+	},
+	"pnpm": {
+		"onlyBuiltDependencies": [
+			"msgpackr-extract"
+		]
 	}
 }
