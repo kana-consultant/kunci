@@ -10,7 +10,11 @@ const rootPkg = JSON.parse(
 )
 
 export default defineConfig(({ mode }) => {
-	const env = loadEnv(mode, process.cwd(), "")
+	// Read env from both the web app dir and the monorepo root so values like
+	// VITE_ALLOWED_HOSTS / VITE_API_URL can live in the shared root .env.
+	const rootEnv = loadEnv(mode, path.resolve(__dirname, "../.."), "")
+	const localEnv = loadEnv(mode, process.cwd(), "")
+	const env = { ...rootEnv, ...localEnv }
 	const apiTarget = env.VITE_API_URL || "http://localhost:3005"
 
 	return {
@@ -33,6 +37,11 @@ export default defineConfig(({ mode }) => {
 		},
 		server: {
 			port: 5418,
+			// Allow tunnelled hosts (ngrok, cloudflared, etc.) by listing them in
+			// VITE_ALLOWED_HOSTS as a comma-separated string. Falls back to localhost.
+			allowedHosts: env.VITE_ALLOWED_HOSTS
+				? env.VITE_ALLOWED_HOSTS.split(",").map((s) => s.trim()).filter(Boolean)
+				: ["localhost", "127.0.0.1"],
 			proxy: {
 				"/rpc": apiTarget,
 				"/api/auth": apiTarget,
