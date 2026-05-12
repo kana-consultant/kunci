@@ -21,6 +21,7 @@ import { createLeadRepository } from "./infrastructure/db/repositories/lead-repo
 import { createOptOutRepository } from "./infrastructure/db/repositories/opt-out-repository.ts"
 import { createPipelineStepRepository } from "./infrastructure/db/repositories/pipeline-step-repository.ts"
 import { createSettingsRepository } from "./infrastructure/db/repositories/settings-repository.ts"
+import { createImapInbound } from "./infrastructure/email/imap-inbound.ts"
 import { createResendService } from "./infrastructure/email/resend-service.ts"
 import { createMxVerifier } from "./infrastructure/email-verification/mx-verifier.ts"
 import { createLinkedInService } from "./infrastructure/linkedin/linkedin-service.ts"
@@ -120,6 +121,20 @@ export async function createServerApp() {
 		logger,
 	})
 
+	const inboundMailbox =
+		env.IMAP_ENABLED && env.IMAP_HOST && env.IMAP_USER && env.IMAP_PASSWORD
+			? createImapInbound({
+					host: env.IMAP_HOST,
+					port: env.IMAP_PORT,
+					secure: env.IMAP_SECURE,
+					user: env.IMAP_USER,
+					password: env.IMAP_PASSWORD,
+					mailbox: env.IMAP_MAILBOX,
+					batchSize: env.IMAP_BATCH_SIZE,
+					logger,
+				})
+			: undefined
+
 	// 2. Build Application Use Cases
 	const useCases = buildUseCases({
 		repos: {
@@ -132,6 +147,7 @@ export async function createServerApp() {
 		tracker,
 		logger,
 		jobQueue: queueHandle.queue,
+		inboundMailbox,
 		config: {
 			unsubscribe: {
 				baseUrl: publicApiBase,
