@@ -1,6 +1,6 @@
 {
 	"name": "@kunci/root",
-	"version": "1.0.0",
+	"version": "2.0.0",
 	"private": true,
 	"scripts": {
 		"dev": "pnpm --filter @kunci/api dev & pnpm --filter @kunci/web dev",
