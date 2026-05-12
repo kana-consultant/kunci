@@ -7,7 +7,7 @@ import {
 	Skeleton,
 } from "@kana-consultant/ui-kit"
 import { useQuery } from "@tanstack/react-query"
-import { createFileRoute, Link } from "@tanstack/react-router"
+import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { Plus, Users } from "lucide-react"
 import { orpc } from "~/libs/orpc/client"
 
@@ -19,6 +19,7 @@ export const Route = createFileRoute("/_authenticated/leads/")({
 })
 
 function LeadsPage() {
+	const navigate = useNavigate()
 	const query = useQuery(
 		orpc.lead.list.queryOptions({ input: { page: 1, limit: 50 } }),
 	)
@@ -137,11 +138,12 @@ function LeadsPage() {
 								Add a lead to start research, personalization, and outbound
 								email sequencing.
 							</p>
-							<Button asChild className="mt-5">
-								<Link to="/capture">
-									<Plus className="size-4" />
-									Capture your first lead
-								</Link>
+							<Button
+								className="mt-5"
+								leadingIcon={<Plus className="size-4" />}
+								onClick={() => navigate({ to: "/capture" })}
+							>
+								Capture your first lead
 							</Button>
 						</div>
 					) : (
