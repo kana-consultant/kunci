@@ -22,6 +22,10 @@ export function createLeadRepository(db: Database): LeadRepository {
 					painPoints: input.painPoints ?? null,
 					leadSource: input.leadSource ?? null,
 					linkedinUrl: input.linkedinUrl ?? null,
+					country: input.country ?? null,
+					locale: input.locale ?? null,
+					language: input.language ?? null,
+					timezone: input.timezone ?? null,
 				})
 				.returning()
 
@@ -104,6 +108,17 @@ export function createLeadRepository(db: Database): LeadRepository {
 					...(data.completedReason !== undefined
 						? { completedReason: data.completedReason }
 						: {}),
+					...(data.country !== undefined ? { country: data.country } : {}),
+					...(data.locale !== undefined ? { locale: data.locale } : {}),
+					...(data.language !== undefined ? { language: data.language } : {}),
+					...(data.timezone !== undefined ? { timezone: data.timezone } : {}),
+					...(data.companyIndustry !== undefined
+						? { companyIndustry: data.companyIndustry }
+						: {}),
+					...(data.companySize !== undefined
+						? { companySize: data.companySize }
+						: {}),
+					...(data.enrichedAt ? { enrichedAt: data.enrichedAt } : {}),
 					updatedAt: new Date(),
 				})
 				.where(eq(leads.id, id))
@@ -243,6 +258,13 @@ function mapRowToLead(row: any): Lead {
 		lastEmailSentAt: row.lastEmailSentAt,
 		autoReplyTurns: row.autoReplyTurns ?? 0,
 		completedReason: (row.completedReason ?? null) as Lead["completedReason"],
+		country: row.country ?? null,
+		locale: row.locale ?? null,
+		language: row.language ?? null,
+		timezone: row.timezone ?? null,
+		companyIndustry: row.companyIndustry ?? null,
+		companySize: row.companySize ?? null,
+		enrichedAt: row.enrichedAt ?? null,
 		createdAt: row.createdAt,
 		updatedAt: row.updatedAt,
 	}

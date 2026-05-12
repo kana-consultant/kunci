@@ -11,11 +11,13 @@ import type {
 	ChatTurn,
 	CompanyDataInput,
 	EmailTemplateInput,
+	EnrichLeadInput,
 } from "#/domain/ports/ai-service.ts"
 import {
 	analyzeBehavior,
 	analyzeWebsite,
 	buildCompanyProfile,
+	enrichLead,
 } from "./analyzers.ts"
 import {
 	classifyIntent,
@@ -38,6 +40,9 @@ export function createOpenRouterService(config: OpenRouterConfig): AIService {
 	const { apiKey } = config
 
 	return {
+		enrichLead: (input: EnrichLeadInput) =>
+			enrichLead(apiKey, config.settings, input),
+
 		analyzeBehavior: (lead: Lead, companyProfile: string) =>
 			analyzeBehavior(apiKey, config.settings, lead, companyProfile),
 

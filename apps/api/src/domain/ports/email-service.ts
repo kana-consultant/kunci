@@ -29,6 +29,8 @@ export interface SendEmailParams {
 	html: string
 	leadId: string
 	stage: number
+	/** RFC 8058 one-click unsubscribe URL. If set, List-Unsubscribe headers are added. */
+	unsubscribeUrl?: string
 }
 
 export interface ReplyInThreadParams {
@@ -39,6 +41,7 @@ export interface ReplyInThreadParams {
 	previousRefs: string[]
 	leadId: string
 	stage: number
+	unsubscribeUrl?: string
 }
 
 export interface EmailSendResult {

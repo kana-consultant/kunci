@@ -18,6 +18,7 @@ import { createDb } from "./infrastructure/db/client.ts"
 import { createEmailMessageRepository } from "./infrastructure/db/repositories/email-message-repository.ts"
 import { createEmailSequenceRepository } from "./infrastructure/db/repositories/email-sequence-repository.ts"
 import { createLeadRepository } from "./infrastructure/db/repositories/lead-repository.ts"
+import { createOptOutRepository } from "./infrastructure/db/repositories/opt-out-repository.ts"
 import { createPipelineStepRepository } from "./infrastructure/db/repositories/pipeline-step-repository.ts"
 import { createSettingsRepository } from "./infrastructure/db/repositories/settings-repository.ts"
 import { createResendService } from "./infrastructure/email/resend-service.ts"
@@ -29,6 +30,7 @@ import {
 	createRequestLogger,
 	logger,
 } from "./infrastructure/observability/logger.ts"
+import { createPipelineQueue } from "./infrastructure/queue/bullmq-pipeline-queue.ts"
 import { createDeepcrawlService } from "./infrastructure/scraper/deepcrawl-service.ts"
 import { appRouter } from "./presentation/routers/index.ts"
 
@@ -52,6 +54,16 @@ function readAppVersion(): string {
 
 const APP_VERSION = readAppVersion()
 
+function renderUnsubscribePage(
+	opts: { status: "ok"; email: string } | { status: "error"; message: string },
+): string {
+	const body =
+		opts.status === "ok"
+			? `<h1>You're unsubscribed</h1><p>The address <strong>${opts.email}</strong> will no longer receive emails from us.</p>`
+			: `<h1>Couldn't unsubscribe</h1><p>${opts.message}</p>`
+	return `<!doctype html><html><head><meta charset="utf-8"><title>Unsubscribe</title><style>body{font-family:-apple-system,Segoe UI,Roboto,sans-serif;max-width:520px;margin:80px auto;padding:0 24px;color:#111827;line-height:1.5}h1{font-size:20px;margin-bottom:12px}p{color:#374151}</style></head><body>${body}</body></html>`
+}
+
 export async function createServerApp() {
 	// 1. Initialize Infrastructure
 	const db = createDb(env.DATABASE_URL)
@@ -62,6 +74,7 @@ export async function createServerApp() {
 		sequence: createEmailSequenceRepository(db),
 		message: createEmailMessageRepository(db),
 		settings: createSettingsRepository(db),
+		optOut: createOptOutRepository(db),
 	}
 
 	const settingsService = new SettingsService(repos.settings, cache)
@@ -94,12 +107,41 @@ export async function createServerApp() {
 
 	const tracker = createPipelineStepRepository(db)
 
+	const publicApiBase = env.PUBLIC_API_URL ?? `http://localhost:${env.PORT}`
+	const unsubscribeSecret = env.UNSUBSCRIBE_SECRET ?? env.BETTER_AUTH_SECRET
+
+	const queueHandle = createPipelineQueue({
+		redisUrl: env.REDIS_URL,
+		concurrency: env.PIPELINE_WORKER_CONCURRENCY,
+		rateLimit: {
+			max: env.PIPELINE_RATE_MAX,
+			duration: env.PIPELINE_RATE_DURATION_MS,
+		},
+		logger,
+	})
+
 	// 2. Build Application Use Cases
 	const useCases = buildUseCases({
-		repos,
+		repos: {
+			lead: repos.lead,
+			sequence: repos.sequence,
+			message: repos.message,
+			optOut: repos.optOut,
+		},
 		services,
 		tracker,
 		logger,
+		jobQueue: queueHandle.queue,
+		config: {
+			unsubscribe: {
+				baseUrl: publicApiBase,
+				secret: unsubscribeSecret,
+			},
+			sendEmail: {
+				senderName: env.SENDER_NAME,
+				senderCompany: env.SENDER_COMPANY,
+			},
+		},
 	})
 
 	// 3. Setup oRPC
@@ -139,6 +181,45 @@ export async function createServerApp() {
 				.passthrough(),
 		})
 		.passthrough()
+
+	// Unsubscribe (public, token-protected). Both GET and POST register opt-out
+	// because RFC 8058 one-click unsubscribe requires POST, but many MUAs
+	// preview/click the link as GET.
+	const unsubscribeHandler = async (c: any) => {
+		const token = c.req.param("token")
+		const encodedEmail = c.req.query("e")
+		const reason = c.req.query("reason")
+		if (!encodedEmail) {
+			return c.html(
+				renderUnsubscribePage({
+					status: "error",
+					message: "Missing email parameter.",
+				}),
+				400,
+			)
+		}
+		try {
+			const result = await useCases.optOut.unsubscribeByToken({
+				token,
+				encodedEmail,
+				reason,
+			})
+			return c.html(
+				renderUnsubscribePage({ status: "ok", email: result.email }),
+			)
+		} catch (err) {
+			logger.warn({ err }, "Unsubscribe failed")
+			return c.html(
+				renderUnsubscribePage({
+					status: "error",
+					message: "Invalid or expired unsubscribe link.",
+				}),
+				400,
+			)
+		}
+	}
+	app.get("/unsubscribe/:token", unsubscribeHandler)
+	app.post("/unsubscribe/:token", unsubscribeHandler)
 
 	// Health checks
 	app.get("/healthz", (c) => c.json({ status: "ok", version: APP_VERSION }))
@@ -276,5 +357,5 @@ export async function createServerApp() {
 		app.get("*", serveStatic({ root: env.WEB_DIST_PATH, path: "index.html" }))
 	}
 
-	return { app, useCases }
+	return { app, useCases, queueHandle }
 }

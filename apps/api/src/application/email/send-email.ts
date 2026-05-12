@@ -3,21 +3,43 @@ import type { BehaviorAnalysis } from "#/domain/behavior-analysis/behavior-analy
 import type { EmailSequenceRepository } from "#/domain/email-sequence/email-sequence-repository.ts"
 import type { Lead } from "#/domain/lead/lead.ts"
 import type { LeadRepository } from "#/domain/lead/lead-repository.ts"
+import type { OptOutRepository } from "#/domain/opt-out/opt-out-repository.ts"
 import type { AIService } from "#/domain/ports/ai-service.ts"
 import type { EmailService } from "#/domain/ports/email-service.ts"
 import type { Logger } from "#/domain/ports/logger.ts"
+import { appendFooterToHtml, buildFooterHtml } from "./email-footer.ts"
+
+export interface SendEmailConfig {
+	senderName: string
+	senderCompany: string
+}
 
 interface EmailUseCaseDeps {
 	leadRepo: LeadRepository
 	sequenceRepo: EmailSequenceRepository
+	optOutRepo: OptOutRepository
 	ai: AIService
 	emailService: EmailService
 	logger: Logger
+	buildUnsubscribeUrl: (email: string) => string
+	config: SendEmailConfig
 }
 
 /** Send the initial (1st) email to a lead */
 export function makeSendInitialEmailUseCase(deps: EmailUseCaseDeps) {
 	return async (lead: Lead, analysis: BehaviorAnalysis): Promise<void> => {
+		if (await deps.optOutRepo.has(lead.email)) {
+			deps.logger.info(
+				{ leadId: lead.id, email: lead.email },
+				"Lead opted out — skipping initial email",
+			)
+			await deps.leadRepo.update(lead.id, {
+				replyStatus: "opted_out",
+				completedReason: "opted_out",
+			})
+			return
+		}
+
 		// 1. Generate 3-email sequence
 		deps.logger.info({ leadId: lead.id }, "Generating email sequence")
 		const generated = await deps.ai.generateEmailSequence(lead, analysis)
@@ -38,9 +60,18 @@ export function makeSendInitialEmailUseCase(deps: EmailUseCaseDeps) {
 		const firstEmail = sequences.find((s) => s.emailNumber === 1)
 		if (!firstEmail) throw new Error("First email not found in sequence")
 
-		// 3. Convert to HTML
+		// 3. Convert to HTML + append compliance footer
 		deps.logger.info({ leadId: lead.id }, "Converting email to HTML")
-		const htmlContent = await deps.ai.convertToHtml(firstEmail.content)
+		const aiHtml = await deps.ai.convertToHtml(firstEmail.content)
+		const htmlContent = appendFooterToHtml(
+			aiHtml,
+			buildFooterHtml({
+				unsubscribeUrl: deps.buildUnsubscribeUrl(lead.email),
+				senderName: deps.config.senderName,
+				senderCompany: deps.config.senderCompany,
+				language: lead.language,
+			}),
+		)
 		await deps.sequenceRepo.updateHtml(firstEmail.id, htmlContent)
 
 		// 4. Pick subject line
@@ -54,6 +85,7 @@ export function makeSendInitialEmailUseCase(deps: EmailUseCaseDeps) {
 			html: htmlContent,
 			leadId: lead.id,
 			stage: 1,
+			unsubscribeUrl: deps.buildUnsubscribeUrl(lead.email),
 		})
 
 		// 6. Mark sent + update lead
@@ -76,6 +108,18 @@ export function makeSendInitialEmailUseCase(deps: EmailUseCaseDeps) {
 /** Send a follow-up email (stage 1→2 or 2→3) */
 export function makeSendFollowupUseCase(deps: EmailUseCaseDeps) {
 	return async (lead: Lead): Promise<void> => {
+		if (await deps.optOutRepo.has(lead.email)) {
+			deps.logger.info(
+				{ leadId: lead.id, email: lead.email },
+				"Lead opted out — skipping follow-up",
+			)
+			await deps.leadRepo.update(lead.id, {
+				replyStatus: "opted_out",
+				completedReason: "opted_out",
+			})
+			return
+		}
+
 		const nextStage = (lead.stage + 1) as 1 | 2 | 3
 		if (nextStage > 3) {
 			deps.logger.info(
@@ -96,10 +140,20 @@ export function makeSendFollowupUseCase(deps: EmailUseCaseDeps) {
 			return
 		}
 
-		// 2. Convert to HTML if not already
+		// 2. Convert to HTML if not already + ensure compliance footer
+		const footer = buildFooterHtml({
+			unsubscribeUrl: deps.buildUnsubscribeUrl(lead.email),
+			senderName: deps.config.senderName,
+			senderCompany: deps.config.senderCompany,
+			language: lead.language,
+		})
 		let html = template.htmlContent
 		if (!html) {
-			html = await deps.ai.convertToHtml(template.content)
+			const aiHtml = await deps.ai.convertToHtml(template.content)
+			html = appendFooterToHtml(aiHtml, footer)
+			await deps.sequenceRepo.updateHtml(template.id, html)
+		} else if (!html.includes("/unsubscribe/")) {
+			html = appendFooterToHtml(html, footer)
 			await deps.sequenceRepo.updateHtml(template.id, html)
 		}
 
@@ -121,6 +175,7 @@ export function makeSendFollowupUseCase(deps: EmailUseCaseDeps) {
 			previousRefs: lead.messageIds,
 			leadId: lead.id,
 			stage: nextStage,
+			unsubscribeUrl: deps.buildUnsubscribeUrl(lead.email),
 		})
 
 		// 5. Update lead

@@ -1,5 +1,9 @@
 import { os } from "@orpc/server"
 import { z } from "zod"
+import {
+	computeSendDelayMs,
+	loadSendWindowOptions,
+} from "#/application/lead/send-window.ts"
 import { badRequest } from "#/application/shared/errors.ts"
 import { SETTING_KEYS } from "#/domain/settings/setting-keys.ts"
 import type { ORPCContext } from "#/presentation/orpc/context"
@@ -56,14 +60,13 @@ export const leadRouter = os.$context<ORPCContext>().router({
 			// Phase 1: Capture lead synchronously (fast — validate + save to DB)
 			const lead = await context.useCases.lead.capture(input)
 
-			// Phase 2: Fire-and-forget — run the rest of the pipeline in the background
-			context.useCases.pipeline.runOutboundForExistingLead(lead).catch(() => {
-				context.useCases.lead
-					.updateStatus(lead.id, "research_failed")
-					.catch(() => {})
-			})
+			// Phase 2: Hand off the pipeline to BullMQ. Delay the job until the
+			// lead's local business hours so the email lands at a reasonable time.
+			const sendWindow = await loadSendWindowOptions(context.useCases.settings)
+			const delayMs = computeSendDelayMs(lead.timezone, sendWindow)
+			await context.useCases.pipeline.enqueue(lead.id, { delayMs })
 
-			return { leadId: lead.id, status: "pipeline_started" }
+			return { leadId: lead.id, status: "pipeline_enqueued", delayMs }
 		}),
 
 	captureBulk: protectedProcedure
@@ -85,6 +88,14 @@ export const leadRouter = os.$context<ORPCContext>().router({
 						reason: z.string(),
 					}),
 				),
+				suppressed: z.array(
+					z.object({
+						email: z.string(),
+						fullName: z.string(),
+						reason: z.string(),
+					}),
+				),
+				enqueued: z.number(),
 			}),
 		)
 		.handler(async ({ input, context }) => {
@@ -93,7 +104,30 @@ export const leadRouter = os.$context<ORPCContext>().router({
 				throw badRequest(`Maximum ${maxLeads} leads per batch`)
 			}
 
-			return context.useCases.lead.bulkCapture(input.leads)
+			const result = await context.useCases.lead.bulkCapture(input.leads)
+
+			// Stagger enqueues so we don't fire 100 jobs at the exact same
+			// instant. BullMQ has its own rate limit but downstream providers
+			// (Resend, OpenRouter) are happier with a gentler ramp.
+			// Also delay each job into the lead's local business hours.
+			const sendWindow = await loadSendWindowOptions(context.useCases.settings)
+			let enqueued = 0
+			for (const [i, lead] of result.created.entries()) {
+				try {
+					const windowDelay = computeSendDelayMs(lead.timezone, sendWindow)
+					await context.useCases.pipeline.enqueue(lead.id, {
+						delayMs: windowDelay + i * 250,
+					})
+					enqueued++
+				} catch (err) {
+					context.logger.error(
+						{ err, leadId: lead.id },
+						"Failed to enqueue lead pipeline job",
+					)
+				}
+			}
+
+			return { ...result, enqueued }
 		}),
 
 	list: protectedProcedure

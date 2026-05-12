@@ -15,6 +15,13 @@ export interface Lead {
 	lastEmailSentAt: Date | null
 	autoReplyTurns: number
 	completedReason: CompletedReason | null
+	country: string | null
+	locale: string | null
+	language: string | null
+	timezone: string | null
+	companyIndustry: string | null
+	companySize: string | null
+	enrichedAt: Date | null
 	createdAt: Date
 	updatedAt: Date
 }
@@ -43,6 +50,7 @@ export const REPLY_STATUSES = [
 	"replied",
 	"bounced",
 	"completed",
+	"opted_out",
 ] as const
 
 export type ReplyStatus = (typeof REPLY_STATUSES)[number]
@@ -59,4 +67,8 @@ export interface CreateLeadInput {
 	painPoints?: string
 	leadSource?: string
 	linkedinUrl?: string
+	country?: string
+	locale?: string
+	language?: string
+	timezone?: string
 }

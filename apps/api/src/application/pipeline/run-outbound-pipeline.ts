@@ -1,3 +1,4 @@
+import type { EnrichLeadResult } from "#/application/lead/enrich-lead.ts"
 import type { CompanyResearchResult } from "#/application/research/research-company.ts"
 import type { BehaviorAnalysis } from "#/domain/behavior-analysis/behavior-analysis.ts"
 import type { CreateLeadInput, Lead, ReplyStatus } from "#/domain/lead/lead.ts"
@@ -7,6 +8,7 @@ import type { PipelineTracker } from "#/domain/ports/pipeline-tracker.ts"
 
 interface PipelineDeps {
 	captureLead: (input: CreateLeadInput) => Promise<Lead>
+	enrichLead: (lead: Lead) => Promise<EnrichLeadResult>
 	researchCompany: (lead: Lead) => Promise<CompanyResearchResult>
 	analyzeBehavior: (
 		lead: Lead,
@@ -80,7 +82,36 @@ export function makeRunOutboundPipelineUseCase(deps: PipelineDeps) {
 		}
 
 		try {
-			// Step 2: Scrape company website
+			// Step 2: Self-enrichment (homepage scrape → AI structured extract)
+			const enrichStepId = await deps.tracker.startStep(
+				lead.id,
+				"enrich",
+				`Enriching lead from homepage: ${lead.companyWebsite}`,
+				{ url: lead.companyWebsite, provider: "Deepcrawl + OpenRouter" },
+			)
+			try {
+				const enrichResult = await deps.enrichLead(lead)
+				lead = enrichResult.updatedLead
+				await deps.tracker.completeStep(enrichStepId, {
+					country: lead.country,
+					language: lead.language,
+					industry: lead.companyIndustry,
+					companySize: lead.companySize,
+				})
+			} catch (error) {
+				const msg = errorMessage(error)
+				// Enrichment is best-effort — log + continue. The downstream
+				// research/analyze steps still work without enriched fields.
+				await deps.tracker.failStep(enrichStepId, msg, {
+					url: lead.companyWebsite,
+				})
+				deps.logger.warn(
+					{ leadId: lead.id, err: error },
+					"Enrichment failed; continuing pipeline",
+				)
+			}
+
+			// Step 3: Scrape company website (research)
 			const scrapeStepId = await deps.tracker.startStep(
 				lead.id,
 				"scrape",
@@ -88,7 +119,6 @@ export function makeRunOutboundPipelineUseCase(deps: PipelineDeps) {
 				{ url: lead.companyWebsite, provider: "Deepcrawl" },
 			)
 
-			// Step 3: AI Analyze website (P3)
 			let research: CompanyResearchResult
 			try {
 				research = await deps.researchCompany(lead)
@@ -210,13 +240,43 @@ export function makeRunOutboundPipelineUseCase(deps: PipelineDeps) {
 export function makeRunOutboundForExistingLeadUseCase(
 	deps: Omit<PipelineDeps, "captureLead">,
 ) {
-	return async (lead: Lead): Promise<{ leadId: string; status: string }> => {
+	return async (
+		initialLead: Lead,
+	): Promise<{ leadId: string; status: string }> => {
+		let lead = initialLead
 		deps.logger.info(
 			{ leadId: lead.id, email: lead.email },
 			"Starting background outbound pipeline",
 		)
 
 		try {
+			// Step 0: Self-enrichment (homepage scrape → AI structured extract)
+			const enrichStepId = await deps.tracker.startStep(
+				lead.id,
+				"enrich",
+				`Enriching lead from homepage: ${lead.companyWebsite}`,
+				{ url: lead.companyWebsite, provider: "Deepcrawl + OpenRouter" },
+			)
+			try {
+				const enrichResult = await deps.enrichLead(lead)
+				lead = enrichResult.updatedLead
+				await deps.tracker.completeStep(enrichStepId, {
+					country: lead.country,
+					language: lead.language,
+					industry: lead.companyIndustry,
+					companySize: lead.companySize,
+				})
+			} catch (error) {
+				const msg = errorMessage(error)
+				await deps.tracker.failStep(enrichStepId, msg, {
+					url: lead.companyWebsite,
+				})
+				deps.logger.warn(
+					{ leadId: lead.id, err: error },
+					"Enrichment failed; continuing pipeline",
+				)
+			}
+
 			// Step 1: Scrape company website
 			const scrapeStepId = await deps.tracker.startStep(
 				lead.id,

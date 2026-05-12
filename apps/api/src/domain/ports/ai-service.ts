@@ -9,6 +9,9 @@ import type { LinkedInProfileContext } from "./linkedin-service.ts"
  * Provider: OpenRouter API (native fetch, no SDK)
  */
 export interface AIService {
+	/** P0: Structured lead enrichment from a homepage scrape + optional email domain hint */
+	enrichLead(input: EnrichLeadInput): Promise<EnrichedLeadData>
+
 	/** P1: Deep behavioral analysis of lead based on company data */
 	analyzeBehavior(lead: Lead, companyProfile: string): Promise<BehaviorAnalysis>
 
@@ -50,6 +53,23 @@ export interface AIService {
 		history: ChatTurn[],
 		latestInbound: string,
 	): Promise<ChatReplyResult>
+}
+
+export interface EnrichLeadInput {
+	websiteMarkdown: string
+	emailDomain: string | null
+	knownCompanyName?: string | null
+}
+
+export interface EnrichedLeadData {
+	companyName: string | null
+	industry: string | null
+	companySize: string | null
+	country: string | null
+	language: string | null
+	targetMarket: string | null
+	recentSignals: string | null
+	painPointHypothesis: string | null
 }
 
 export interface ChatTurn {

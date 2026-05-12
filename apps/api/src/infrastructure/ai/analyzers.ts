@@ -3,12 +3,81 @@ import type { BehaviorAnalysis } from "#/domain/behavior-analysis/behavior-analy
 import type { Lead } from "#/domain/lead/lead.ts"
 import type {
 	CompanyDataInput,
+	EnrichedLeadData,
+	EnrichLeadInput,
 	WebsiteAnalysis,
 } from "#/domain/ports/ai-service.ts"
 import type { LinkedInProfileContext } from "#/domain/ports/linkedin-service.ts"
 import { SETTING_KEYS } from "#/domain/settings/setting-keys.ts"
 import { PromptLoader } from "./prompt-loader.ts"
 import { callOpenRouterQueued } from "./queue.ts"
+
+export async function enrichLead(
+	apiKey: string,
+	settings: SettingsService,
+	input: EnrichLeadInput,
+): Promise<EnrichedLeadData> {
+	const promptLoader = new PromptLoader(settings)
+	const prompt = await promptLoader.getLeadEnrichmentPrompt()
+	const model = await settings.get<string>(
+		SETTING_KEYS.AI_MODEL_LEAD_ENRICHMENT,
+		"openai/gpt-4o-mini",
+	)
+	const maxRetries = await settings.get<number>(
+		SETTING_KEYS.AI_RETRY_MAX_RETRIES,
+		3,
+	)
+	const maxLength = await settings.get<number>(
+		SETTING_KEYS.AI_LIMIT_WEBSITE_MARKDOWN_CHARS,
+		15000,
+	)
+
+	const userContent = `Email domain: ${input.emailDomain ?? "unknown"}
+Known company name (may be wrong): ${input.knownCompanyName ?? "unknown"}
+
+Homepage markdown:
+${input.websiteMarkdown.slice(0, maxLength)}`
+
+	return callOpenRouterQueued<EnrichedLeadData>(
+		apiKey,
+		{
+			model,
+			messages: [
+				{ role: "system", content: prompt },
+				{ role: "user", content: userContent },
+			],
+			schema: {
+				name: "lead_enrichment",
+				schema: {
+					type: "object",
+					properties: {
+						companyName: { type: ["string", "null"] },
+						industry: { type: ["string", "null"] },
+						companySize: { type: ["string", "null"] },
+						country: { type: ["string", "null"] },
+						language: { type: ["string", "null"] },
+						targetMarket: { type: ["string", "null"] },
+						recentSignals: { type: ["string", "null"] },
+						painPointHypothesis: { type: ["string", "null"] },
+					},
+					required: [
+						"companyName",
+						"industry",
+						"companySize",
+						"country",
+						"language",
+						"targetMarket",
+						"recentSignals",
+						"painPointHypothesis",
+					],
+					additionalProperties: false,
+				},
+			},
+			temperature: 0.2,
+		},
+		maxRetries,
+	)
+}
 
 export async function analyzeBehavior(
 	apiKey: string,

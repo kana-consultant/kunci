@@ -26,10 +26,37 @@ export const leads = pgTable("leads", {
 	lastEmailSentAt: timestamp("last_email_sent_at", { withTimezone: true }),
 	autoReplyTurns: integer("auto_reply_turns").notNull().default(0),
 	completedReason: text("completed_reason"),
+	/** ISO 3166-1 alpha-2 country code (e.g. ID, SG, MY, TH). Inferred from TLD/enrichment. */
+	country: text("country"),
+	/** BCP-47 locale tag (e.g. id-ID, en-SG). Drives prompt language. */
+	locale: text("locale"),
+	/** Preferred language (e.g. id, en). Convenience subset of locale. */
+	language: text("language"),
+	/** IANA timezone (e.g. Asia/Jakarta). Used for send-window scheduling. */
+	timezone: text("timezone"),
+	companyIndustry: text("company_industry"),
+	/** Free-form estimate from enrichment: "1-10", "11-50", etc. */
+	companySize: text("company_size"),
+	enrichedAt: timestamp("enriched_at", { withTimezone: true }),
 	createdAt: timestamp("created_at", { withTimezone: true })
 		.notNull()
 		.defaultNow(),
 	updatedAt: timestamp("updated_at", { withTimezone: true })
+		.notNull()
+		.defaultNow(),
+})
+
+/**
+ * Opt-out / unsubscribe registry. Email-keyed suppression list checked
+ * before every outbound send. Token enables one-click unsubscribe URLs
+ * without revealing the email in the link.
+ */
+export const optOuts = pgTable("opt_outs", {
+	email: text("email").primaryKey(),
+	token: text("token").notNull().unique(),
+	reason: text("reason"),
+	source: text("source").notNull().default("unsubscribe_link"),
+	optedOutAt: timestamp("opted_out_at", { withTimezone: true })
 		.notNull()
 		.defaultNow(),
 })

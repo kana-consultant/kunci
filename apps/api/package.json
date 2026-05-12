@@ -22,6 +22,7 @@
 		"@orpc/client": "^1.4.0",
 		"@orpc/server": "^1.4.0",
 		"better-auth": "^1.6.9",
+		"bullmq": "^5.76.7",
 		"croner": "^9.0.0",
 		"deepcrawl": "^0.1.0",
 		"drizzle-orm": "^0.39.0",

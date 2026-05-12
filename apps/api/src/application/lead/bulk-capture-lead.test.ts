@@ -31,11 +31,15 @@ describe("bulkCaptureLead", () => {
 		emailVerifier: {
 			verify: vi.fn(),
 		},
+		optOutRepo: {
+			has: vi.fn(),
+		},
 		logger: { info: vi.fn(), error: vi.fn(), warn: vi.fn(), debug: vi.fn() },
 	}
 
 	beforeEach(() => {
 		vi.clearAllMocks()
+		mockDeps.optOutRepo.has.mockResolvedValue(false)
 	})
 
 	const baseInput = {

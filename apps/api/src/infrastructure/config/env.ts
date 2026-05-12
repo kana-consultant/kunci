@@ -28,6 +28,22 @@ const envSchema = z
 		BETTER_AUTH_SECRET: z.string().min(1, "BETTER_AUTH_SECRET is required"),
 		BETTER_AUTH_URL: z.string().url().optional(),
 		SLACK_WEBHOOK_URL: z.string().url().optional(),
+		/** Public origin for unsubscribe links (defaults to API origin built from PORT). */
+		PUBLIC_API_URL: z.string().url().optional(),
+		/** HMAC secret for unsubscribe tokens. Falls back to BETTER_AUTH_SECRET. */
+		UNSUBSCRIBE_SECRET: z.string().min(16).optional(),
+
+		/** BullMQ worker concurrency for the lead-pipeline queue. */
+		PIPELINE_WORKER_CONCURRENCY: z.coerce.number().int().positive().default(3),
+		/** Max pipeline jobs started in the rolling window below. */
+		PIPELINE_RATE_MAX: z.coerce.number().int().positive().default(10),
+		/** Rolling window in ms for PIPELINE_RATE_MAX. */
+		PIPELINE_RATE_DURATION_MS: z.coerce.number().int().positive().default(1000),
+		/** Whether to auto-enqueue captured leads into the pipeline queue. */
+		PIPELINE_AUTO_ENQUEUE: z
+			.enum(["true", "false"])
+			.default("true")
+			.transform((value) => value === "true"),
 	})
 	.superRefine((data, ctx) => {
 		if (data.NODE_ENV === "production" && !data.RESEND_WEBHOOK_SECRET) {
