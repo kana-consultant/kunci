@@ -5,6 +5,7 @@
 
 import { Resend } from "resend"
 import type {
+	EmailAttachment,
 	EmailSendResult,
 	EmailService,
 	ReplyInThreadParams,
@@ -41,6 +42,7 @@ export function createResendService(config: ResendConfig): EmailService {
 							subject: params.subject,
 							html: params.html,
 							headers: buildUnsubscribeHeaders(params.unsubscribeUrl),
+							attachments: toResendAttachments(params.attachments),
 							tags: [
 								{ name: "lead_id", value: params.leadId },
 								{ name: "stage", value: String(params.stage) },
@@ -214,6 +216,15 @@ function buildUnsubscribeHeaders(
 		"List-Unsubscribe": `<${unsubscribeUrl}>`,
 		"List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
 	}
+}
+
+function toResendAttachments(attachments: EmailAttachment[] | undefined) {
+	if (!attachments?.length) return undefined
+	return attachments.map((a) => ({
+		filename: a.filename,
+		content: a.content,
+		contentType: a.contentType,
+	}))
 }
 
 async function getSender(config: ResendConfig): Promise<string> {

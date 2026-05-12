@@ -61,6 +61,15 @@ const envSchema = z
 		IMAP_MAILBOX: z.string().default("INBOX"),
 		IMAP_BATCH_SIZE: z.coerce.number().int().positive().default(25),
 		IMAP_POLL_INTERVAL_SECONDS: z.coerce.number().int().positive().default(60),
+
+		/** Local-disk root for user-uploaded assets (company profile PDFs, etc.). */
+		UPLOAD_DIR: z.string().default("./uploads"),
+		/** Max upload bytes per single file (10 MB default; Resend caps email at 40 MB). */
+		UPLOAD_MAX_BYTES: z.coerce
+			.number()
+			.int()
+			.positive()
+			.default(10 * 1024 * 1024),
 	})
 	.superRefine((data, ctx) => {
 		if (data.NODE_ENV === "production" && !data.RESEND_WEBHOOK_SECRET) {

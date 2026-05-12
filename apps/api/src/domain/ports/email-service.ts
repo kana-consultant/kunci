@@ -23,6 +23,13 @@ export interface EmailService {
 	): unknown
 }
 
+export interface EmailAttachment {
+	filename: string
+	/** Raw bytes — the email adapter converts to whatever the provider expects. */
+	content: Buffer
+	contentType?: string
+}
+
 export interface SendEmailParams {
 	to: string
 	subject: string
@@ -31,6 +38,7 @@ export interface SendEmailParams {
 	stage: number
 	/** RFC 8058 one-click unsubscribe URL. If set, List-Unsubscribe headers are added. */
 	unsubscribeUrl?: string
+	attachments?: EmailAttachment[]
 }
 
 export interface ReplyInThreadParams {

@@ -48,6 +48,9 @@ export const SETTING_KEYS = {
 	BUSINESS_TONE_OF_VOICE: "business.tone_of_voice",
 	BUSINESS_WEBSITE: "business.website",
 	BUSINESS_OFFERINGS: "business.offerings",
+	BUSINESS_COMPANY_PROFILE_MODE: "business.company_profile_mode",
+	BUSINESS_COMPANY_PROFILE_URL: "business.company_profile_url",
+	BUSINESS_COMPANY_PROFILE_FILE: "business.company_profile_file",
 
 	EMAIL_COLOR_PRIMARY: "email.color_primary",
 	EMAIL_COLOR_ACCENT: "email.color_accent",

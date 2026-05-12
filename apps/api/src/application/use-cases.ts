@@ -7,6 +7,7 @@ import type { AIService } from "#/domain/ports/ai-service.ts"
 import type { Cache } from "#/domain/ports/cache.ts"
 import type { EmailService } from "#/domain/ports/email-service.ts"
 import type { EmailVerifier } from "#/domain/ports/email-verifier.ts"
+import type { FileStorage } from "#/domain/ports/file-storage.ts"
 import type { InboundMailbox } from "#/domain/ports/inbound-mailbox.ts"
 import type { JobQueue } from "#/domain/ports/job-queue.ts"
 import type { LinkedInService } from "#/domain/ports/linkedin-service.ts"
@@ -14,6 +15,10 @@ import type { Logger } from "#/domain/ports/logger.ts"
 import type { NotificationService } from "#/domain/ports/notification-service.ts"
 import type { PipelineTracker } from "#/domain/ports/pipeline-tracker.ts"
 import type { ScraperService } from "#/domain/ports/scraper-service.ts"
+import {
+	makeClearCompanyProfileFileUseCase,
+	makeUploadCompanyProfileUseCase,
+} from "./company-profile/use-cases.ts"
 import { makeHandleReplyUseCase } from "./email/handle-reply.ts"
 import { makePollInboundMailboxUseCase } from "./email/poll-inbound-mailbox.ts"
 import {
@@ -61,6 +66,7 @@ export interface AppDependencies {
 		cache: Cache
 		settings: SettingsService
 		notifier: NotificationService
+		fileStorage: FileStorage
 	}
 	tracker: PipelineTracker
 	logger: Logger
@@ -70,6 +76,7 @@ export interface AppDependencies {
 	config: {
 		unsubscribe: UnsubscribeConfig
 		sendEmail: SendEmailConfig
+		companyProfile: { maxBytes: number }
 	}
 }
 
@@ -139,6 +146,8 @@ export function buildUseCases(deps: AppDependencies) {
 		optOutRepo: deps.repos.optOut,
 		ai: deps.services.ai,
 		emailService: deps.services.email,
+		settings: deps.services.settings,
+		fileStorage: deps.services.fileStorage,
 		logger,
 		buildUnsubscribeUrl,
 		config: deps.config.sendEmail,
@@ -150,9 +159,25 @@ export function buildUseCases(deps: AppDependencies) {
 		optOutRepo: deps.repos.optOut,
 		ai: deps.services.ai,
 		emailService: deps.services.email,
+		settings: deps.services.settings,
+		fileStorage: deps.services.fileStorage,
 		logger,
 		buildUnsubscribeUrl,
 		config: deps.config.sendEmail,
+	})
+
+	// Company profile (asset upload + lifecycle)
+	const uploadCompanyProfile = makeUploadCompanyProfileUseCase({
+		storage: deps.services.fileStorage,
+		settings: deps.services.settings,
+		maxBytes: deps.config.companyProfile.maxBytes,
+		logger,
+	})
+	const clearCompanyProfileFile = makeClearCompanyProfileFileUseCase({
+		storage: deps.services.fileStorage,
+		settings: deps.services.settings,
+		maxBytes: deps.config.companyProfile.maxBytes,
+		logger,
 	})
 
 	const handleReply = makeHandleReplyUseCase({
@@ -273,6 +298,10 @@ export function buildUseCases(deps: AppDependencies) {
 		},
 		scheduler: {
 			processPendingFollowups,
+		},
+		companyProfile: {
+			upload: uploadCompanyProfile,
+			clearFile: clearCompanyProfileFile,
 		},
 		settings: deps.services.settings,
 		scraper: deps.services.scraper,

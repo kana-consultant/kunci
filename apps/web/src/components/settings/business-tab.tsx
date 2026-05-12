@@ -12,9 +12,16 @@ import { FlaskConical, Loader2, Play } from "lucide-react"
 import { useState } from "react"
 import { OfferingsEditor } from "~/components/offerings-editor"
 import { orpcClient } from "~/libs/orpc/client"
+import { CompanyProfileSection } from "./company-profile-section"
 import { SandboxShell } from "./shared/sandbox-shell"
 import { SettingField } from "./shared/setting-field"
 import type { TabProps } from "./types"
+
+const COMPANY_PROFILE_KEYS = new Set([
+	"business.company_profile_mode",
+	"business.company_profile_url",
+	"business.company_profile_file",
+])
 
 interface LeadDraft {
 	fullName: string
@@ -196,7 +203,9 @@ function BusinessSandboxPanel({
 
 export function BusinessTab({ settings, formState, onFieldChange }: TabProps) {
 	const businessSettings = settings
-		.filter((s) => s.category === "business")
+		.filter(
+			(s) => s.category === "business" && !COMPANY_PROFILE_KEYS.has(s.key),
+		)
 		.sort((a, b) => a.key.localeCompare(b.key))
 
 	const textSettings = businessSettings.filter((s) => s.valueType !== "json")
@@ -205,38 +214,45 @@ export function BusinessTab({ settings, formState, onFieldChange }: TabProps) {
 	)
 
 	const leftPanel = (
-		<Card>
-			<CardHeader className="pb-2">
-				<CardTitle className="text-base">Business Profile</CardTitle>
-			</CardHeader>
-			<CardContent className="space-y-6">
-				{textSettings.map((setting) => (
-					<SettingField
-						key={setting.key}
-						setting={setting}
-						value={formState[setting.key]}
-						onChange={(value) => onFieldChange(setting.key, value)}
-					/>
-				))}
-				{offeringsSettings.map((setting) => (
-					<div key={setting.key} className="space-y-2">
-						<Label className="text-sm font-semibold">{setting.label}</Label>
-						{setting.description && (
-							<p
-								className="text-xs mt-0.5 mb-2"
-								style={{ color: "var(--color-muted-foreground)" }}
-							>
-								{setting.description}
-							</p>
-						)}
-						<OfferingsEditor
-							value={formState[setting.key] ?? []}
+		<div className="space-y-4">
+			<Card>
+				<CardHeader className="pb-2">
+					<CardTitle className="text-base">Business Profile</CardTitle>
+				</CardHeader>
+				<CardContent className="space-y-6">
+					{textSettings.map((setting) => (
+						<SettingField
+							key={setting.key}
+							setting={setting}
+							value={formState[setting.key]}
 							onChange={(value) => onFieldChange(setting.key, value)}
 						/>
-					</div>
-				))}
-			</CardContent>
-		</Card>
+					))}
+					{offeringsSettings.map((setting) => (
+						<div key={setting.key} className="space-y-2">
+							<Label className="text-sm font-semibold">{setting.label}</Label>
+							{setting.description && (
+								<p
+									className="text-xs mt-0.5 mb-2"
+									style={{ color: "var(--color-muted-foreground)" }}
+								>
+									{setting.description}
+								</p>
+							)}
+							<OfferingsEditor
+								value={formState[setting.key] ?? []}
+								onChange={(value) => onFieldChange(setting.key, value)}
+							/>
+						</div>
+					))}
+				</CardContent>
+			</Card>
+
+			<CompanyProfileSection
+				formState={formState}
+				onFieldChange={onFieldChange}
+			/>
+		</div>
 	)
 
 	return (
