@@ -1,6 +1,12 @@
-import { Badge, DataTableColumnHeader } from "@kana-consultant/ui-kit"
+import {
+	Avatar,
+	AvatarFallback,
+	Badge,
+	DataTableColumnHeader,
+} from "@kana-consultant/ui-kit"
 import { Link } from "@tanstack/react-router"
 import type { ColumnDef } from "@tanstack/react-table"
+import { ExternalLink, Globe } from "lucide-react"
 
 export type Lead = {
 	id: string
@@ -55,6 +61,15 @@ const dateFormatter = new Intl.DateTimeFormat("en", {
 	year: "numeric",
 })
 
+function initials(name: string): string {
+	return name
+		.split(/\s+/)
+		.filter(Boolean)
+		.slice(0, 2)
+		.map((part) => part[0]?.toUpperCase())
+		.join("")
+}
+
 export const columns: ColumnDef<Lead>[] = [
 	{
 		accessorKey: "fullName",
@@ -67,12 +82,20 @@ export const columns: ColumnDef<Lead>[] = [
 				<Link
 					to="/leads/$leadId"
 					params={{ leadId: lead.id }}
-					className="flex min-w-48 flex-col gap-0.5 rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+					className="flex items-center gap-3 min-w-52 rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
 				>
-					<span className="font-medium">{lead.fullName}</span>
-					<span style={{ color: "var(--color-muted-foreground)" }}>
-						{lead.email}
-					</span>
+					<Avatar size="sm" className="shrink-0">
+						<AvatarFallback>{initials(lead.fullName) || "L"}</AvatarFallback>
+					</Avatar>
+					<div className="min-w-0">
+						<p className="font-medium truncate">{lead.fullName}</p>
+						<p
+							className="text-xs truncate"
+							style={{ color: "var(--color-muted-foreground)" }}
+						>
+							{lead.email}
+						</p>
+					</div>
 				</Link>
 			)
 		},
@@ -86,28 +109,43 @@ export const columns: ColumnDef<Lead>[] = [
 			const lead = row.original
 			return (
 				<div className="min-w-56">
-					<div className="font-medium">{lead.companyName}</div>
-					<div className="flex flex-col gap-0.5">
-						<a
-							href={lead.companyWebsite}
-							target="_blank"
-							rel="noreferrer"
-							className="relative z-10 text-sm underline-offset-4 hover:underline"
-							style={{ color: "var(--color-primary)" }}
-							onClick={(e) => e.stopPropagation()}
-						>
-							{lead.companyWebsite?.replace(/^https?:\/\//, "")}
-						</a>
-						{lead.leadSource && (
-							<span
-								className="text-xs"
-								style={{ color: "var(--color-muted-foreground)" }}
-							>
-								Source: {lead.leadSource}
-							</span>
-						)}
-					</div>
+					<p className="font-medium truncate">{lead.companyName}</p>
+					<a
+						href={lead.companyWebsite}
+						target="_blank"
+						rel="noreferrer"
+						className="relative z-10 inline-flex items-center gap-1 text-xs underline-offset-4 hover:underline"
+						style={{ color: "var(--color-primary)" }}
+						onClick={(e) => e.stopPropagation()}
+					>
+						<Globe className="size-3" />
+						{lead.companyWebsite?.replace(/^https?:\/\//, "")}
+						<ExternalLink className="size-3 opacity-60" />
+					</a>
 				</div>
+			)
+		},
+	},
+	{
+		accessorKey: "leadSource",
+		header: ({ column }) => (
+			<DataTableColumnHeader column={column} title="Source" />
+		),
+		cell: ({ row }) => {
+			const source = row.original.leadSource
+			if (!source)
+				return (
+					<span
+						className="text-xs"
+						style={{ color: "var(--color-muted-foreground)" }}
+					>
+						—
+					</span>
+				)
+			return (
+				<Badge tone="outline" className="font-normal">
+					{source}
+				</Badge>
 			)
 		},
 	},
@@ -121,7 +159,11 @@ export const columns: ColumnDef<Lead>[] = [
 				text: `Stage ${row.getValue("stage")}`,
 				tone: "neutral" as const,
 			}
-			return <Badge tone={stage.tone}>{stage.text}</Badge>
+			return (
+				<Badge tone={stage.tone} dot>
+					{stage.text}
+				</Badge>
+			)
 		},
 	},
 	{
@@ -133,7 +175,7 @@ export const columns: ColumnDef<Lead>[] = [
 			const status = row.getValue("replyStatus") as string
 			const statusTone = statusTones[status] ?? "neutral"
 			return (
-				<Badge tone={statusTone}>
+				<Badge tone={statusTone} dot>
 					{statusLabels[status] ?? status.replaceAll("_", " ")}
 				</Badge>
 			)
@@ -147,7 +189,7 @@ export const columns: ColumnDef<Lead>[] = [
 		cell: ({ row }) => {
 			return (
 				<span
-					className="whitespace-nowrap tabular-nums"
+					className="whitespace-nowrap tabular-nums text-xs"
 					style={{ color: "var(--color-muted-foreground)" }}
 				>
 					{dateFormatter.format(new Date(row.getValue("createdAt")))}
