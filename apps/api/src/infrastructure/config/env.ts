@@ -44,6 +44,23 @@ const envSchema = z
 			.enum(["true", "false"])
 			.default("true")
 			.transform((value) => value === "true"),
+
+		/** IMAP polling — alternative to Resend Inbound for capturing replies. */
+		IMAP_ENABLED: z
+			.enum(["true", "false"])
+			.default("false")
+			.transform((value) => value === "true"),
+		IMAP_HOST: z.string().optional(),
+		IMAP_PORT: z.coerce.number().int().positive().default(993),
+		IMAP_SECURE: z
+			.enum(["true", "false"])
+			.default("true")
+			.transform((value) => value === "true"),
+		IMAP_USER: z.string().optional(),
+		IMAP_PASSWORD: z.string().optional(),
+		IMAP_MAILBOX: z.string().default("INBOX"),
+		IMAP_BATCH_SIZE: z.coerce.number().int().positive().default(25),
+		IMAP_POLL_INTERVAL_SECONDS: z.coerce.number().int().positive().default(60),
 	})
 	.superRefine((data, ctx) => {
 		if (data.NODE_ENV === "production" && !data.RESEND_WEBHOOK_SECRET) {
@@ -52,6 +69,21 @@ const envSchema = z
 				message: "RESEND_WEBHOOK_SECRET is required in production",
 				path: ["RESEND_WEBHOOK_SECRET"],
 			})
+		}
+		if (data.IMAP_ENABLED) {
+			for (const field of [
+				"IMAP_HOST",
+				"IMAP_USER",
+				"IMAP_PASSWORD",
+			] as const) {
+				if (!data[field]) {
+					ctx.addIssue({
+						code: z.ZodIssueCode.custom,
+						message: `${field} is required when IMAP_ENABLED=true`,
+						path: [field],
+					})
+				}
+			}
 		}
 	})
 

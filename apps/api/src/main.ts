@@ -17,6 +17,32 @@ async function bootstrap() {
 		await useCases.pipeline.runOutboundForExistingLead(lead)
 	})
 
+	// IMAP polling fallback for inbound replies (when Resend Inbound MX
+	// isn't configured for the sender domain). Runs at IMAP_POLL_INTERVAL_SECONDS.
+	const inboundPoll = useCases.email.pollInbound
+	let inboundTimer: NodeJS.Timeout | null = null
+	let inboundRunning = false
+	if (inboundPoll) {
+		const intervalMs = env.IMAP_POLL_INTERVAL_SECONDS * 1000
+		const tick = async () => {
+			if (inboundRunning) return
+			inboundRunning = true
+			try {
+				await inboundPoll()
+			} catch (err) {
+				logger.error({ err }, "Inbound mailbox poll failed")
+			} finally {
+				inboundRunning = false
+			}
+		}
+		inboundTimer = setInterval(tick, intervalMs)
+		void tick()
+		logger.info(
+			{ intervalSeconds: env.IMAP_POLL_INTERVAL_SECONDS, user: env.IMAP_USER },
+			"IMAP inbound poller started",
+		)
+	}
+
 	const server = serve(
 		{
 			fetch: app.fetch,
@@ -29,6 +55,7 @@ async function bootstrap() {
 
 	const shutdown = async (signal: string) => {
 		logger.info({ signal }, "Shutting down")
+		if (inboundTimer) clearInterval(inboundTimer)
 		try {
 			await queueHandle.stopWorker()
 		} catch (err) {

@@ -7,6 +7,7 @@ import type { AIService } from "#/domain/ports/ai-service.ts"
 import type { Cache } from "#/domain/ports/cache.ts"
 import type { EmailService } from "#/domain/ports/email-service.ts"
 import type { EmailVerifier } from "#/domain/ports/email-verifier.ts"
+import type { InboundMailbox } from "#/domain/ports/inbound-mailbox.ts"
 import type { JobQueue } from "#/domain/ports/job-queue.ts"
 import type { LinkedInService } from "#/domain/ports/linkedin-service.ts"
 import type { Logger } from "#/domain/ports/logger.ts"
@@ -14,6 +15,7 @@ import type { NotificationService } from "#/domain/ports/notification-service.ts
 import type { PipelineTracker } from "#/domain/ports/pipeline-tracker.ts"
 import type { ScraperService } from "#/domain/ports/scraper-service.ts"
 import { makeHandleReplyUseCase } from "./email/handle-reply.ts"
+import { makePollInboundMailboxUseCase } from "./email/poll-inbound-mailbox.ts"
 import {
 	makeSendFollowupUseCase,
 	makeSendInitialEmailUseCase,
@@ -63,6 +65,8 @@ export interface AppDependencies {
 	tracker: PipelineTracker
 	logger: Logger
 	jobQueue: JobQueue
+	/** Optional — when provided, exposes pollInbound() use case. */
+	inboundMailbox?: InboundMailbox
 	config: {
 		unsubscribe: UnsubscribeConfig
 		sendEmail: SendEmailConfig
@@ -162,6 +166,14 @@ export function buildUseCases(deps: AppDependencies) {
 		registerOptOut,
 	})
 
+	const pollInboundMailbox = deps.inboundMailbox
+		? makePollInboundMailboxUseCase({
+				mailbox: deps.inboundMailbox,
+				handleReply,
+				logger,
+			})
+		: null
+
 	// Pipeline orchestrator (with step tracking)
 	const runOutboundPipeline = makeRunOutboundPipelineUseCase({
 		captureLead,
@@ -235,6 +247,7 @@ export function buildUseCases(deps: AppDependencies) {
 			sendInitial: sendInitialEmail,
 			sendFollowup: sendFollowup,
 			handleReply: handleReply,
+			pollInbound: pollInboundMailbox,
 		},
 		optOut: {
 			unsubscribeByToken,
