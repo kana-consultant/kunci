@@ -26,8 +26,8 @@ import {
 	FileText,
 	Globe,
 	Linkedin,
-	type LucideIcon,
 	Loader2,
+	type LucideIcon,
 	Mail,
 	MapPin,
 	RotateCcw,
@@ -114,12 +114,14 @@ function formatDuration(ms: number | null): string {
 }
 
 function initials(name: string): string {
-	return name
-		.split(/\s+/)
-		.filter(Boolean)
-		.slice(0, 2)
-		.map((part) => part[0]?.toUpperCase())
-		.join("") || "L"
+	return (
+		name
+			.split(/\s+/)
+			.filter(Boolean)
+			.slice(0, 2)
+			.map((part) => part[0]?.toUpperCase())
+			.join("") || "L"
+	)
 }
 
 const dateFormatter = new Intl.DateTimeFormat("en", {
@@ -141,7 +143,8 @@ function relativeTime(input: string | Date | null | undefined): string {
 	const sec = Math.round(diff / 1000)
 	const formatter = new Intl.RelativeTimeFormat("en", { numeric: "auto" })
 	if (Math.abs(sec) < 60) return formatter.format(-sec, "second")
-	if (Math.abs(sec) < 3600) return formatter.format(-Math.round(sec / 60), "minute")
+	if (Math.abs(sec) < 3600)
+		return formatter.format(-Math.round(sec / 60), "minute")
 	if (Math.abs(sec) < 86400)
 		return formatter.format(-Math.round(sec / 3600), "hour")
 	return formatter.format(-Math.round(sec / 86400), "day")
@@ -260,7 +263,17 @@ function PipelineStepsTimeline({ leadId }: { leadId: string }) {
 		data: steps,
 		isPending,
 		error,
-	} = useQuery(orpc.lead.getPipelineSteps.queryOptions({ input: { leadId } }))
+	} = useQuery({
+		...orpc.lead.getPipelineSteps.queryOptions({ input: { leadId } }),
+		// Poll while the pipeline is still executing — stop as soon as no
+		// step is in `running` state (and at least one step exists).
+		refetchInterval: (query) => {
+			const data = query.state.data as PipelineStep[] | undefined
+			if (!data || data.length === 0) return 2000
+			return data.some((s) => s.status === "running") ? 2000 : false
+		},
+		refetchIntervalInBackground: false,
+	})
 
 	const pipelineSteps = (steps ?? []) as PipelineStep[]
 
@@ -323,7 +336,9 @@ function PipelineStepsTimeline({ leadId }: { leadId: string }) {
 		(s) => s.status === "completed",
 	).length
 	const failedCount = pipelineSteps.filter((s) => s.status === "failed").length
-	const runningCount = pipelineSteps.filter((s) => s.status === "running").length
+	const runningCount = pipelineSteps.filter(
+		(s) => s.status === "running",
+	).length
 	const progressValue = Math.min(100, (completedCount / totalSteps) * 100)
 
 	return (
@@ -393,8 +408,7 @@ function PipelineStepsTimeline({ leadId }: { leadId: string }) {
 							STATUS_COLOR[step.status] ?? "var(--color-muted-foreground)"
 						const detail = step.detail as Record<string, string> | null
 						const isRunning = step.status === "running"
-						const isFailed =
-							step.status === "failed" || step.status === "error"
+						const isFailed = step.status === "failed" || step.status === "error"
 
 						return (
 							<li
@@ -543,9 +557,26 @@ function PipelineStepsTimeline({ leadId }: { leadId: string }) {
 function LeadDetailPage() {
 	const { leadId } = Route.useParams()
 
-	const { data, isPending, error } = useQuery(
-		orpc.lead.getDetail.queryOptions({ input: { id: leadId } }),
-	)
+	const { data, isPending, error } = useQuery({
+		...orpc.lead.getDetail.queryOptions({ input: { id: leadId } }),
+		// Auto-poll lead detail while the pipeline is in-flight or the lead
+		// is waiting on a reply. Stops as soon as the lead reaches a stable
+		// terminal-ish state (`completed`, `replied`, `bounced`, `opted_out`).
+		refetchInterval: (query) => {
+			const lead = query.state.data as { replyStatus?: string } | undefined
+			const status = lead?.replyStatus
+			if (!status) return 2000
+			const live = new Set([
+				"pending",
+				"researching",
+				"research_failed",
+				"ready",
+				"awaiting",
+			])
+			return live.has(status) ? 2000 : false
+		},
+		refetchIntervalInBackground: false,
+	})
 	const queryClient = useQueryClient()
 
 	// biome-ignore lint/suspicious/noExplicitAny: oRPC mutationOptions narrowing escape
@@ -791,11 +822,7 @@ function LeadDetailPage() {
 							</p>
 						</CardHeader>
 						<CardContent className="space-y-4">
-							<ContactRow
-								icon={Mail}
-								label="Email"
-								tone="var(--color-primary)"
-							>
+							<ContactRow icon={Mail} label="Email" tone="var(--color-primary)">
 								<a
 									href={`mailto:${lead.email}`}
 									className="break-all hover:underline"
@@ -1014,9 +1041,7 @@ function LeadDetailPage() {
 								>
 									<Mail className="size-4" />
 								</div>
-								<p className="text-sm font-semibold">
-									Sequence not available
-								</p>
+								<p className="text-sm font-semibold">Sequence not available</p>
 								<p
 									className="text-xs max-w-sm"
 									style={{ color: "var(--color-muted-foreground)" }}
