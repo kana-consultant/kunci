@@ -348,15 +348,14 @@ function BrandPanel() {
 function BrandMarkIcon() {
 	return (
 		<div
-			className="flex h-10 w-10 items-center justify-center rounded-lg border text-base font-bold"
+			className="flex h-10 w-10 items-center justify-center rounded-lg border overflow-hidden"
 			style={{
 				borderColor: "var(--color-border)",
 				background:
 					"color-mix(in srgb, var(--color-surface) 70%, transparent)",
-				color: "var(--color-primary)",
 			}}
 		>
-			K
+			<img src="/logo.svg" alt="KUNCI" className="h-7 w-7 object-contain" />
 		</div>
 	)
 }

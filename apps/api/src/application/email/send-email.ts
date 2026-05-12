@@ -1,12 +1,26 @@
+import type {
+	CompanyProfileFileMeta,
+	CompanyProfileMode,
+} from "#/application/company-profile/use-cases.ts"
 import { AppError } from "#/application/shared/errors.ts"
+import type { SettingsService } from "#/application/shared/settings-service.ts"
 import type { BehaviorAnalysis } from "#/domain/behavior-analysis/behavior-analysis.ts"
 import type { EmailSequenceRepository } from "#/domain/email-sequence/email-sequence-repository.ts"
 import type { Lead } from "#/domain/lead/lead.ts"
 import type { LeadRepository } from "#/domain/lead/lead-repository.ts"
 import type { OptOutRepository } from "#/domain/opt-out/opt-out-repository.ts"
 import type { AIService } from "#/domain/ports/ai-service.ts"
-import type { EmailService } from "#/domain/ports/email-service.ts"
+import type {
+	EmailAttachment,
+	EmailService,
+} from "#/domain/ports/email-service.ts"
+import type { FileStorage } from "#/domain/ports/file-storage.ts"
 import type { Logger } from "#/domain/ports/logger.ts"
+import { SETTING_KEYS } from "#/domain/settings/setting-keys.ts"
+import {
+	buildCompanyProfileCtaHtml,
+	injectCompanyProfileCta,
+} from "./company-profile-cta.ts"
 import { appendFooterToHtml, buildFooterHtml } from "./email-footer.ts"
 
 export interface SendEmailConfig {
@@ -20,9 +34,80 @@ interface EmailUseCaseDeps {
 	optOutRepo: OptOutRepository
 	ai: AIService
 	emailService: EmailService
+	settings: SettingsService
+	fileStorage: FileStorage
 	logger: Logger
 	buildUnsubscribeUrl: (email: string) => string
 	config: SendEmailConfig
+}
+
+interface CompanyProfileAttachmentResult {
+	html: string
+	attachments: EmailAttachment[]
+}
+
+async function applyCompanyProfile(
+	deps: EmailUseCaseDeps,
+	html: string,
+	language: string | null,
+): Promise<CompanyProfileAttachmentResult> {
+	const mode = await deps.settings.get<CompanyProfileMode>(
+		SETTING_KEYS.BUSINESS_COMPANY_PROFILE_MODE,
+		"disabled",
+	)
+
+	if (mode === "url") {
+		const url = (
+			await deps.settings.get<string>(
+				SETTING_KEYS.BUSINESS_COMPANY_PROFILE_URL,
+				"",
+			)
+		)?.trim()
+		if (!url) {
+			deps.logger.warn(
+				{},
+				"Company profile mode is 'url' but no URL is configured — skipping inject",
+			)
+			return { html, attachments: [] }
+		}
+		const cta = buildCompanyProfileCtaHtml({ url, language })
+		return { html: injectCompanyProfileCta(html, cta), attachments: [] }
+	}
+
+	if (mode === "file") {
+		const meta = await deps.settings.get<CompanyProfileFileMeta | null>(
+			SETTING_KEYS.BUSINESS_COMPANY_PROFILE_FILE,
+			null,
+		)
+		if (!meta?.storageKey) {
+			deps.logger.warn(
+				{},
+				"Company profile mode is 'file' but no file is uploaded — skipping attachment",
+			)
+			return { html, attachments: [] }
+		}
+		try {
+			const blob = await deps.fileStorage.get(meta.storageKey)
+			return {
+				html,
+				attachments: [
+					{
+						filename: meta.fileName,
+						content: blob.bytes,
+						contentType: blob.mime || meta.mime,
+					},
+				],
+			}
+		} catch (err) {
+			deps.logger.error(
+				{ err, storageKey: meta.storageKey },
+				"Failed to load company profile file — sending email without attachment",
+			)
+			return { html, attachments: [] }
+		}
+	}
+
+	return { html, attachments: [] }
 }
 
 /** Send the initial (1st) email to a lead */
@@ -63,7 +148,7 @@ export function makeSendInitialEmailUseCase(deps: EmailUseCaseDeps) {
 		// 3. Convert to HTML + append compliance footer
 		deps.logger.info({ leadId: lead.id }, "Converting email to HTML")
 		const aiHtml = await deps.ai.convertToHtml(firstEmail.content)
-		const htmlContent = appendFooterToHtml(
+		const withFooter = appendFooterToHtml(
 			aiHtml,
 			buildFooterHtml({
 				unsubscribeUrl: deps.buildUnsubscribeUrl(lead.email),
@@ -72,13 +157,25 @@ export function makeSendInitialEmailUseCase(deps: EmailUseCaseDeps) {
 				language: lead.language,
 			}),
 		)
+
+		// 3b. Apply company-profile setting (URL CTA inject or file attachment).
+		// Only the FIRST email gets the profile — follow-ups stay lean.
+		const profile = await applyCompanyProfile(deps, withFooter, lead.language)
+		const htmlContent = profile.html
 		await deps.sequenceRepo.updateHtml(firstEmail.id, htmlContent)
 
 		// 4. Pick subject line
 		const subject = await deps.ai.pickSubjectLine(lead, firstEmail.subjectLines)
 
 		// 5. Send via Resend
-		deps.logger.info({ leadId: lead.id, to: lead.email }, "Sending first email")
+		deps.logger.info(
+			{
+				leadId: lead.id,
+				to: lead.email,
+				attachments: profile.attachments.length,
+			},
+			"Sending first email",
+		)
 		const result = await deps.emailService.send({
 			to: lead.email,
 			subject,
@@ -86,6 +183,9 @@ export function makeSendInitialEmailUseCase(deps: EmailUseCaseDeps) {
 			leadId: lead.id,
 			stage: 1,
 			unsubscribeUrl: deps.buildUnsubscribeUrl(lead.email),
+			attachments: profile.attachments.length
+				? profile.attachments
+				: undefined,
 		})
 
 		// 6. Mark sent + update lead

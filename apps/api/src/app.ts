@@ -33,6 +33,7 @@ import {
 } from "./infrastructure/observability/logger.ts"
 import { createPipelineQueue } from "./infrastructure/queue/bullmq-pipeline-queue.ts"
 import { createDeepcrawlService } from "./infrastructure/scraper/deepcrawl-service.ts"
+import { createLocalDiskStorage } from "./infrastructure/storage/local-disk-storage.ts"
 import { appRouter } from "./presentation/routers/index.ts"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
@@ -81,6 +82,8 @@ export async function createServerApp() {
 	const settingsService = new SettingsService(repos.settings, cache)
 	const scraper = createDeepcrawlService({ apiKey: env.DEEPCRAWL_API_KEY })
 
+	const fileStorage = createLocalDiskStorage({ root: env.UPLOAD_DIR })
+
 	const services = {
 		emailVerifier: createMxVerifier(),
 		scraper,
@@ -104,6 +107,7 @@ export async function createServerApp() {
 		notifier: env.SLACK_WEBHOOK_URL
 			? createSlackNotificationService(env.SLACK_WEBHOOK_URL)
 			: createNoopNotificationService(),
+		fileStorage,
 	}
 
 	const tracker = createPipelineStepRepository(db)
@@ -156,6 +160,9 @@ export async function createServerApp() {
 			sendEmail: {
 				senderName: env.SENDER_NAME,
 				senderCompany: env.SENDER_COMPANY,
+			},
+			companyProfile: {
+				maxBytes: env.UPLOAD_MAX_BYTES,
 			},
 		},
 	})
@@ -236,6 +243,64 @@ export async function createServerApp() {
 	}
 	app.get("/unsubscribe/:token", unsubscribeHandler)
 	app.post("/unsubscribe/:token", unsubscribeHandler)
+
+	// Company-profile upload routes (multipart — oRPC is poor at binary).
+	// Auth: Better Auth session OR x-api-key header (matches protectedProcedure
+	// semantics). One file at a time, capped at UPLOAD_MAX_BYTES.
+	const requireAuth = async (
+		c: any,
+	): Promise<{ userId: string | null } | Response> => {
+		const apiKey = c.req.header("x-api-key")
+		if (env.API_KEY && apiKey === env.API_KEY) return { userId: null }
+		const session = await auth.api.getSession({ headers: c.req.raw.headers })
+		if (!session) return c.json({ error: "unauthorized" }, 401)
+		return { userId: session.user.id }
+	}
+
+	app.post("/api/uploads/company-profile", async (c) => {
+		const authResult = await requireAuth(c)
+		if (authResult instanceof Response) return authResult
+
+		const contentLength = Number(c.req.header("content-length") ?? "0")
+		if (contentLength > env.UPLOAD_MAX_BYTES * 2) {
+			return c.json({ error: "payload_too_large" }, 413)
+		}
+
+		const body = await c.req.parseBody({ all: false })
+		const file = body.file
+		if (!(file instanceof File)) {
+			return c.json({ error: "missing 'file' field" }, 400)
+		}
+
+		const bytes = Buffer.from(await file.arrayBuffer())
+		try {
+			const meta = await useCases.companyProfile.upload({
+				bytes,
+				mime: file.type || "application/octet-stream",
+				fileName: file.name || "company-profile",
+				updatedBy: authResult.userId ?? undefined,
+			})
+			return c.json({ ok: true, file: meta })
+		} catch (err: any) {
+			if (err?.code === "BAD_REQUEST") {
+				return c.json({ error: err.message }, 400)
+			}
+			logger.error({ err }, "Company profile upload failed")
+			return c.json({ error: "upload_failed" }, 500)
+		}
+	})
+
+	app.delete("/api/uploads/company-profile", async (c) => {
+		const authResult = await requireAuth(c)
+		if (authResult instanceof Response) return authResult
+		try {
+			await useCases.companyProfile.clearFile(authResult.userId ?? undefined)
+			return c.json({ ok: true })
+		} catch (err) {
+			logger.error({ err }, "Company profile clear failed")
+			return c.json({ error: "clear_failed" }, 500)
+		}
+	})
 
 	// Health checks
 	app.get("/healthz", (c) => c.json({ status: "ok", version: APP_VERSION }))

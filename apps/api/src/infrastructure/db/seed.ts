@@ -63,6 +63,9 @@ async function seed() {
 
 		console.log("⚙️ Seeding default settings...")
 		for (const setting of DEFAULT_SETTINGS) {
+			// app_settings.value is NOT NULL — null defaults mean "no value yet"
+			// and are served from the hardcoded fallback in SettingsService instead.
+			if (setting.value === null) continue
 			await db
 				.insert(appSettings)
 				.values({

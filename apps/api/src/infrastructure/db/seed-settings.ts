@@ -327,6 +327,33 @@ export const DEFAULT_SETTINGS = [
 		valueType: "json",
 		description: "List of products and services you offer",
 	},
+	{
+		key: SETTING_KEYS.BUSINESS_COMPANY_PROFILE_MODE,
+		value: "disabled",
+		category: "business",
+		label: "Company Profile Attachment",
+		valueType: "string",
+		description:
+			"How to attach company profile to the first outreach email: disabled, url (inject hyperlink), or file (attach PDF/DOCX)",
+	},
+	{
+		key: SETTING_KEYS.BUSINESS_COMPANY_PROFILE_URL,
+		value: "",
+		category: "business",
+		label: "Company Profile URL",
+		valueType: "string",
+		description:
+			"Public URL to your company profile (used when mode is 'url').",
+	},
+	{
+		key: SETTING_KEYS.BUSINESS_COMPANY_PROFILE_FILE,
+		value: null,
+		category: "business",
+		label: "Company Profile File",
+		valueType: "json",
+		description:
+			"Uploaded company profile metadata { storageKey, fileName, mime, size }. Managed via the uploader UI — do not edit by hand.",
+	},
 
 	// ── Pipeline ──
 	{

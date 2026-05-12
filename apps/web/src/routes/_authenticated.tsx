@@ -119,6 +119,13 @@ function AuthenticatedLayout() {
 		<DashboardShell
 			sidebar={
 				<Sidebar
+					logo={
+						<img
+							src="/logo.svg"
+							alt="KUNCI"
+							className="h-6 w-6 object-contain"
+						/>
+					}
 					brandName="KUNCI"
 					items={navItems}
 					activeId={activeId}
