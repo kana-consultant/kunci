@@ -1,4 +1,6 @@
 import {
+	Avatar,
+	AvatarFallback,
 	Badge,
 	Button,
 	Card,
@@ -6,7 +8,6 @@ import {
 	CardHeader,
 	CardTitle,
 	Progress,
-	Separator,
 	Skeleton,
 	Tooltip,
 	TooltipContent,
@@ -24,10 +25,15 @@ import {
 	ExternalLink,
 	FileText,
 	Globe,
+	Linkedin,
+	type LucideIcon,
 	Loader2,
 	Mail,
+	MapPin,
 	RotateCcw,
 	Send,
+	Sparkles,
+	Tag,
 	UserCheck,
 	XCircle,
 } from "lucide-react"
@@ -38,6 +44,10 @@ import { orpc } from "~/libs/orpc/client"
 export const Route = createFileRoute("/_authenticated/leads/$leadId")({
 	component: LeadDetailPage,
 })
+
+function softBg(token: string) {
+	return `color-mix(in oklab, ${token} 14%, transparent)`
+}
 
 const statusTones: Record<
 	string,
@@ -53,21 +63,196 @@ const statusTones: Record<
 	research_failed: "warning",
 }
 
-/** Map step identifiers to icons and colors */
-const stepMeta: Record<string, { icon: typeof CheckCircle2; color: string }> = {
+const statusLabels: Record<string, string> = {
+	pending: "Pending",
+	researching: "Researching",
+	ready: "Ready",
+	awaiting: "Awaiting reply",
+	replied: "Replied",
+	completed: "Completed",
+	bounced: "Bounced",
+	research_failed: "Research failed",
+}
+
+const stageMeta: Record<number, { label: string; tone: string }> = {
+	0: { label: "Captured", tone: "var(--color-primary)" },
+	1: { label: "1st Email Sent", tone: "var(--color-info)" },
+	2: { label: "Follow-up 1", tone: "var(--color-warning)" },
+	3: { label: "Follow-up 2", tone: "var(--color-success)" },
+}
+
+const stepMeta: Record<string, { icon: LucideIcon; color: string }> = {
 	capture: { icon: UserCheck, color: "var(--color-primary)" },
 	scrape: { icon: Globe, color: "var(--color-info)" },
+	scrape_website: { icon: Globe, color: "var(--color-info)" },
 	analyze_website: { icon: Brain, color: "var(--color-accent)" },
+	website_analysis: { icon: Brain, color: "var(--color-accent)" },
 	build_profile: { icon: FileText, color: "var(--color-success)" },
+	company_profile: { icon: FileText, color: "var(--color-success)" },
 	analyze_behavior: { icon: Brain, color: "var(--color-warning)" },
+	behavior_analysis: { icon: Brain, color: "var(--color-warning)" },
 	generate_sequence: { icon: Mail, color: "var(--color-primary)" },
+	email_sequence: { icon: Mail, color: "var(--color-primary)" },
+	html_convert: { icon: FileText, color: "var(--color-info)" },
+	subject_line: { icon: Sparkles, color: "var(--color-primary)" },
 	send_email: { icon: Send, color: "var(--color-success)" },
+}
+
+const STATUS_COLOR: Record<string, string> = {
+	completed: "var(--color-success)",
+	success: "var(--color-success)",
+	running: "var(--color-info)",
+	pending: "var(--color-warning)",
+	failed: "var(--color-danger)",
+	error: "var(--color-danger)",
 }
 
 function formatDuration(ms: number | null): string {
 	if (!ms) return "—"
 	if (ms < 1000) return `${ms}ms`
 	return `${(ms / 1000).toFixed(1)}s`
+}
+
+function initials(name: string): string {
+	return name
+		.split(/\s+/)
+		.filter(Boolean)
+		.slice(0, 2)
+		.map((part) => part[0]?.toUpperCase())
+		.join("") || "L"
+}
+
+const dateFormatter = new Intl.DateTimeFormat("en", {
+	month: "short",
+	day: "numeric",
+	year: "numeric",
+})
+
+const timeFormatter = new Intl.DateTimeFormat("en", {
+	hour: "2-digit",
+	minute: "2-digit",
+	second: "2-digit",
+})
+
+function relativeTime(input: string | Date | null | undefined): string {
+	if (!input) return "—"
+	const date = typeof input === "string" ? new Date(input) : input
+	const diff = Date.now() - date.getTime()
+	const sec = Math.round(diff / 1000)
+	const formatter = new Intl.RelativeTimeFormat("en", { numeric: "auto" })
+	if (Math.abs(sec) < 60) return formatter.format(-sec, "second")
+	if (Math.abs(sec) < 3600) return formatter.format(-Math.round(sec / 60), "minute")
+	if (Math.abs(sec) < 86400)
+		return formatter.format(-Math.round(sec / 3600), "hour")
+	return formatter.format(-Math.round(sec / 86400), "day")
+}
+
+// ─── Status strip ────────────────────────────────────────────────────────────
+
+type StripCell = {
+	icon: LucideIcon
+	label: string
+	value: string
+	hint?: string
+	tone: string
+}
+
+function StatusStrip({ cells }: { cells: StripCell[] }) {
+	return (
+		<div
+			className="grid grid-cols-2 lg:grid-cols-4 rounded-2xl border overflow-hidden"
+			style={{
+				borderColor: "var(--color-border)",
+				background: "var(--color-surface)",
+			}}
+		>
+			{cells.map((c, i) => {
+				const Icon = c.icon
+				return (
+					<div
+						key={c.label}
+						className="flex items-start gap-3 p-4"
+						style={{
+							borderLeft: i > 0 ? "1px solid var(--color-border)" : undefined,
+						}}
+					>
+						<div
+							className="rounded-lg p-2 shrink-0"
+							style={{ background: softBg(c.tone), color: c.tone }}
+						>
+							<Icon className="size-4" />
+						</div>
+						<div className="flex-1 min-w-0 space-y-1">
+							<p
+								className="text-[11px] font-semibold uppercase tracking-wider"
+								style={{ color: "var(--color-muted-foreground)" }}
+							>
+								{c.label}
+							</p>
+							<p className="text-base font-semibold leading-none truncate">
+								{c.value}
+							</p>
+							{c.hint && (
+								<p
+									className="text-xs truncate"
+									style={{ color: "var(--color-muted-foreground)" }}
+								>
+									{c.hint}
+								</p>
+							)}
+						</div>
+					</div>
+				)
+			})}
+		</div>
+	)
+}
+
+// ─── Contact row ─────────────────────────────────────────────────────────────
+
+function ContactRow({
+	icon: Icon,
+	label,
+	children,
+	tone,
+}: {
+	icon: LucideIcon
+	label: string
+	children: React.ReactNode
+	tone: string
+}) {
+	return (
+		<div className="flex items-start gap-3">
+			<div
+				className="size-8 rounded-lg flex items-center justify-center shrink-0"
+				style={{ background: softBg(tone), color: tone }}
+			>
+				<Icon className="size-4" />
+			</div>
+			<div className="flex-1 min-w-0">
+				<p
+					className="text-[11px] font-semibold uppercase tracking-wider"
+					style={{ color: "var(--color-muted-foreground)" }}
+				>
+					{label}
+				</p>
+				<div className="text-sm mt-0.5 min-w-0">{children}</div>
+			</div>
+		</div>
+	)
+}
+
+// ─── Pipeline timeline ───────────────────────────────────────────────────────
+
+type PipelineStep = {
+	id?: string
+	step: string
+	label: string
+	status: string
+	durationMs: number | null
+	startedAt: string | Date
+	completedAt: string | Date | null
+	detail?: Record<string, unknown> | null
 }
 
 function PipelineStepsTimeline({ leadId }: { leadId: string }) {
@@ -77,13 +262,13 @@ function PipelineStepsTimeline({ leadId }: { leadId: string }) {
 		error,
 	} = useQuery(orpc.lead.getPipelineSteps.queryOptions({ input: { leadId } }))
 
-	const pipelineSteps = steps ?? []
+	const pipelineSteps = (steps ?? []) as PipelineStep[]
 
 	if (isPending) {
 		return (
-			<div className="space-y-3 p-4">
-				{[1, 2, 3].map((i) => (
-					<Skeleton key={i} className="h-14 rounded-lg" />
+			<div className="space-y-3">
+				{[1, 2, 3, 4].map((i) => (
+					<Skeleton key={i} className="h-16 rounded-lg" />
 				))}
 			</div>
 		)
@@ -92,8 +277,12 @@ function PipelineStepsTimeline({ leadId }: { leadId: string }) {
 	if (error) {
 		return (
 			<div
-				className="p-6 text-center text-sm"
-				style={{ color: "var(--color-danger)" }}
+				className="p-4 rounded-xl border text-sm"
+				style={{
+					borderColor: "var(--color-danger)",
+					color: "var(--color-danger)",
+					background: softBg("var(--color-danger)"),
+				}}
 			>
 				Failed to load pipeline steps.
 			</div>
@@ -103,206 +292,253 @@ function PipelineStepsTimeline({ leadId }: { leadId: string }) {
 	if (pipelineSteps.length === 0) {
 		return (
 			<div
-				className="text-center py-12"
-				style={{ color: "var(--color-muted-foreground)" }}
+				className="flex flex-col items-center justify-center gap-2 py-10 rounded-xl border border-dashed text-center"
+				style={{
+					borderColor: "var(--color-border)",
+					background: "var(--color-surface-muted)",
+				}}
 			>
-				<Clock className="w-10 h-10 mx-auto mb-3 opacity-30" />
-				<p className="text-sm">No pipeline steps recorded yet.</p>
-				<p className="text-xs mt-1 opacity-60">
-					Steps will appear here when the pipeline runs.
+				<div
+					className="size-10 rounded-lg flex items-center justify-center"
+					style={{
+						background: softBg("var(--color-primary)"),
+						color: "var(--color-primary)",
+					}}
+				>
+					<Sparkles className="size-4" />
+				</div>
+				<p className="text-sm font-semibold">No pipeline steps yet</p>
+				<p
+					className="text-xs max-w-xs"
+					style={{ color: "var(--color-muted-foreground)" }}
+				>
+					Steps will appear here as the AI pipeline runs.
 				</p>
 			</div>
 		)
 	}
 
 	const totalSteps = 7
-	const completedSteps = pipelineSteps.filter(
-		(s: any) => s.status === "completed",
+	const completedCount = pipelineSteps.filter(
+		(s) => s.status === "completed",
 	).length
+	const failedCount = pipelineSteps.filter((s) => s.status === "failed").length
+	const runningCount = pipelineSteps.filter((s) => s.status === "running").length
+	const progressValue = Math.min(100, (completedCount / totalSteps) * 100)
 
 	return (
-		<div className="relative">
-			<Progress
-				value={(completedSteps / totalSteps) * 100}
-				tone="primary"
-				className="mb-4 mx-2"
-			/>
-			{/* Vertical timeline line */}
-			<div
-				className="absolute left-[19px] top-4 bottom-4 w-px"
-				style={{ background: "var(--color-border)" }}
-			/>
-
-			<div className="space-y-1">
-				{pipelineSteps.map((step: any, idx: number) => {
-					const meta = stepMeta[step.step] ?? {
-						icon: CheckCircle2,
-						color: "var(--color-muted-foreground)",
-					}
-					const StepIcon = meta.icon
-					const isFailed = step.status === "failed"
-					const isRunning = step.status === "running"
-
-					const StatusIcon = isFailed
-						? XCircle
-						: isRunning
-							? Loader2
-							: CheckCircle2
-
-					const statusColor = isFailed
-						? "var(--color-danger)"
-						: isRunning
-							? "var(--color-warning)"
-							: "var(--color-success)"
-
-					const detail = step.detail as Record<string, string> | null
-
-					return (
-						<div
-							key={step.id ?? idx}
-							className="relative flex items-start gap-3 px-2 py-2.5 group"
+		<TooltipProvider>
+			<div className="space-y-4">
+				<div className="space-y-2">
+					<div className="flex items-center justify-between text-xs">
+						<span style={{ color: "var(--color-muted-foreground)" }}>
+							Overall progress
+						</span>
+						<span className="font-semibold tabular-nums">
+							{completedCount}/{totalSteps}
+						</span>
+					</div>
+					<Progress value={progressValue} tone="primary" />
+					<div className="flex flex-wrap gap-2 text-[11px]">
+						<span
+							className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full"
+							style={{
+								background: softBg("var(--color-success)"),
+								color: "var(--color-success)",
+							}}
 						>
-							{/* Timeline dot */}
-							<div
-								className="relative z-10 flex items-center justify-center w-[22px] h-[22px] rounded-full shrink-0 mt-0.5"
+							<CheckCircle2 className="size-3" />
+							{completedCount} done
+						</span>
+						{runningCount > 0 && (
+							<span
+								className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full"
 								style={{
-									background: `color-mix(in srgb, ${statusColor} 20%, transparent)`,
-									border: `2px solid ${statusColor}`,
+									background: softBg("var(--color-info)"),
+									color: "var(--color-info)",
 								}}
 							>
-								<StatusIcon
-									className={`w-3 h-3 ${isRunning ? "animate-spin" : ""}`}
-									style={{ color: statusColor }}
-								/>
-							</div>
+								<Loader2 className="size-3 animate-spin" />
+								{runningCount} running
+							</span>
+						)}
+						{failedCount > 0 && (
+							<span
+								className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full"
+								style={{
+									background: softBg("var(--color-danger)"),
+									color: "var(--color-danger)",
+								}}
+							>
+								<XCircle className="size-3" />
+								{failedCount} failed
+							</span>
+						)}
+					</div>
+				</div>
 
-							{/* Content */}
-							<div className="flex-1 min-w-0">
-								<div className="flex items-center justify-between gap-2">
-									<div className="flex items-center gap-2 min-w-0">
-										<StepIcon
-											className="w-3.5 h-3.5 shrink-0"
-											style={{ color: meta.color }}
-										/>
-										<span className="text-sm font-medium truncate">
-											{step.label}
-										</span>
-									</div>
-									<div className="flex items-center gap-2 shrink-0">
-										{step.durationMs != null && (
-											<span
-												className="text-xs font-mono tabular-nums"
-												style={{ color: "var(--color-muted-foreground)" }}
-											>
-												{formatDuration(step.durationMs)}
-											</span>
-										)}
-										<Badge
-											tone={
-												isFailed ? "danger" : isRunning ? "warning" : "success"
-											}
-											className="text-[10px] px-1.5 py-0"
-										>
-											{step.status}
-										</Badge>
-									</div>
+				<ol className="relative space-y-2">
+					<span
+						aria-hidden
+						className="absolute left-[15px] top-3 bottom-3 w-px"
+						style={{ background: "var(--color-border)" }}
+					/>
+					{pipelineSteps.map((step, idx) => {
+						const meta = stepMeta[step.step] ?? {
+							icon: CheckCircle2,
+							color: "var(--color-muted-foreground)",
+						}
+						const StepIcon = meta.icon
+						const statusColor =
+							STATUS_COLOR[step.status] ?? "var(--color-muted-foreground)"
+						const detail = step.detail as Record<string, string> | null
+						const isRunning = step.status === "running"
+						const isFailed =
+							step.status === "failed" || step.status === "error"
+
+						return (
+							<li
+								key={step.id ?? `${step.step}-${idx}`}
+								className="flex items-start gap-3 relative"
+							>
+								<div
+									className="size-8 rounded-lg flex items-center justify-center shrink-0 relative z-10"
+									style={{
+										background: softBg(statusColor),
+										color: statusColor,
+										boxShadow: "0 0 0 4px var(--color-surface)",
+									}}
+								>
+									{isRunning ? (
+										<Loader2 className="size-4 animate-spin" />
+									) : isFailed ? (
+										<XCircle className="size-4" />
+									) : (
+										<StepIcon className="size-4" />
+									)}
 								</div>
 
-								{/* Detail info */}
-								{detail && (
-									<div className="mt-1 space-y-0.5">
-										{detail.error && (
-											<TooltipProvider>
+								<div
+									className="flex-1 min-w-0 rounded-xl border p-3"
+									style={{
+										background: "var(--color-surface)",
+										borderColor: "var(--color-border)",
+									}}
+								>
+									<div className="flex items-center justify-between gap-2 flex-wrap">
+										<div className="flex items-center gap-2 min-w-0">
+											<StepIcon
+												className="size-3.5 shrink-0"
+												style={{ color: meta.color }}
+											/>
+											<span className="text-sm font-semibold truncate">
+												{step.label}
+											</span>
+										</div>
+										<div className="flex items-center gap-2 shrink-0">
+											{step.durationMs != null && (
+												<span
+													className="text-xs font-mono tabular-nums"
+													style={{ color: "var(--color-muted-foreground)" }}
+												>
+													{formatDuration(step.durationMs)}
+												</span>
+											)}
+											<Badge
+												tone={
+													isFailed
+														? "danger"
+														: isRunning
+															? "info"
+															: step.status === "completed"
+																? "success"
+																: "neutral"
+												}
+												size="sm"
+												dot
+											>
+												{step.status}
+											</Badge>
+										</div>
+									</div>
+
+									{detail && (
+										<div className="mt-2 space-y-1">
+											{detail.error && (
 												<Tooltip>
 													<TooltipTrigger asChild>
 														<p
 															className="text-xs truncate cursor-help"
 															style={{ color: "var(--color-danger)" }}
 														>
-															Error: {detail.error as string}
+															<span className="font-semibold">Error:</span>{" "}
+															{detail.error}
 														</p>
 													</TooltipTrigger>
-													<TooltipContent>
-														{detail.error as string}
-													</TooltipContent>
+													<TooltipContent>{detail.error}</TooltipContent>
 												</Tooltip>
-											</TooltipProvider>
-										)}
-										{detail.provider && (
-											<p
-												className="text-xs"
-												style={{ color: "var(--color-muted-foreground)" }}
-											>
-												Provider:{" "}
-												<span className="font-medium">
-													{detail.provider as string}
-												</span>
-												{detail.model && (
-													<>
-														{" · "}Model:{" "}
-														<span className="font-mono">
-															{detail.model as string}
-														</span>
-													</>
-												)}
-											</p>
-										)}
-										{detail.apiUrl && (
-											<TooltipProvider>
+											)}
+											{detail.provider && (
+												<p
+													className="text-xs"
+													style={{ color: "var(--color-muted-foreground)" }}
+												>
+													Provider:{" "}
+													<span className="font-medium">{detail.provider}</span>
+													{detail.model && (
+														<>
+															{" · "}Model:{" "}
+															<span className="font-mono">{detail.model}</span>
+														</>
+													)}
+												</p>
+											)}
+											{detail.apiUrl && (
 												<Tooltip>
 													<TooltipTrigger asChild>
 														<p
-															className="text-xs font-mono truncate opacity-60 cursor-help"
+															className="text-xs font-mono truncate cursor-help opacity-60"
 															style={{ color: "var(--color-muted-foreground)" }}
 														>
-															→ {detail.apiUrl as string}
+															→ {detail.apiUrl}
 														</p>
 													</TooltipTrigger>
-													<TooltipContent>
-														{detail.apiUrl as string}
-													</TooltipContent>
+													<TooltipContent>{detail.apiUrl}</TooltipContent>
 												</Tooltip>
-											</TooltipProvider>
-										)}
-										{detail.url && !detail.apiUrl && (
-											<TooltipProvider>
+											)}
+											{detail.url && !detail.apiUrl && (
 												<Tooltip>
 													<TooltipTrigger asChild>
 														<p
-															className="text-xs font-mono truncate opacity-60 cursor-help"
+															className="text-xs font-mono truncate cursor-help opacity-60"
 															style={{ color: "var(--color-muted-foreground)" }}
 														>
-															→ {detail.url as string}
+															→ {detail.url}
 														</p>
 													</TooltipTrigger>
-													<TooltipContent>
-														{detail.url as string}
-													</TooltipContent>
+													<TooltipContent>{detail.url}</TooltipContent>
 												</Tooltip>
-											</TooltipProvider>
-										)}
-									</div>
-								)}
+											)}
+										</div>
+									)}
 
-								{/* Timestamp */}
-								<p
-									className="text-[10px] mt-1 opacity-50 tabular-nums"
-									style={{ color: "var(--color-muted-foreground)" }}
-								>
-									{new Date(step.startedAt as string).toLocaleTimeString([], {
-										hour: "2-digit",
-										minute: "2-digit",
-										second: "2-digit",
-									})}
-								</p>
-							</div>
-						</div>
-					)
-				})}
+									<p
+										className="text-[10px] mt-1.5 tabular-nums"
+										style={{ color: "var(--color-muted-foreground)" }}
+									>
+										{timeFormatter.format(new Date(step.startedAt))}
+									</p>
+								</div>
+							</li>
+						)
+					})}
+				</ol>
 			</div>
-		</div>
+		</TooltipProvider>
 	)
 }
+
+// ─── Main page ───────────────────────────────────────────────────────────────
 
 function LeadDetailPage() {
 	const { leadId } = Route.useParams()
@@ -310,161 +546,365 @@ function LeadDetailPage() {
 	const { data, isPending, error } = useQuery(
 		orpc.lead.getDetail.queryOptions({ input: { id: leadId } }),
 	)
-	const lead = data
 	const queryClient = useQueryClient()
 
+	// biome-ignore lint/suspicious/noExplicitAny: oRPC mutationOptions narrowing escape
 	const { mutate: retry, isPending: isRetrying } = useMutation(
 		(orpc.lead.retry as any).mutationOptions({
 			onSuccess: () => {
-				alert("Pipeline restarted")
 				queryClient.invalidateQueries()
-			},
-			onError: (err: any) => {
-				alert(err.message || "Failed to restart pipeline")
 			},
 		}),
 	)
 
 	if (isPending) {
 		return (
-			<div className="space-y-6 max-w-5xl mx-auto">
+			<div className="space-y-6">
 				<Skeleton className="h-8 w-48" />
-				<Skeleton className="h-64 rounded-xl" />
+				<Skeleton className="h-24 rounded-2xl" />
+				<div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+					<Skeleton className="h-64 rounded-2xl" />
+					<Skeleton className="h-64 rounded-2xl lg:col-span-2" />
+				</div>
 			</div>
 		)
 	}
 
-	if (error || !lead) {
+	if (error || !data) {
 		return (
-			<div className="max-w-5xl mx-auto space-y-4">
+			<div className="space-y-4">
+				<Link
+					to="/leads"
+					className="inline-flex items-center gap-1.5 text-xs font-medium hover:underline"
+					style={{ color: "var(--color-muted-foreground)" }}
+				>
+					<ArrowLeft className="size-3.5" />
+					Back to pipeline
+				</Link>
 				<Card>
-					<CardContent className="p-4" style={{ color: "var(--color-danger)" }}>
-						Failed to load lead details. Make sure the API server is running.
+					<CardContent
+						className="p-5 flex items-start gap-3"
+						style={{ color: "var(--color-danger)" }}
+					>
+						<XCircle className="size-5 shrink-0" />
+						<div>
+							<p className="font-semibold">Failed to load lead</p>
+							<p
+								className="text-sm mt-1"
+								style={{ color: "var(--color-muted-foreground)" }}
+							>
+								Make sure the API server is running.
+							</p>
+						</div>
 					</CardContent>
 				</Card>
-				<Link to="/leads">
-					<Button
-						variant="ghost"
-						leadingIcon={<ArrowLeft className="w-4 h-4" />}
-					>
-						Back to pipeline
-					</Button>
-				</Link>
 			</div>
 		)
 	}
 
-	const statusTone = statusTones[lead.replyStatus as string] ?? "neutral"
+	const lead = data as {
+		fullName: string
+		email: string
+		companyName: string
+		companyWebsite: string
+		painPoints?: string | null
+		companyResearch?: string | null
+		stage: number
+		replyStatus: string
+		leadSource?: string | null
+		linkedinUrl?: string | null
+		lastEmailSentAt?: string | Date | null
+		createdAt: string | Date
+	}
+
+	const statusTone = statusTones[lead.replyStatus] ?? "neutral"
+	const stage = stageMeta[lead.stage] ?? {
+		label: `Stage ${lead.stage}`,
+		tone: "var(--color-muted-foreground)",
+	}
+
+	const stripCells: StripCell[] = [
+		{
+			icon: Tag,
+			label: "Stage",
+			value: stage.label,
+			hint: `Stage ${lead.stage} of 3`,
+			tone: stage.tone,
+		},
+		{
+			icon: Mail,
+			label: "Reply Status",
+			value: statusLabels[lead.replyStatus] ?? lead.replyStatus,
+			hint:
+				lead.replyStatus === "awaiting"
+					? "Awaiting prospect reply"
+					: lead.replyStatus === "replied"
+						? "Engaged — triage in inbox"
+						: "Pipeline status",
+			tone:
+				lead.replyStatus === "replied"
+					? "var(--color-success)"
+					: lead.replyStatus === "awaiting"
+						? "var(--color-warning)"
+						: lead.replyStatus === "bounced"
+							? "var(--color-danger)"
+							: "var(--color-info)",
+		},
+		{
+			icon: Calendar,
+			label: "Captured",
+			value: dateFormatter.format(new Date(lead.createdAt)),
+			hint: relativeTime(lead.createdAt),
+			tone: "var(--color-primary)",
+		},
+		{
+			icon: Send,
+			label: "Last Email",
+			value: lead.lastEmailSentAt
+				? dateFormatter.format(new Date(lead.lastEmailSentAt))
+				: "Not yet sent",
+			hint: lead.lastEmailSentAt
+				? relativeTime(lead.lastEmailSentAt)
+				: "Sequence pending",
+			tone: "var(--color-accent)",
+		},
+	]
+
+	const handleRetry = () => {
+		// biome-ignore lint/suspicious/noExplicitAny: oRPC mutate signature
+		;(retry as any)({ leadId })
+	}
 
 	return (
-		<div className="space-y-6 max-w-5xl mx-auto">
-			{/* Header */}
-			<div>
-				<Link to="/leads">
-					<Button
-						variant="ghost"
-						size="sm"
-						leadingIcon={<ArrowLeft className="w-4 h-4" />}
-						className="mb-4"
-					>
-						Back to pipeline
-					</Button>
+		<div className="space-y-6">
+			{/* ── Header ── */}
+			<div className="space-y-4">
+				<Link
+					to="/leads"
+					className="inline-flex items-center gap-1.5 text-xs font-medium hover:underline"
+					style={{ color: "var(--color-muted-foreground)" }}
+				>
+					<ArrowLeft className="size-3.5" />
+					Back to pipeline
 				</Link>
-				<div className="flex items-start justify-between">
-					<div>
-						<h1 className="text-3xl font-bold">{lead.fullName as string}</h1>
-						<p
-							className="text-lg mt-1 flex items-center gap-2"
-							style={{ color: "var(--color-muted-foreground)" }}
-						>
-							{lead.companyName as string}
-							{lead.companyWebsite && (
-								<a
-									href={lead.companyWebsite as string}
-									target="_blank"
-									rel="noreferrer"
-									className="inline-flex items-center gap-1 text-sm"
+				<div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+					<div className="flex items-start gap-4 min-w-0">
+						<Avatar size="lg" className="shrink-0">
+							<AvatarFallback>{initials(lead.fullName)}</AvatarFallback>
+						</Avatar>
+						<div className="min-w-0">
+							<div className="flex items-center gap-2 mb-1">
+								<span
+									className="text-[11px] font-semibold uppercase tracking-widest"
 									style={{ color: "var(--color-primary)" }}
 								>
-									<ExternalLink className="w-3.5 h-3.5" />
+									Lead Detail
+								</span>
+								<span
+									className="size-1 rounded-full"
+									style={{ background: "var(--color-muted-foreground)" }}
+								/>
+								<span
+									className="text-[11px] uppercase tracking-widest font-mono"
+									style={{ color: "var(--color-muted-foreground)" }}
+								>
+									{leadId.slice(0, 8)}
+								</span>
+							</div>
+							<h1 className="text-2xl font-bold tracking-tight truncate">
+								{lead.fullName}
+							</h1>
+							<div
+								className="flex items-center gap-2 mt-1 text-sm flex-wrap"
+								style={{ color: "var(--color-muted-foreground)" }}
+							>
+								<span>{lead.companyName}</span>
+								<span
+									className="size-1 rounded-full"
+									style={{ background: "var(--color-border-strong)" }}
+								/>
+								<a
+									href={lead.companyWebsite}
+									target="_blank"
+									rel="noreferrer"
+									className="inline-flex items-center gap-1 hover:underline"
+									style={{ color: "var(--color-primary)" }}
+								>
+									<Globe className="size-3.5" />
+									{lead.companyWebsite.replace(/^https?:\/\//, "")}
+									<ExternalLink className="size-3 opacity-60" />
 								</a>
-							)}
-						</p>
+							</div>
+						</div>
 					</div>
-					<div className="flex items-center gap-3">
-						<Badge tone={statusTone} className="capitalize">
-							{(lead.replyStatus as string).replace("_", " ")}
+
+					<div className="flex items-center gap-2 shrink-0 flex-wrap">
+						<Badge tone={statusTone} dot>
+							{statusLabels[lead.replyStatus] ?? lead.replyStatus}
 						</Badge>
-						<Badge tone="neutral">Stage {lead.stage as number}</Badge>
+						<Badge tone="neutral">{stage.label}</Badge>
 						{lead.replyStatus === "research_failed" && (
 							<Button
 								size="sm"
-								variant="soft"
-								leadingIcon={<RotateCcw className="w-3.5 h-3.5" />}
-								onClick={() => (retry as any)({ leadId })}
-								loading={isRetrying}
+								variant="outline"
+								leadingIcon={
+									isRetrying ? (
+										<Loader2 className="size-3.5 animate-spin" />
+									) : (
+										<RotateCcw className="size-3.5" />
+									)
+								}
+								onClick={handleRetry}
+								disabled={isRetrying}
 							>
-								Retry Pipeline
+								{isRetrying ? "Retrying…" : "Retry Pipeline"}
 							</Button>
 						)}
+						<Button
+							size="sm"
+							variant="outline"
+							leadingIcon={<Mail className="size-3.5" />}
+							onClick={() => {
+								window.location.href = `mailto:${lead.email}`
+							}}
+						>
+							Email
+						</Button>
 					</div>
 				</div>
 			</div>
 
+			{/* ── Status strip ── */}
+			<StatusStrip cells={stripCells} />
+
 			<div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-				{/* Left Column: Details & Research */}
-				<div className="lg:col-span-1 space-y-6">
+				{/* ── Left: contact + research ── */}
+				<div className="space-y-6">
 					<Card>
 						<CardHeader>
-							<CardTitle className="text-sm uppercase tracking-wider">
-								Contact Info
-							</CardTitle>
-						</CardHeader>
-						<CardContent className="space-y-3">
-							<div className="flex items-center gap-3 text-sm">
-								<Mail
-									className="w-4 h-4 shrink-0"
-									style={{ color: "var(--color-muted-foreground)" }}
-								/>
-								<a
-									href={`mailto:${lead.email}`}
-									className="break-all"
-									style={{ color: "var(--color-primary)" }}
-								>
-									{lead.email as string}
-								</a>
-							</div>
-							<div
-								className="flex items-center gap-3 text-sm"
+							<CardTitle className="text-base">Contact Info</CardTitle>
+							<p
+								className="text-xs mt-1"
 								style={{ color: "var(--color-muted-foreground)" }}
 							>
-								<Calendar className="w-4 h-4 shrink-0" />
-								Captured on {new Date(lead.createdAt).toLocaleDateString()}
-							</div>
+								Reachable channels & metadata
+							</p>
+						</CardHeader>
+						<CardContent className="space-y-4">
+							<ContactRow
+								icon={Mail}
+								label="Email"
+								tone="var(--color-primary)"
+							>
+								<a
+									href={`mailto:${lead.email}`}
+									className="break-all hover:underline"
+									style={{ color: "var(--color-primary)" }}
+								>
+									{lead.email}
+								</a>
+							</ContactRow>
+							{lead.linkedinUrl && (
+								<ContactRow
+									icon={Linkedin}
+									label="LinkedIn"
+									tone="var(--color-info)"
+								>
+									<a
+										href={lead.linkedinUrl}
+										target="_blank"
+										rel="noreferrer"
+										className="inline-flex items-center gap-1 hover:underline break-all"
+										style={{ color: "var(--color-info)" }}
+									>
+										{lead.linkedinUrl.replace(/^https?:\/\/(www\.)?/, "")}
+										<ExternalLink className="size-3 opacity-60 shrink-0" />
+									</a>
+								</ContactRow>
+							)}
+							{lead.leadSource && (
+								<ContactRow
+									icon={MapPin}
+									label="Source"
+									tone="var(--color-accent)"
+								>
+									<Badge tone="outline" className="font-normal">
+										{lead.leadSource}
+									</Badge>
+								</ContactRow>
+							)}
+							<ContactRow
+								icon={Calendar}
+								label="Captured"
+								tone="var(--color-warning)"
+							>
+								<span
+									className="tabular-nums"
+									style={{ color: "var(--color-muted-foreground)" }}
+								>
+									{dateFormatter.format(new Date(lead.createdAt))}
+								</span>
+							</ContactRow>
 						</CardContent>
 					</Card>
 
-					{(lead.painPoints as string) && (
+					{lead.painPoints && (
 						<Card>
 							<CardHeader>
-								<CardTitle className="text-sm uppercase tracking-wider">
-									Pain Points
-								</CardTitle>
+								<div className="flex items-center gap-3">
+									<div
+										className="size-9 rounded-lg flex items-center justify-center"
+										style={{
+											background: softBg("var(--color-warning)"),
+											color: "var(--color-warning)",
+										}}
+									>
+										<Sparkles className="size-4" />
+									</div>
+									<div>
+										<CardTitle className="text-base">Pain Points</CardTitle>
+										<p
+											className="text-xs mt-1"
+											style={{ color: "var(--color-muted-foreground)" }}
+										>
+											Anchors for the AI copy
+										</p>
+									</div>
+								</div>
 							</CardHeader>
 							<CardContent>
 								<p className="text-sm leading-relaxed whitespace-pre-wrap">
-									{lead.painPoints as string}
+									{lead.painPoints}
 								</p>
 							</CardContent>
 						</Card>
 					)}
 
-					{(lead.companyResearch as string) && (
+					{lead.companyResearch && (
 						<Card>
 							<CardHeader>
-								<CardTitle className="text-sm uppercase tracking-wider">
-									AI Company Analysis
-								</CardTitle>
+								<div className="flex items-center gap-3">
+									<div
+										className="size-9 rounded-lg flex items-center justify-center"
+										style={{
+											background: softBg("var(--color-accent)"),
+											color: "var(--color-accent)",
+										}}
+									>
+										<Brain className="size-4" />
+									</div>
+									<div>
+										<CardTitle className="text-base">
+											AI Company Analysis
+										</CardTitle>
+										<p
+											className="text-xs mt-1"
+											style={{ color: "var(--color-muted-foreground)" }}
+										>
+											Synthesized from scraped website + LLM
+										</p>
+									</div>
+								</div>
 							</CardHeader>
 							<CardContent>
 								<div
@@ -483,7 +923,7 @@ function LeadDetailPage() {
 									}
 								>
 									<ReactMarkdown remarkPlugins={[remarkBreaks]}>
-										{lead.companyResearch as string}
+										{lead.companyResearch}
 									</ReactMarkdown>
 								</div>
 							</CardContent>
@@ -491,51 +931,99 @@ function LeadDetailPage() {
 					)}
 				</div>
 
-				{/* Right Column: Pipeline Steps + Sequence */}
+				{/* ── Right: pipeline + sequence ── */}
 				<div className="lg:col-span-2 space-y-6">
-					{/* Pipeline Execution Steps */}
 					<Card>
-						<CardHeader className="flex flex-row items-center justify-between">
-							<CardTitle className="flex items-center gap-2">
-								<Clock className="w-4 h-4" />
-								Pipeline Execution
-							</CardTitle>
-							<span
-								className="text-xs font-medium uppercase tracking-wider"
-								style={{ color: "var(--color-muted-foreground)" }}
-							>
-								Step-by-Step
-							</span>
+						<CardHeader className="flex flex-row items-start justify-between gap-3">
+							<div className="flex items-center gap-3">
+								<div
+									className="size-9 rounded-lg flex items-center justify-center"
+									style={{
+										background: softBg("var(--color-primary)"),
+										color: "var(--color-primary)",
+									}}
+								>
+									<Clock className="size-4" />
+								</div>
+								<div>
+									<CardTitle className="text-base">
+										Pipeline Execution
+									</CardTitle>
+									<p
+										className="text-xs mt-1"
+										style={{ color: "var(--color-muted-foreground)" }}
+									>
+										Step-by-step AI run history
+									</p>
+								</div>
+							</div>
 						</CardHeader>
-						<Separator />
-						<CardContent className="p-2">
+						<CardContent>
 							<PipelineStepsTimeline leadId={leadId} />
 						</CardContent>
 					</Card>
 
-					{/* Email Sequence */}
-					<Card className="flex flex-col">
-						<CardHeader className="flex flex-row items-center justify-between">
-							<CardTitle>Email Sequence</CardTitle>
-							<span
-								className="text-xs font-medium uppercase tracking-wider"
-								style={{ color: "var(--color-muted-foreground)" }}
-							>
-								Timeline
-							</span>
+					<Card>
+						<CardHeader className="flex flex-row items-start justify-between gap-3">
+							<div className="flex items-center gap-3">
+								<div
+									className="size-9 rounded-lg flex items-center justify-center"
+									style={{
+										background: softBg("var(--color-info)"),
+										color: "var(--color-info)",
+									}}
+								>
+									<Mail className="size-4" />
+								</div>
+								<div>
+									<CardTitle className="text-base">Email Sequence</CardTitle>
+									<p
+										className="text-xs mt-1"
+										style={{ color: "var(--color-muted-foreground)" }}
+									>
+										Outbound + follow-up timeline
+									</p>
+								</div>
+							</div>
+							{lead.lastEmailSentAt && (
+								<span
+									className="text-xs px-2.5 py-1 rounded-full font-medium"
+									style={{
+										background: softBg("var(--color-success)"),
+										color: "var(--color-success)",
+									}}
+								>
+									Last sent {relativeTime(lead.lastEmailSentAt)}
+								</span>
+							)}
 						</CardHeader>
-
-						<Separator />
-
-						<CardContent className="flex-1">
+						<CardContent>
 							<div
-								className="text-center py-12"
-								style={{ color: "var(--color-muted-foreground)" }}
+								className="flex flex-col items-center justify-center gap-2 py-10 rounded-xl border border-dashed text-center"
+								style={{
+									borderColor: "var(--color-border)",
+									background: "var(--color-surface-muted)",
+								}}
 							>
-								<Mail className="w-12 h-12 mx-auto mb-3 opacity-30" />
-								<p>
-									The AI is currently crafting the sequence or no emails have
-									been sent yet.
+								<div
+									className="size-10 rounded-lg flex items-center justify-center"
+									style={{
+										background: softBg("var(--color-info)"),
+										color: "var(--color-info)",
+									}}
+								>
+									<Mail className="size-4" />
+								</div>
+								<p className="text-sm font-semibold">
+									Sequence not available
+								</p>
+								<p
+									className="text-xs max-w-sm"
+									style={{ color: "var(--color-muted-foreground)" }}
+								>
+									{lead.lastEmailSentAt
+										? "Per-email tracking endpoint isn't wired up yet — check the pipeline timeline for send activity."
+										: "AI is still crafting the sequence, or no emails have been sent. Refresh once the pipeline finishes."}
 								</p>
 							</div>
 						</CardContent>
