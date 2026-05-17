@@ -28,6 +28,39 @@
 
 ---
 
+<p align="center">
+  <img src="./docs/assets/login-preview.png" alt="KUNCI login screen with live dashboard preview" width="100%" />
+</p>
+
+### Screens
+
+<table>
+  <tr>
+    <td width="50%"><img src="./docs/assets/dashboard-preview.png" alt="Dashboard — AI SDR command center" /></td>
+    <td width="50%"><img src="./docs/assets/leads-pipeline-preview.png" alt="Leads Pipeline — stage tracking" /></td>
+  </tr>
+  <tr>
+    <td align="center"><strong>Dashboard</strong><br/><sub>Campaign health, KPIs, pipeline stages</sub></td>
+    <td align="center"><strong>Leads Pipeline</strong><br/><sub>Captured → Researched → Sequenced → Replied</sub></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="./docs/assets/add-lead-preview.png" alt="Add Lead — manual capture" /></td>
+    <td width="50%"><img src="./docs/assets/bulk-import-preview.png" alt="Bulk Import — CSV upload" /></td>
+  </tr>
+  <tr>
+    <td align="center"><strong>Add Lead</strong><br/><sub>Manual entry kicks off the 4-step AI pipeline</sub></td>
+    <td align="center"><strong>Bulk Import</strong><br/><sub>CSV upload, duplicate detection, row validation</sub></td>
+  </tr>
+  <tr>
+    <td colspan="2"><img src="./docs/assets/settings-preview.png" alt="Settings — AI models, prompts, sandbox" /></td>
+  </tr>
+  <tr>
+    <td align="center" colspan="2"><strong>Settings</strong><br/><sub>Tune AI providers, prompts, senders, and pipeline cadence — with a live prompt sandbox</sub></td>
+  </tr>
+</table>
+
+---
+
 ## What is KUNCI?
 
 **KUNCI** is a fully autonomous AI Sales Development Representative (SDR) that automates outbound sales — from lead capture to personalized email conversations.
